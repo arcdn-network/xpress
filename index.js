@@ -1,11 +1,41 @@
-require('dotenv').config();
+process.env.NTBA_FIX_350 = true;
+require('dotenv').config({ quiet: true });
 
 const TelegramBot = require('node-telegram-bot-api');
+const connectDB = require('./config/database');
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const registerMeCommand = require('./commands/me');
+const registerStartCommand = require('./commands/start');
+const registerCreditosCommand = require('./commands/creditos');
+const registerActivateCommand = require('./commands/activate');
+const registerBuyCommand = require('./commands/buy');
+const registerCmdsCommand = require('./commands/cmds');
 
-bot.on('message', (msg) => {
-  console.log('Mensaje recibido:', msg.text);
+async function startApp() {
+  const token = process.env.BOT_TOKEN;
+
+  if (!token) {
+    throw new Error('Falta BOT_TOKEN en el archivo .env');
+  }
+
+  await connectDB();
+
+  const bot = new TelegramBot(token, { polling: true });
+
+  registerMeCommand(bot);
+  registerStartCommand(bot);
+  registerCreditosCommand(bot);
+  registerActivateCommand(bot);
+  registerBuyCommand(bot);
+  registerCmdsCommand(bot);
+
+  bot.on('polling_error', (error) => {
+    console.error('Polling error:', error.message);
+  });
+
+  console.log('Bot YapeXpress iniciado');
+}
+
+startApp().catch((error) => {
+  console.error('Error al iniciar la app:', error.message);
 });
-
-console.log('\x1b[32mBot activo...\x1b[0m');
