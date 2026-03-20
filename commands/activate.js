@@ -1,6 +1,8 @@
 const User = require('../models/users');
 const ActivationLog = require('../models/activation_logs');
 const { findClientByEmail, updateClientById } = require('../sevices/clients');
+const { sendMessage } = require('../utils/sender');
+const { buildButtonsCredits, APP_NAME } = require('../utils/constants');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
@@ -168,13 +170,13 @@ function buildActivationSuccessMessage(client, user, activatedLicenses, cost, re
 🔐 <b>Licencias:</b> ${activatedLicenses.join(', ')}
 👤 <b>Activado por:</b> ${resellerName}
 
-━━━━━━━━━━━━━━━
+•···························•····························•
 💳 <b>Detalle</b>
 
 • Costo: <b>${cost}</b> créditos
 • Créditos restantes: <b>${user.credits}</b>
 
-━━━━━━━━━━━━━━━
+•···························•····························•
 
 🚀 Activación completada correctamente.
 `.trim();
@@ -188,11 +190,25 @@ function buildAlreadyActivatedMessage(client, resellerName, requestedLicenses) {
 🔐 <b>Licencias solicitadas:</b> ${requestedLicenses.join(', ')}
 👤 <b>Solicitado por:</b> ${resellerName}
 
-━━━━━━━━━━━━━━━
+•···························•····························•
 
 Todas las licencias solicitadas ya se encontraban activas.
 No se descontaron créditos.
 `.trim();
+}
+
+function buildInsufficientCreditsMessage(user, cost) {
+  return `<b>[#${APP_NAME}]</b> ➣ CRÉDITOS INSUFICIENTES
+
+<b>[⚠️] REQUISITO</b>
+• Créditos necesarios ➣ ${cost}
+
+<b>[🙎‍♂️] TU ESTADO</b>
+• Créditos actuales ➣ ${user.credits}
+
+<b>[📌] INFORMACIÓN</b>
+• No cuentas con créditos suficientes.
+• Para recargar créditos usa: /buy`;
 }
 
 function registerActivateCommand(bot) {
@@ -218,7 +234,7 @@ function registerActivateCommand(bot) {
       const user = await User.findOne({ telegramId });
 
       if (!user) {
-        return bot.sendMessage(chatId, 'No estás registrado. Usa /start');
+        return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
       }
 
       const client = await findClientByEmail(email);
@@ -227,12 +243,8 @@ function registerActivateCommand(bot) {
         return bot.sendMessage(chatId, 'El correo ingresado no existe');
       }
 
-      if (client.status !== true) {
-        return bot.sendMessage(chatId, 'No es posible activar esta cuenta porque el cliente no está habilitado');
-      }
-
-      if (client.banned === true) {
-        return bot.sendMessage(chatId, 'No es posible activar esta cuenta porque el cliente se encuentra bloqueado');
+      if (client.banned) {
+        return bot.sendMessage(chatId, 'No es posible activar esta cuenta porque el cliente se encuentra baneado');
       }
 
       const pendingLicenses = getPendingLicenses(client, requestedLicenses);
@@ -244,12 +256,12 @@ function registerActivateCommand(bot) {
           parse_mode: 'HTML',
         });
       }
-
       if (user.credits < cost) {
-        return bot.sendMessage(
-          chatId,
-          `No tienes créditos suficientes.\nCosto requerido: ${cost}\nSaldo actual: ${user.credits}`,
-        );
+        return sendMessage(bot, chatId, {
+          text: buildInsufficientCreditsMessage(user, cost),
+          filePath: 'yapito1.png',
+          replyMarkup: buildButtonsCredits(),
+        });
       }
 
       const loadingMsg = await bot.sendMessage(chatId, '⏳ Procesando activación...');
@@ -273,7 +285,7 @@ function registerActivateCommand(bot) {
           clientEmail: client.email,
           activatedLicenses: pendingLicenses,
           creditsCost: cost,
-          commandRaw: rawValue,
+          commandRaw: '/activate ' + rawValue,
         });
       } catch (logError) {
         console.error('Error guardando activation log:', logError.message);

@@ -1,4 +1,5 @@
 const User = require('../models/users');
+const CreditsLog = require('../models/credit_logs');
 const isAdmin = require('../middleware/isAdmin');
 
 function getUserDisplayName(user) {
@@ -12,16 +13,14 @@ function buildUserCreditsAddedMessage(user, amount, previousCredits) {
 🎉 <b>¡Créditos añadidos!</b>
 
 Hola ${displayName},
-
 Hemos agregado <b>${Math.abs(amount)}</b> créditos a tu cuenta.
 
-━━━━━━━━━━━━━━━
+•···························•····························•
 💳 <b>Tu saldo</b>
 
 Antes: <b>${previousCredits}</b> créditos
 Ahora: <b>${user.credits}</b> créditos
-
-━━━━━━━━━━━━━━━
+•···························•····························•
 
 🚀 Ya puedes seguir utilizando nuestros servicios.
 `.trim();
@@ -34,16 +33,14 @@ function buildUserCreditsDiscountedMessage(user, amount, previousCredits) {
 ⚠️ <b>Ajuste de créditos</b>
 
 Hola ${displayName},
-
 Se han descontado <b>${Math.abs(amount)}</b> créditos de tu cuenta.
 
-━━━━━━━━━━━━━━━
+•···························•····························•
 💳 <b>Tu saldo</b>
 
 Antes: <b>${previousCredits}</b> créditos
 Ahora: <b>${user.credits}</b> créditos
-
-━━━━━━━━━━━━━━━
+•···························•····························•
 
 Si tienes alguna consulta, puedes contactarnos.
 `.trim();
@@ -108,6 +105,17 @@ function registerCreditosCommand(bot) {
 
       user.credits += amount;
       await user.save();
+
+      await CreditsLog.create({
+        targetTelegramId: user.telegramId,
+        adminTelegramId: senderId,
+        amount,
+        previousCredits,
+        currentCredits: user.credits,
+        movementType: amount > 0 ? 'add' : 'discount',
+        reason: 'Ajuste manual de créditos',
+        commandRaw: match[0],
+      });
 
       try {
         const userMessage =

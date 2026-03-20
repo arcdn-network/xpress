@@ -1,6 +1,7 @@
 const User = require('../models/users');
-const path = require('path');
-const { sendPhoto } = require('../utils/sender');
+const { APP_NAME } = require('../utils/constants');
+
+const { sendMessage } = require('../utils/sender');
 const { formatDate } = require('../utils/functions');
 
 function registerMeCommand(bot) {
@@ -17,9 +18,11 @@ function registerMeCommand(bot) {
       }
 
       const response = buildProfileTemplate(user, msg);
-      const imagePath = path.join(process.cwd(), 'resources', 'target.png');
 
-      await sendPhoto(bot, chatId, imagePath, { caption: response });
+      await sendMessage(bot, chatId, {
+        text: response,
+        filePath: 'target.png',
+      });
     } catch (error) {
       console.error('Error en /me:', error.message);
       await bot.sendMessage(chatId, 'Error al obtener tu información');
@@ -42,7 +45,7 @@ function buildProfileTemplate(user, msg) {
   };
 
   return `
-<b>[#YapeXpress]</b> <b>PERFIL DE USUARIO</b>
+<b>[#${APP_NAME}]</b> <b>PERFIL DE USUARIO</b>
 •···························•····························•
 ➤ <b>INFORMACIÓN DE USUARIO</b>
 

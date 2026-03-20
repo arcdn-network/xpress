@@ -1,12 +1,11 @@
 const User = require('../models/users');
-const path = require('path');
-const { sendPhoto } = require('../utils/sender');
-const { buildButtonsCredits } = require('../utils/constants');
+const { sendMessage } = require('../utils/sender');
 const { formatDate } = require('../utils/functions');
+const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME } = require('../utils/constants');
 
 function buildStartMessage(firstName) {
   return `
-Hola, que tal <b>${firstName}</b>? Bienvenido a <b>YapeXpress</b>!
+Hola, que tal <b>${firstName}</b>? Bienvenido a <b>${APP_NAME}</b>!
 
 Para utilizar este bot primero debes registrarte utilizando:
 <b>/register</b>
@@ -14,7 +13,8 @@ Para utilizar este bot primero debes registrarte utilizando:
 [🧾] Para visualizar la lista de comandos utiliza <b>/cmds</b>
 [👤] Para visualizar el perfil de tu cuenta usa <b>/me</b>
 [💸] Para visualizar los precios <b>/buy</b>
-[❓] Si tienes alguna duda o consulta respecto a <b>YapeXpress</b> puedes contactar con <b>(@dev_lguss)</b>
+[🚀] Para descargar la aplicación <b>/apk</b>
+[❓] Si tienes alguna duda o consulta respecto a <b>${APP_NAME}</b> puedes contactar con <b>(@dev_lguss)</b>
 `.trim();
 }
 
@@ -31,7 +31,7 @@ Para comprar créditos haz click en el enlace de abajo.
 }
 
 function buildAlreadyRegisteredMessage(firstName) {
-  return `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>YapeXpress</b> 🧑‍🦯`.trim();
+  return `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>${APP_NAME}</b> 🧑‍🦯`.trim();
 }
 
 function registerStartCommand(bot) {
@@ -41,11 +41,11 @@ function registerStartCommand(bot) {
 
     try {
       const response = buildStartMessage(firstName);
-      const imagePath = path.join(process.cwd(), 'resources', 'welcome.png');
 
-      await sendPhoto(bot, chatId, imagePath, {
-        caption: response,
-        replyMarkup: buildButtonsCredits(),
+      await sendMessage(bot, chatId, {
+        text: response,
+        filePath: 'welcome.png',
+        replyMarkup: buildButtonsCreditsWithApk(),
       });
     } catch (error) {
       console.error('Error en /start:', error.message);
@@ -88,10 +88,10 @@ function registerStartCommand(bot) {
       });
 
       const response = buildRegisterSuccessMessage(firstName, user);
-
-      await bot.sendMessage(chatId, response, {
-        parse_mode: 'HTML',
-        reply_markup: buildButtonsCredits(),
+      await sendMessage(bot, chatId, {
+        text: response,
+        filePath: 'welcome.png',
+        replyMarkup: buildButtonsCredits(),
       });
     } catch (error) {
       console.error('Error en /register:', error.message);

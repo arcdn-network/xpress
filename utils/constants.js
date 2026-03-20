@@ -1,3 +1,5 @@
+const APP_NAME = 'YapeXpress';
+
 const RESELLERS = [
   {
     text: '💰 Comprar créditos @dev_lguss',
@@ -5,8 +7,8 @@ const RESELLERS = [
     visible: true,
   },
   {
-    text: '💰 Comprar créditos @chucky_NET',
-    url: 'https://t.me/chucky_NET',
+    text: '💰 Comprar créditos @tuchucky_net_x',
+    url: 'https://t.me/tuchucky_net_x',
     visible: false,
   },
 ];
@@ -19,6 +21,32 @@ function buildButtonsCredits() {
         url: item.url,
       },
     ]),
+  };
+}
+function buildButtonsCreditsWithApk() {
+  const resellers = RESELLERS.filter((item) => item.visible).map((item) => [
+    {
+      text: item.text,
+      url: item.url,
+    },
+  ]);
+
+  const buttons = [
+    [
+      {
+        text: '🌐 WEB (Android/IPhone)',
+        switch_inline_query_current_chat: '/web',
+      },
+      {
+        text: '⬇️ APK (Android)',
+        switch_inline_query_current_chat: '/apk',
+      },
+    ],
+    ...resellers,
+  ];
+
+  return {
+    inline_keyboard: buttons,
   };
 }
 
@@ -40,7 +68,9 @@ function buildPaquetesMessage() {
 }
 
 module.exports = {
+  APP_NAME,
   TARIFARIO,
   buildButtonsCredits,
+  buildButtonsCreditsWithApk,
   buildPaquetesMessage,
 };
