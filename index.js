@@ -25,6 +25,18 @@ async function startApp() {
 
   const bot = new TelegramBot(token, { polling: true });
 
+  await bot.setMyCommands([
+    { command: 'start', description: 'Iniciar el bot' },
+    { command: 'register', description: 'Registrarte en el sistema' },
+    { command: 'cmds', description: 'Ver comandos disponibles' },
+    { command: 'me', description: 'Ver tu perfil' },
+    { command: 'buy', description: 'Ver precios y compras' },
+    { command: 'info', description: 'Validar cuentas Yape' },
+    { command: 'activate', description: 'Activar una cuenta' },
+    { command: 'apk', description: 'Descargar APK' },
+    { command: 'web', description: 'Descargar Link' },
+  ]);
+
   registerMeCommand(bot);
   registerStartCommand(bot);
   registerCreditosCommand(bot);

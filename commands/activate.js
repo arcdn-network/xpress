@@ -7,6 +7,11 @@ const { buildButtonsCredits, APP_NAME } = require('../utils/constants');
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ACTIVATION_TTL_MS = 2 * 60 * 1000;
+
+const pendingActivations = new Map();
+const processingActivations = new Set();
+const pendingActivationByUser = new Map();
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -211,7 +216,292 @@ function buildInsufficientCreditsMessage(user, cost) {
 • Para recargar créditos usa: /buy`;
 }
 
+function buildConfirmActivationMessage(client, pendingLicenses, cost, user) {
+  return `
+⚠️ <b>Confirmar activación</b>
+
+📧 <b>Correo:</b> <code>${client.email}</code>
+🔐 <b>Licencias:</b> ${pendingLicenses.join(' + ')}
+💰 <b>Costo:</b> ${cost} créditos
+💳 <b>Créditos actuales:</b> ${user.credits}
+💸 <b>Créditos restantes:</b> ${user.credits - cost}
+`.trim();
+}
+
+function buildCanceledActivationMessage() {
+  return '❌ Activación cancelada';
+}
+
+async function deletePendingMessage(bot, payload) {
+  if (!payload?.chatId || !payload?.messageId) {
+    return;
+  }
+
+  await bot.deleteMessage(payload.chatId, payload.messageId).catch(() => {});
+}
+
+function clearActivationState(confirmId) {
+  const payload = pendingActivations.get(confirmId);
+
+  if (payload?.timeoutId) {
+    clearTimeout(payload.timeoutId);
+  }
+
+  if (payload?.telegramId) {
+    pendingActivationByUser.delete(payload.telegramId);
+  }
+
+  pendingActivations.delete(confirmId);
+  processingActivations.delete(confirmId);
+}
+
+function setActivationTimeout(bot, confirmId) {
+  return setTimeout(async () => {
+    const payload = pendingActivations.get(confirmId);
+
+    if (!payload) {
+      processingActivations.delete(confirmId);
+      return;
+    }
+
+    await deletePendingMessage(bot, payload);
+    clearActivationState(confirmId);
+  }, ACTIVATION_TTL_MS);
+}
+
+async function replacePendingActivation(bot, telegramId) {
+  const previousConfirmId = pendingActivationByUser.get(telegramId);
+
+  if (!previousConfirmId) {
+    return;
+  }
+
+  const previousPayload = pendingActivations.get(previousConfirmId);
+
+  if (previousPayload) {
+    await deletePendingMessage(bot, previousPayload);
+  }
+
+  clearActivationState(previousConfirmId);
+}
+
+function registerActivateCallback(bot) {
+  if (bot._activateCallbackRegistered) {
+    return;
+  }
+
+  bot._activateCallbackRegistered = true;
+
+  bot.on('callback_query', async (query) => {
+    const data = query.data || '';
+    const chatId = query.message?.chat?.id;
+    const messageId = query.message?.message_id;
+
+    if (!data.startsWith('activate_confirm_') && !data.startsWith('activate_cancel_')) {
+      return;
+    }
+
+    let confirmId = '';
+
+    try {
+      if (data.startsWith('activate_cancel_')) {
+        confirmId = data.replace('activate_cancel_', '');
+
+        const payload = pendingActivations.get(confirmId);
+
+        if (!payload) {
+          await bot.answerCallbackQuery(query.id, {
+            text: 'La confirmación expiró o ya fue procesada',
+          });
+          return;
+        }
+
+        if (query.from.id !== payload.telegramId) {
+          await bot.answerCallbackQuery(query.id, {
+            text: 'No puedes cancelar esta activación',
+          });
+          return;
+        }
+
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Activación cancelada',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(chatId, buildCanceledActivationMessage());
+
+        return;
+      }
+
+      confirmId = data.replace('activate_confirm_', '');
+
+      const payload = pendingActivations.get(confirmId);
+
+      if (!payload) {
+        await bot.answerCallbackQuery(query.id, {
+          text: 'La confirmación expiró o ya fue procesada',
+        });
+        return;
+      }
+
+      if (query.from.id !== payload.telegramId) {
+        await bot.answerCallbackQuery(query.id, {
+          text: 'No puedes confirmar esta activación',
+        });
+        return;
+      }
+
+      if (processingActivations.has(confirmId)) {
+        await bot.answerCallbackQuery(query.id, {
+          text: '⏳ Ya se está procesando...',
+        });
+        return;
+      }
+
+      processingActivations.add(confirmId);
+
+      const { telegramId, clientId, clientEmail, requestedLicenses, rawValue } = payload;
+
+      const user = await User.findOne({ telegramId });
+
+      if (!user) {
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Usuario no encontrado',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(chatId, '❌ No fue posible completar la activación.');
+
+        return;
+      }
+
+      const client = await findClientByEmail(clientEmail);
+
+      if (!client || String(client._id) !== String(clientId)) {
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Cliente no disponible',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(chatId, '❌ El cliente ya no se encuentra disponible.');
+
+        return;
+      }
+
+      if (client.banned) {
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Cliente baneado',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(chatId, '❌ No es posible activar esta cuenta porque el cliente se encuentra baneado.');
+
+        return;
+      }
+
+      const pendingLicenses = getPendingLicenses(client, requestedLicenses);
+      const cost = getActivationCost(pendingLicenses);
+
+      if (pendingLicenses.length === 0) {
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Ya estaba activado',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(
+          chatId,
+          buildAlreadyActivatedMessage(client, getUserDisplayName(user), requestedLicenses),
+          {
+            parse_mode: 'HTML',
+          },
+        );
+
+        return;
+      }
+
+      if (user.credits < cost) {
+        clearActivationState(confirmId);
+
+        await bot.answerCallbackQuery(query.id, {
+          text: 'Créditos insuficientes',
+        });
+
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendMessage(chatId, buildInsufficientCreditsMessage(user, cost), {
+          parse_mode: 'HTML',
+        });
+
+        return;
+      }
+
+      await bot.answerCallbackQuery(query.id, {
+        text: 'Procesando activación...',
+      });
+
+      await bot.deleteMessage(chatId, messageId).catch(() => {});
+
+      const loadingMsg = await bot.sendMessage(chatId, '⏳ Procesando activación...');
+
+      await delay(2000);
+
+      const updateData = buildClientUpdateData(pendingLicenses);
+
+      user.credits -= cost;
+      updateUserActivationStats(user, pendingLicenses);
+      await user.save();
+
+      await updateClientById(client._id, updateData);
+      Object.assign(client, updateData);
+
+      try {
+        await ActivationLog.create({
+          resellerTelegramId: user.telegramId,
+          clientId: client._id ? String(client._id) : null,
+          clientEmail: client.email,
+          activatedLicenses: pendingLicenses,
+          creditsCost: cost,
+          commandRaw: '/activate ' + rawValue,
+        });
+      } catch (logError) {
+        console.error('Error guardando activation log:', logError.message);
+      }
+
+      const resellerName = getUserDisplayName(user);
+
+      await bot.editMessageText(buildActivationSuccessMessage(client, user, pendingLicenses, cost, resellerName), {
+        chat_id: chatId,
+        message_id: loadingMsg.message_id,
+        parse_mode: 'HTML',
+      });
+
+      clearActivationState(confirmId);
+    } catch (error) {
+      if (confirmId) {
+        clearActivationState(confirmId);
+      }
+
+      console.error('Error en callback de activación:', error.message);
+
+      if (chatId) {
+        await bot.sendMessage(chatId, '❌ Ocurrió un error al procesar la activación.').catch(() => {});
+      }
+    }
+  });
+}
+
 function registerActivateCommand(bot) {
+  registerActivateCallback(bot);
+
   bot.onText(/\/activate (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
@@ -256,6 +546,7 @@ function registerActivateCommand(bot) {
           parse_mode: 'HTML',
         });
       }
+
       if (user.credits < cost) {
         return sendMessage(bot, chatId, {
           text: buildInsufficientCreditsMessage(user, cost),
@@ -264,38 +555,38 @@ function registerActivateCommand(bot) {
         });
       }
 
-      const loadingMsg = await bot.sendMessage(chatId, '⏳ Procesando activación...');
+      await replacePendingActivation(bot, telegramId);
 
-      await delay(2000);
+      const confirmId = `${telegramId}_${Date.now()}`;
+      const confirmText = buildConfirmActivationMessage(client, pendingLicenses, cost, user);
 
-      const updateData = buildClientUpdateData(pendingLicenses);
-
-      user.credits -= cost;
-      updateUserActivationStats(user, pendingLicenses);
-      await user.save();
-
-      await updateClientById(client._id, updateData);
-
-      Object.assign(client, updateData);
-
-      try {
-        await ActivationLog.create({
-          resellerTelegramId: user.telegramId,
-          clientId: client._id ? String(client._id) : null,
-          clientEmail: client.email,
-          activatedLicenses: pendingLicenses,
-          creditsCost: cost,
-          commandRaw: '/activate ' + rawValue,
-        });
-      } catch (logError) {
-        console.error('Error guardando activation log:', logError.message);
-      }
-
-      await bot.editMessageText(buildActivationSuccessMessage(client, user, pendingLicenses, cost, resellerName), {
-        chat_id: chatId,
-        message_id: loadingMsg.message_id,
-        parse_mode: 'HTML',
+      const sentMessage = await sendMessage(bot, chatId, {
+        text: confirmText,
+        filePath: 'target.png',
+        replyMarkup: {
+          inline_keyboard: [
+            [
+              { text: '✅ Confirmar', callback_data: `activate_confirm_${confirmId}` },
+              { text: '❌ Cancelar', callback_data: `activate_cancel_${confirmId}` },
+            ],
+          ],
+        },
       });
+
+      const timeoutId = setActivationTimeout(bot, confirmId);
+
+      pendingActivations.set(confirmId, {
+        telegramId,
+        chatId,
+        messageId: sentMessage?.message_id || null,
+        clientId: client._id ? String(client._id) : null,
+        clientEmail: client.email,
+        requestedLicenses,
+        rawValue,
+        timeoutId,
+      });
+
+      pendingActivationByUser.set(telegramId, confirmId);
     } catch (error) {
       console.error('Error en /activate:', error.message);
       await bot.sendMessage(chatId, 'Ocurrió un error al activar la cuenta');
