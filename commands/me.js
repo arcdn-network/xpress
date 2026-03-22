@@ -31,11 +31,6 @@ function registerMeCommand(bot) {
 }
 
 function buildProfileTemplate(user, msg) {
-  const roles = {
-    admin: 'ADMIN',
-    user: 'USUARIO',
-  };
-
   const activationStats = user.activationStats || {
     total: 0,
     yape: 0,
@@ -53,16 +48,9 @@ function buildProfileTemplate(user, msg) {
 [🗒] NOMBRE ➤ ${msg.from.first_name || 'No disponible'}
 [⚡] USERNAME ➤ ${user.username ? '@' + user.username : 'Sin username'}
 
-[〽️] ROL ➤ ${roles[user.role] || 'USUARIO'}
-[💰] CREDITOS ➤ ${user.credits}
-[👾] ESTADO ➤ ${user.status === 'activo' ? 'ACTIVO' : 'NO ACTIVO'}
 [📅] REGISTRADO ➤ ${formatDate(user.registeredAt)}
-
-•···························•····························•
-➤ <b>RESUMEN DE ACTIVACIONES</b>
-
-[🔎] ACTIVACIONES ➤ ${activationStats.total}
-[📦] DETALLE ➤ YAPE: ${activationStats.yape} | BCP: ${activationStats.bcp} | IBK: ${activationStats.ibk} | BBVA: ${activationStats.bbva}
+[👾] ESTADO ➤ ${user.status === 'activo' ? 'ACTIVO' : 'NO ACTIVO'}
+[💰] CREDITOS ➤ ${user.credits}
 •···························•····························•
 `.trim();
 }

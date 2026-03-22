@@ -31,8 +31,6 @@ async function startApp() {
     { command: 'cmds', description: 'Ver comandos disponibles' },
     { command: 'me', description: 'Ver tu perfil' },
     { command: 'buy', description: 'Ver precios y compras' },
-    { command: 'info', description: 'Validar cuentas Yape' },
-    { command: 'activate', description: 'Activar una cuenta' },
     { command: 'apk', description: 'Descargar APK' },
     { command: 'web', description: 'Descargar Link' },
   ]);
