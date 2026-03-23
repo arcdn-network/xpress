@@ -10,6 +10,7 @@ const registerStartCommand = require('./commands/start');
 const registerCreditosCommand = require('./commands/creditos');
 const registerActivateCommand = require('./commands/activate');
 const registerHistorialCommand = require('./commands/historial');
+const registerTutorialCommand = require('./commands/tutorial');
 
 const registerBuyCommand = require('./commands/buy');
 const registerCmdsCommand = require('./commands/cmds');
@@ -34,6 +35,7 @@ async function startApp() {
     { command: 'me', description: 'Ver tu perfil' },
     { command: 'buy', description: 'Ver precios y compras' },
     { command: 'historial', description: 'Ver historial de activaciones' },
+    { command: 'tutorial', description: 'Ver tutorial de activaciones' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
   ]);
@@ -43,6 +45,7 @@ async function startApp() {
   registerCreditosCommand(bot);
   registerActivateCommand(bot);
   registerHistorialCommand(bot);
+  registerTutorialCommand(bot);
 
   registerBuyCommand(bot);
   registerCmdsCommand(bot);

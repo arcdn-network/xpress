@@ -65,7 +65,7 @@ function getActivationCost(licenses) {
   return cost;
 }
 
-function buildClientUpdateData(pendingLicenses) {
+function buildClientUpdateData(pendingLicenses, currentClient) {
   const updateData = {};
 
   if (pendingLicenses.includes('YAPE')) {
@@ -83,6 +83,12 @@ function buildClientUpdateData(pendingLicenses) {
   if (pendingLicenses.includes('IBK')) {
     updateData.ibk = true;
   }
+
+  if (!currentClient?.reseller) {
+    updateData.reseller = '698bcab283fedfc8230cbc65';
+  }
+
+  updateData.currentToken = null;
 
   return updateData;
 }

@@ -11,7 +11,7 @@ Para utilizar este bot primero debes registrarte utilizando:
 <b>/register</b>
 
 [👤] Para visualizar tu perfil <b>/me</b>
-[🧾] Para visualizar los comandos <b>/cmds</b>
+[🧾] Para visualizar comandos <b>/cmds</b>
 [💰] Para visualizar los precios <b>/buy</b>
 [❓] Si tienes alguna consulta respecto a <b>${APP_NAME}</b> puedes contactar con <b>(@dev_lguss)</b>
 `.trim();
