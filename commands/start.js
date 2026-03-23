@@ -10,10 +10,10 @@ Hola, que tal <b>${firstName}</b>? Bienvenido a <b>${APP_NAME}</b>!
 Para utilizar este bot primero debes registrarte utilizando:
 <b>/register</b>
 
-[🧾] Para visualizar la lista de comandos utiliza <b>/cmds</b>
-[👤] Para visualizar el perfil de tu cuenta usa <b>/me</b>
+[👤] Para visualizar tu perfil <b>/me</b>
+[🧾] Para visualizar los comandos <b>/cmds</b>
 [💰] Para visualizar los precios <b>/buy</b>
-[❓] Si tienes alguna duda o consulta respecto a <b>${APP_NAME}</b> puedes contactar con <b>(@dev_lguss)</b>
+[❓] Si tienes alguna consulta respecto a <b>${APP_NAME}</b> puedes contactar con <b>(@dev_lguss)</b>
 `.trim();
 }
 

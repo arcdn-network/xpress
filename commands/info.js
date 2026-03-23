@@ -163,7 +163,7 @@ function registerInfoCommand(bot) {
 
       await sendMessage(bot, chatId, {
         text: response,
-        filePath: !client || (client && client.banned) ? 'yapito1.png' : 'yapito2.png',
+        filePath: !client || (client && client.banned) ? 'target.png' : 'target.png',
       });
     } catch (error) {
       console.error('Error en /info:', error.message);

@@ -2,14 +2,9 @@ const APP_NAME = 'YapeXpress';
 
 const RESELLERS = [
   {
-    text: '💰 Comprar créditos @dev_lguss',
+    text: '💰 Comprar créditos',
     url: 'https://t.me/dev_lguss',
     visible: true,
-  },
-  {
-    text: '💰 Comprar créditos @tuchucky_net_x',
-    url: 'https://t.me/tuchucky_net_x',
-    visible: false,
   },
 ];
 

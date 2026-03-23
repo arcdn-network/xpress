@@ -1,56 +1,43 @@
-const { buildButtonsCreditsWithApk } = require('../utils/constants');
+const { buildButtonsCredits } = require('../utils/constants');
 
 function buildCommandsMessage() {
   return `
-📋 <b>LISTA DE COMANDOS</b>
-
-Estos son los comandos disponibles para gestionar tus licencias y créditos:
+📋 <b>COMANDOS DISPONIBLES</b>
 
 •···························•····························•
-🔎 <b>Validación previa</b>
 
-Antes de activar una cuenta, valida el correo con:
-<code>/info correo@gmail.com</code>
+🪪 <b>CUENTA</b>
+<code>/me</code>
+Consulta tu perfil y créditos disponibles.
 
-Con este comando podrás verificar:
-• Si la cuenta está registrada
-• Licencias activas actualmente
-• Activaciones disponibles sugeridas
+<code>/buy</code>
+Recarga créditos para tus activaciones.
 
 •···························•····························•
-🚀 <b>Activaciones</b>
 
-<b>🔹 YAPE</b> (⭐ <b>20 créditos</b>)
+🚀 <b>ACTIVACIONES</b>
 <code>/activate correo@gmail.com</code>
-
-<b>🔹 YAPE + 1 BANCA</b> (⭐ <b>25 créditos</b>)
-<code>/activate correo@gmail.com|bcp</code>
-<code>/activate correo@gmail.com|ibk</code>
-<code>/activate correo@gmail.com|bbva</code>
-
-<b>🔹 YAPE + 2 BANCAS</b> (⭐ <b>30 créditos</b>)
-<code>/activate correo@gmail.com|bcp,ibk</code>
-<code>/activate correo@gmail.com|bcp,bbva</code>
-<code>/activate correo@gmail.com|ibk,bbva</code>
-
-<b>🔹 YAPE + 3 BANCAS</b> (⭐ <b>35 créditos</b>)
-<code>/activate correo@gmail.com|bcp,ibk,bbva</code>
+Selecciona los productos que quieres activar.
+Puedes confirmar o cancelar esta operación.
 
 •···························•····························•
-ℹ️ <b>Importante</b>
 
-• Primero valida con <b>/info</b> antes de activar
-• Las bancas deben ir separadas por <b>comas</b>
-• Los productos activados <b>no se vuelven a cobrar</b>
-• Si el <b>YAPE</b> ya está activado, solo se cobra la banca adicional
-• Las cuentas deben estar <b>registradas</b> en la aplicación
+👤 <b>CONSULTAS</b>
+<code>/info correo@gmail.com</code>
+Obtén información detallada del cliente.
+
+<code>/historial</code>
+Revisa todas tus activaciones realizadas.
+
+•···························•····························•
 `.trim();
 }
+
 function registerCmdsCommand(bot) {
   bot.onText(/\/cmds$/, async (msg) => {
     await bot.sendMessage(msg.chat.id, buildCommandsMessage(), {
       parse_mode: 'HTML',
-      reply_markup: buildButtonsCreditsWithApk(),
+      reply_markup: buildButtonsCredits(),
     });
   });
 }

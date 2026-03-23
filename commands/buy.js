@@ -5,9 +5,6 @@ function buildBuyMessage() {
   return `
 💳 <b>COMPRA DE CRÉDITOS</b>
 
-Actualmente trabajamos con:
-<b>YAPE | BCP | BBVA | INTERBANK</b>
-
 🎯 <b>Consumo de créditos</b>
 • Yape Fake ➤ <b>20 créditos</b>
 • Bancas Fake ➤ <b>5 créditos</b>
@@ -22,7 +19,7 @@ Actualmente trabajamos con:
 • Yape + 3 bancas ➤ <b>S/ 70</b>
 
 📈 <b>Ganancia para reseller</b>
-Obtienes <b>50% a 60% de ganancia</b> por venta.
+Obtienes <b>hasta el 60% de ganancia</b> por venta.
 Eres libre de poner tus propios precios.
 
 🛒 <b>Compra tus créditos aquí</b> 👇
