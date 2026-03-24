@@ -1,9 +1,9 @@
 const User = require('../models/users');
-const { APP_NAME } = require('../utils/constants');
-
+const { APP_NAME, LOCAL } = require('../utils/constants');
 const { findClientByEmail } = require('../sevices/clients');
 const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
+const { getFiles, saveFileTelegram } = require('../utils/files');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,64 +27,6 @@ function buildProducts(client) {
   }
 
   return products.length ? products.join(', ') : 'NINGUNO';
-}
-
-function buildSuggestedCommands(client) {
-  const email = client.email;
-  const missing = [];
-
-  if (!client.bcp) {
-    missing.push('bcp');
-  }
-
-  if (!client.ibk) {
-    missing.push('ibk');
-  }
-
-  if (!client.bbva) {
-    missing.push('bbva');
-  }
-
-  const lines = [];
-
-  lines.push('🚀 <b>ACTIVACIONES</b>');
-  lines.push('');
-
-  if (!client.payment) {
-    lines.push('<b>🔹 YAPE</b> (⭐ <b>20 créditos</b>)');
-    lines.push(`<code>/activate ${email}</code>`);
-    lines.push('');
-  }
-
-  if (missing.length >= 1) {
-    lines.push('<b>🔹 YAPE + 1 BANCA</b> (⭐ <b>25 créditos</b>)');
-
-    missing.forEach((bank) => {
-      lines.push(`<code>/activate ${email}|${bank}</code>`);
-    });
-
-    lines.push('');
-  }
-
-  if (missing.length >= 2) {
-    lines.push('<b>🔹 YAPE + 2 BANCAS</b> (⭐ <b>30 créditos</b>)');
-
-    for (let i = 0; i < missing.length; i++) {
-      for (let j = i + 1; j < missing.length; j++) {
-        lines.push(`<code>/activate ${email}|${missing[i]},${missing[j]}</code>`);
-      }
-    }
-
-    lines.push('');
-  }
-
-  if (missing.length === 3) {
-    lines.push('<b>🔹 YAPE + 3 BANCAS</b> (⭐ <b>35 créditos</b>)');
-    lines.push(`<code>/activate ${email}|${missing.join(',')}</code>`);
-    lines.push('');
-  }
-
-  return lines.join('\n').trim();
 }
 
 function buildNotFoundClientMessage(email) {
@@ -119,11 +61,8 @@ function buildAvailableClientMessage(client) {
 [👤] TITULAR ➤ ${client.titular || 'NO DEFINIDO'}
 [📅] REGISTRADO ➤ ${formatDate(client.createdAt)}
 [👾] ESTADO ➤ ${client.status ? 'ACTIVO' : 'INACTIVO'}
-[🚫] BANEADO ➤ NO
-
+[🚫] BANEADO ➤ ${client.banned ? 'SI' : 'NO'}
 [📦] LICENCIAS ➤ ${buildProducts(client)}
-•···························•····························•
-${buildSuggestedCommands(client)}
 •···························•····························•
 `.trim();
 }
@@ -160,11 +99,21 @@ function registerInfoCommand(bot) {
 
       const client = await findClientByEmail(email);
       const response = buildClientInfoMessage(client, email);
+      const files = getFiles();
 
-      await sendMessage(bot, chatId, {
+      if (files.TARGET_IMAGE) {
+        return sendMessage(bot, chatId, {
+          text: response,
+          fileId: files.TARGET_IMAGE,
+        });
+      }
+
+      const telegramResponse = await sendMessage(bot, chatId, {
         text: response,
-        filePath: !client || (client && client.banned) ? 'target.png' : 'target.png',
+        filePath: LOCAL.TARGET_IMAGE,
       });
+
+      saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
     } catch (error) {
       console.error('Error en /info:', error.message);
       await bot.sendMessage(chatId, 'Error al consultar la información del cliente');

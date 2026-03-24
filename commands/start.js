@@ -1,7 +1,8 @@
 const User = require('../models/users');
 const { sendMessage } = require('../utils/sender');
 const { formatDate } = require('../utils/functions');
-const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME } = require('../utils/constants');
+const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
+const { getFiles, saveFileTelegram } = require('../utils/files');
 
 function buildStartMessage(firstName) {
   return `
@@ -33,6 +34,28 @@ function buildAlreadyRegisteredMessage(firstName) {
   return `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>${APP_NAME}</b> 🧑‍🦯`.trim();
 }
 
+async function sendWelcomeMessage(bot, chatId, text, replyMarkup) {
+  const files = getFiles();
+
+  if (files.WELCOME_IMAGE) {
+    return sendMessage(bot, chatId, {
+      text,
+      fileId: files.WELCOME_IMAGE,
+      replyMarkup,
+    });
+  }
+
+  const telegramResponse = await sendMessage(bot, chatId, {
+    text,
+    filePath: LOCAL.WELCOME_IMAGE,
+    replyMarkup,
+  });
+
+  saveFileTelegram(telegramResponse, 'WELCOME_IMAGE');
+
+  return telegramResponse;
+}
+
 function registerStartCommand(bot) {
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -40,12 +63,7 @@ function registerStartCommand(bot) {
 
     try {
       const response = buildStartMessage(firstName);
-
-      await sendMessage(bot, chatId, {
-        text: response,
-        filePath: 'welcome.png',
-        replyMarkup: buildButtonsCreditsWithApk(),
-      });
+      await sendWelcomeMessage(bot, chatId, response, buildButtonsCreditsWithApk());
     } catch (error) {
       console.error('Error en /start:', error.message);
       await bot.sendMessage(chatId, 'Error al mostrar el mensaje de bienvenida');
@@ -87,11 +105,7 @@ function registerStartCommand(bot) {
       });
 
       const response = buildRegisterSuccessMessage(firstName, user);
-      await sendMessage(bot, chatId, {
-        text: response,
-        filePath: 'welcome.png',
-        replyMarkup: buildButtonsCredits(),
-      });
+      await sendWelcomeMessage(bot, chatId, response, buildButtonsCredits());
     } catch (error) {
       console.error('Error en /register:', error.message);
       await bot.sendMessage(chatId, 'Error al procesar tu registro');

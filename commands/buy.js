@@ -1,5 +1,6 @@
 const { sendMessage } = require('../utils/sender');
-const { buildButtonsCredits } = require('../utils/constants');
+const { buildButtonsCredits, LOCAL } = require('../utils/constants');
+const { getFiles, saveFileTelegram } = require('../utils/files');
 
 function buildBuyMessage() {
   return `
@@ -33,16 +34,34 @@ function registerBuyCommand(bot) {
     try {
       const response = buildBuyMessage();
 
-      await sendMessage(bot, chatId, {
-        text: response,
-        filePath: 'credits.png',
-        replyMarkup: buildButtonsCredits(),
-      });
+      await sendBuyMessage(bot, chatId, response);
     } catch (error) {
       console.error('Error en /buy:', error.message);
       await bot.sendMessage(chatId, 'Error al mostrar la información de compra');
     }
   });
+}
+
+async function sendBuyMessage(bot, chatId, text) {
+  const files = getFiles();
+
+  if (files.CREDITS_IMAGE) {
+    return sendMessage(bot, chatId, {
+      text,
+      fileId: files.CREDITS_IMAGE,
+      replyMarkup: buildButtonsCredits(),
+    });
+  }
+
+  const telegramResponse = await sendMessage(bot, chatId, {
+    text,
+    filePath: LOCAL.CREDITS_IMAGE,
+    replyMarkup: buildButtonsCredits(),
+  });
+
+  saveFileTelegram(telegramResponse, 'CREDITS_IMAGE');
+
+  return telegramResponse;
 }
 
 module.exports = registerBuyCommand;

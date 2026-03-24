@@ -1,8 +1,8 @@
 const User = require('../models/users');
-const { APP_NAME } = require('../utils/constants');
-
+const { APP_NAME, LOCAL } = require('../utils/constants');
 const { sendMessage } = require('../utils/sender');
 const { formatDate } = require('../utils/functions');
+const { getFiles } = require('../utils/files');
 
 function registerMeCommand(bot) {
   bot.onText(/\/me/, async (msg) => {
@@ -10,7 +10,6 @@ function registerMeCommand(bot) {
 
     try {
       const telegramId = msg.from.id;
-
       const user = await User.findOne({ telegramId });
 
       if (!user) {
@@ -18,11 +17,21 @@ function registerMeCommand(bot) {
       }
 
       const response = buildProfileTemplate(user, msg);
+      const files = getFiles();
 
-      await sendMessage(bot, chatId, {
+      if (files.TARGET_IMAGE) {
+        return sendMessage(bot, chatId, {
+          text: response,
+          fileId: files.TARGET_IMAGE,
+        });
+      }
+
+      const telegramResponse = await sendMessage(bot, chatId, {
         text: response,
-        filePath: 'target.png',
+        filePath: LOCAL.TARGET_IMAGE,
       });
+
+      saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
     } catch (error) {
       console.error('Error en /me:', error.message);
       await bot.sendMessage(chatId, 'Error al obtener tu información');
@@ -31,14 +40,6 @@ function registerMeCommand(bot) {
 }
 
 function buildProfileTemplate(user, msg) {
-  const activationStats = user.activationStats || {
-    total: 0,
-    yape: 0,
-    bcp: 0,
-    ibk: 0,
-    bbva: 0,
-  };
-
   return `
 <b>[#${APP_NAME}]</b> <b>PERFIL DE USUARIO</b>
 •···························•····························•

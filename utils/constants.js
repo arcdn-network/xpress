@@ -1,3 +1,11 @@
+const LOCAL = {
+  TARGET_IMAGE: 'target.png',
+  WELCOME_IMAGE: 'welcome.png',
+  CREDITS_IMAGE: 'credits.png',
+  RECHARGE_IMAGE: 'recharge.png',
+  APK_FILE: 'files/Yape_Fake.apk',
+};
+
 const APP_NAME = 'YapeXpress';
 
 const RESELLERS = [
@@ -6,6 +14,13 @@ const RESELLERS = [
     url: 'https://t.me/dev_lguss',
     visible: true,
   },
+];
+
+const TARIFARIO = [
+  { credits: 50, price: 50, active: true },
+  { credits: 100, price: 95, active: true },
+  { credits: 200, price: 180, active: true },
+  { credits: 500, price: 400, active: true, label: null },
 ];
 
 function buildButtonsCredits() {
@@ -45,13 +60,6 @@ function buildButtonsCreditsWithApk() {
   };
 }
 
-const TARIFARIO = [
-  { credits: 50, price: 50, active: true },
-  { credits: 100, price: 95, active: true },
-  { credits: 200, price: 180, active: true },
-  { credits: 500, price: 400, active: true, label: null },
-];
-
 function buildPaquetesMessage() {
   return TARIFARIO.filter((item) => item.active)
     .sort((a, b) => a.credits - b.credits)
@@ -63,6 +71,7 @@ function buildPaquetesMessage() {
 }
 
 module.exports = {
+  LOCAL,
   APP_NAME,
   TARIFARIO,
   buildButtonsCredits,

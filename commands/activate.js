@@ -2,14 +2,13 @@ const User = require('../models/users');
 const ActivationLog = require('../models/activation_logs');
 const { findClientByEmail, updateClientById } = require('../sevices/clients');
 const { sendMessage } = require('../utils/sender');
-const { buildButtonsCredits, APP_NAME } = require('../utils/constants');
+const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
+const { getFiles, saveFileTelegram } = require('../utils/files');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ACTIVATION_TTL_MS = 2 * 60 * 1000;
-const ACTIVATION_IMAGE = 'target.png';
-const RECHARGE_IMAGE = 'recharge.png';
 
 const pendingActivations = new Map();
 const processingActivations = new Set();
@@ -20,6 +19,50 @@ const processingActivationFlows = new Set();
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function sendRechargeMessage(bot, chatId, text) {
+  const files = getFiles();
+
+  if (files.RECHARGE_IMAGE) {
+    return sendMessage(bot, chatId, {
+      text,
+      fileId: files.RECHARGE_IMAGE,
+      replyMarkup: buildButtonsCredits(),
+    });
+  }
+
+  const telegramResponse = await sendMessage(bot, chatId, {
+    text,
+    filePath: LOCAL.RECHARGE_IMAGE,
+    replyMarkup: buildButtonsCredits(),
+  });
+
+  saveFileTelegram(telegramResponse, 'RECHARGE_IMAGE');
+
+  return telegramResponse;
+}
+
+async function sendTargetMessage(bot, chatId, text, replyMarkup) {
+  const files = getFiles();
+
+  if (files.TARGET_IMAGE) {
+    return sendMessage(bot, chatId, {
+      text,
+      fileId: files.TARGET_IMAGE,
+      replyMarkup,
+    });
+  }
+
+  const telegramResponse = await sendMessage(bot, chatId, {
+    text,
+    filePath: LOCAL.TARGET_IMAGE,
+    replyMarkup,
+  });
+
+  saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
+
+  return telegramResponse;
 }
 
 function getUserDisplayName(user) {
@@ -502,11 +545,7 @@ async function openActivationConfirmation(
 
   if (user.credits < cost) {
     await safeDeleteMessage(bot, chatId, messageId);
-    await sendMessage(bot, chatId, {
-      text: buildInsufficientCreditsMessage(user, cost),
-      filePath: RECHARGE_IMAGE,
-      replyMarkup: buildButtonsCredits(),
-    });
+    await sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, cost));
     return;
   }
 
@@ -751,11 +790,7 @@ function registerActivateCallback(bot) {
           });
 
           await safeDeleteMessage(bot, chatId, messageId);
-          await sendMessage(bot, chatId, {
-            text: buildInsufficientCreditsMessage(user, cost),
-            filePath: RECHARGE_IMAGE,
-            replyMarkup: buildButtonsCredits(),
-          });
+          await sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, cost));
 
           return;
         }
@@ -1024,22 +1059,19 @@ function registerActivateCommand(bot) {
       const minimumCost = getMinimumActivationCost(client);
 
       if (minimumCost > 0 && user.credits < minimumCost) {
-        return sendMessage(bot, chatId, {
-          text: buildInsufficientCreditsMessage(user, minimumCost),
-          filePath: RECHARGE_IMAGE,
-          replyMarkup: buildButtonsCredits(),
-        });
+        return sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, minimumCost));
       }
 
       await replacePendingActivationFlow(bot, telegramId);
 
       const initialSelectedBanks = [];
 
-      const sentMessage = await sendMessage(bot, chatId, {
-        text: buildActivationSelectorMessage(client, user, initialSelectedBanks),
-        filePath: ACTIVATION_IMAGE,
-        replyMarkup: buildActivationSelectorKeyboard(telegramId, client, user, initialSelectedBanks),
-      });
+      const sentMessage = await sendTargetMessage(
+        bot,
+        chatId,
+        buildActivationSelectorMessage(client, user, initialSelectedBanks),
+        buildActivationSelectorKeyboard(telegramId, client, user, initialSelectedBanks),
+      );
 
       pendingActivationFlows.set(telegramId, {
         telegramId,
