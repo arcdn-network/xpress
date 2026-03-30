@@ -3,7 +3,7 @@ const LOCAL = {
   WELCOME_IMAGE: 'welcome.png',
   CREDITS_IMAGE: 'credits.png',
   RECHARGE_IMAGE: 'recharge.png',
-  APK_FILE: 'files/Yape_Fake.apk',
+  APK_FILE: 'resources/files/Yape_Fake.apk',
 };
 
 const APP_NAME = 'YapeXpress';

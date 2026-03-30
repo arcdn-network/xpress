@@ -1,5 +1,5 @@
 const { LOCAL } = require('../utils/constants');
-const { sendMessage } = require('../utils/sender');
+const path = require('path');
 
 function buildApkTemplate() {
   return `
@@ -45,17 +45,16 @@ function registerAppCommands(bot) {
     const chatId = msg.chat.id;
 
     try {
-      const filePath = LOCAL.APK_FILE;
-
-      await sendMessage(bot, chatId, {
-        filePath,
-        text: buildApkTemplate(),
+      const filePath = path.resolve(LOCAL.APK_FILE);
+      await bot.sendDocument(chatId, filePath, {
+        caption: buildApkTemplate(),
+        parse_mode: 'HTML',
       });
     } catch (error) {
-      console.error('Error en /apk:', error.message);
-      await sendMessage(bot, chatId, {
-        text: 'Error al enviar el APK',
-      });
+      console.error('Error en /apk:', error);
+      try {
+        await bot.sendMessage(chatId, 'Error al enviar el APK');
+      } catch {}
     }
   });
 
