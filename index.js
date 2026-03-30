@@ -16,6 +16,7 @@ const registerBuyCommand = require('./commands/buy');
 const registerCmdsCommand = require('./commands/cmds');
 const registerAppCommands = require('./commands/apk');
 const registerInfoCommand = require('./commands/info');
+const registerYapeCommand = require('./commands/yape');
 
 async function startApp() {
   const token = process.env.BOT_TOKEN;
@@ -36,6 +37,7 @@ async function startApp() {
     { command: 'buy', description: 'Ver precios y compras' },
     { command: 'historial', description: 'Ver historial de activaciones' },
     { command: 'tutorial', description: 'Ver tutorial de activaciones' },
+    { command: 'yape', description: 'Generar Voucher' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
   ]);
@@ -51,6 +53,7 @@ async function startApp() {
   registerCmdsCommand(bot);
   registerAppCommands(bot);
   registerInfoCommand(bot);
+  registerYapeCommand(bot);
 
   bot.on('polling_error', (error) => {
     console.error('Polling error:', error.message);
