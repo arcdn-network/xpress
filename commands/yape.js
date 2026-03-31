@@ -84,6 +84,14 @@ function formatFecha() {
   };
 }
 
+function formatFechaFilename() {
+  const now = new Date();
+  const dia = now.getDate().toString().padStart(2, '0');
+  const mes = (now.getMonth() + 1).toString().padStart(2, '0');
+  const anio = now.getFullYear().toString().slice(-2);
+  return `${dia}${mes}${anio}`;
+}
+
 function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
@@ -194,7 +202,12 @@ function registerYapeCommand(bot) {
 
       setCooldown(userId);
       await bot.deleteMessage(chatId, loading.message_id);
-      await bot.sendPhoto(chatId, buffer, { reply_to_message_id: msg.message_id });
+      await bot.sendDocument(
+        chatId,
+        buffer,
+        { reply_to_message_id: msg.message_id },
+        { filename: `Screenshot_${formatFechaFilename()}.png`, contentType: 'image/png' },
+      );
     } catch (error) {
       console.error('Error en /yape:', error.message);
       await bot.deleteMessage(chatId, loading.message_id);
