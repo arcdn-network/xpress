@@ -2,6 +2,11 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
+const CDN_BANNER = `${CDN_BASE}/banner.webp`;
+const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
+const CDN_CHAT = `${CDN_BASE}/chat.png`;
+
 let browser = null;
 let activePages = 0;
 const MAX_PAGES = 5;
@@ -87,7 +92,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
   const mensajeHtml = mensaje
     ? `<div class="bg-yape-message py-2 px-1 border-round-lg mt-3 flex gap-2 align-items-center">
          <div class="mx-1 flex">
-           <img src="https://cdn.jsdelivr.net/gh/arcdn-network/resource@main/chat.png" alt="" width="16">
+           <img src="${CDN_CHAT}" alt="" width="16">
          </div>
          <div class="font-semibold text-xs" style="color: #403554;">${mensaje}</div>
        </div>`
@@ -107,7 +112,9 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
     .replace('{{DIGITOS}}', digitos)
     .replace('{{OPERACION}}', operacion)
     .replace('{{MENSAJE}}', mensajeHtml)
-    .replace('{{DESTINO}}', destino);
+    .replace('{{DESTINO}}', destino)
+    .replace('{{CDN_LOGO}}', CDN_LOGO)
+    .replace('{{CDN_BANNER}}', CDN_BANNER);
 }
 
 function getYapeErrorMsg() {
