@@ -187,7 +187,7 @@ function registerYapeCommand(bot) {
 
       setCooldown(userId);
       await bot.deleteMessage(chatId, loading.message_id);
-      await bot.sendPhoto(chatId, buffer);
+      await bot.sendPhoto(chatId, buffer, { reply_to_message_id: msg.message_id });
     } catch (error) {
       console.error('Error en /yape:', error.message);
       await bot.deleteMessage(chatId, loading.message_id);
