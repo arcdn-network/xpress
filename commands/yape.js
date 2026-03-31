@@ -1,11 +1,15 @@
+const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
-const puppeteer = require('puppeteer');
 
 let browser = null;
 let activePages = 0;
 const MAX_PAGES = 5;
 const queue = [];
+
+const cooldowns = new Map();
+const COOLDOWN_MS = 10000;
+const enProceso = new Set();
 
 async function getBrowser() {
   if (!browser || !browser.connected) {
@@ -46,6 +50,15 @@ function isDentroDeHorario() {
   return hora >= 8 && hora < 22;
 }
 
+function isEnCooldown(userId) {
+  if (!cooldowns.has(userId)) return false;
+  return Date.now() - cooldowns.get(userId) < COOLDOWN_MS;
+}
+
+function setCooldown(userId) {
+  cooldowns.set(userId, Date.now());
+}
+
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
@@ -59,17 +72,26 @@ function formatFecha() {
   let horas = now.getHours();
   const mins = now.getMinutes().toString().padStart(2, '0');
   const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
-  horas = horas % 12 || 12;
+  horas = (horas % 12 || 12).toString().padStart(2, '0');
   return {
     fecha: `${dia} ${mes}. ${anio}`,
     hora: `${horas}:${mins} ${ampm}`,
   };
 }
 
-function buildYapeHtml({ monto, nombre, digitos }) {
+function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
   const [d1, d2, d3] = operacion.slice(-3).split('');
+
+  const mensajeHtml = mensaje
+    ? `<div class="bg-yape-message py-2 px-1 border-round-lg mt-3 flex gap-2 align-items-center">
+         <div class="mx-1 flex">
+           <img src="https://cdn.jsdelivr.net/gh/arcdn-network/resource@main/chat.png" alt="" width="16">
+         </div>
+         <div class="font-semibold text-xs" style="color: #403554;">${mensaje}</div>
+       </div>`
+    : '';
 
   const templatePath = path.resolve(__dirname, '../resources/templates/yape.html');
   const html = fs.readFileSync(templatePath, 'utf-8');
@@ -83,37 +105,58 @@ function buildYapeHtml({ monto, nombre, digitos }) {
     .replace('{{D2}}', d2)
     .replace('{{D3}}', d3)
     .replace('{{DIGITOS}}', digitos)
-    .replace('{{OPERACION}}', operacion);
+    .replace('{{OPERACION}}', operacion)
+    .replace('{{MENSAJE}}', mensajeHtml)
+    .replace('{{DESTINO}}', destino);
 }
+
+function getYapeErrorMsg() {
+  return `⚠️ *Formato incorrecto.*
+Debes proporcionar: El monto, titular y los últimos 3 dígitos.
+Puedes ingresar texto (opcional) y destino (opcional).
+
+✅ *Ejemplo de uso:*
+\`\`\`
+/yape 150|Pedro Cas*|987
+\`\`\`
+\`\`\`
+/yape 150|Pedro Cas*|987|Texto de la operación|Plin
+\`\`\``;
+}
+
 function registerYapeCommand(bot) {
   bot.onText(/\/yape(.*)/, async (msg, match) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     const input = match[1].trim();
-
-    const errorMsg = `⚠️ *Formato incorrecto.*
-Debes proporcionar: El monto, titular y los últimos 3 dígitos.
-
-✅ *Ejemplo de uso:*
-\`/yape 150|Pedro Cas*|987\``;
 
     const replyOpts = {
       parse_mode: 'Markdown',
       reply_to_message_id: msg.message_id,
     };
 
-    const sendError = () => bot.sendMessage(chatId, errorMsg, replyOpts);
+    const sendError = () => bot.sendMessage(chatId, getYapeErrorMsg(), replyOpts);
 
     if (!input) {
       return sendError();
     }
 
+    if (enProceso.has(userId)) {
+      return bot.sendMessage(chatId, '⏳ Ya tienes un voucher generándose, espere un momento.', replyOpts);
+    }
+
+    if (isEnCooldown(userId)) {
+      const restante = Math.ceil((COOLDOWN_MS - (Date.now() - cooldowns.get(userId))) / 1000);
+      return bot.sendMessage(chatId, `⏳ Espera *${restante} segundos* antes de generar otro voucher.`, replyOpts);
+    }
+
     const args = input.split('|');
 
-    if (args.length !== 3) {
+    if (args.length < 3 || args.length > 5) {
       return sendError();
     }
 
-    const [monto, nombre, digitos] = args.map((a) => a.trim());
+    const [monto, nombre, digitos, mensaje = '', destino = 'Yape'] = args.map((a) => a.trim());
 
     if (!monto || !/^\d+(\.\d{1,2})?$/.test(monto)) {
       return sendError();
@@ -135,18 +178,22 @@ Debes proporcionar: El monto, titular y los últimos 3 dígitos.
       );
     }
 
+    enProceso.add(userId);
     const loading = await bot.sendMessage(chatId, '⏳ Generando voucher...');
 
     try {
-      const html = buildYapeHtml({ monto, nombre, digitos });
+      const html = buildYapeHtml({ monto, nombre, digitos, mensaje, destino });
       const buffer = await takeScreenshot(html);
 
+      setCooldown(userId);
       await bot.deleteMessage(chatId, loading.message_id);
       await bot.sendPhoto(chatId, buffer);
     } catch (error) {
       console.error('Error en /yape:', error.message);
       await bot.deleteMessage(chatId, loading.message_id);
       await bot.sendMessage(chatId, '❌ Error al generar el voucher', replyOpts);
+    } finally {
+      enProceso.delete(userId);
     }
   });
 }
