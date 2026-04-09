@@ -52,7 +52,7 @@ async function takeScreenshot(html) {
 
 function isDentroDeHorario() {
   const hora = new Date().getHours();
-  return hora >= 8 && hora < 22;
+  return hora >= 6 && hora < 22;
 }
 
 function isEnCooldown(userId) {
@@ -96,6 +96,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
   const [d1, d2, d3] = operacion.slice(-3).split('');
+  const mostrarCodigo = destino.toLowerCase() === 'yape';
 
   const mensajeHtml = mensaje
     ? `<div class="bg-yape-message py-2 px-1 border-round-lg mt-3 flex gap-2 align-items-center">
@@ -106,6 +107,28 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
        </div>`
     : '';
 
+  const codigoHtml = mostrarCodigo
+    ? `
+      <div class="flex align-items-center justify-content-between mt-2">
+        <div class="flex align-items-center gap-2 text-uxs font-semibold"
+          style="color: var(--yape-text-label); letter-spacing: 0.5px;">
+          <span>CÓDIGO DE SEGURIDAD</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--yape-teal)">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M4.929 19.07A10 10 0 0 0 12 22c5.522 0 10-4.477 10-10S17.522 2 12 2 2 6.478 2 12a10 10 0 0 0 2.929 7.07M13 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-2 3a1 1 0 1 1 2 0v5a1 1 0 0 1-2 0z" />
+          </svg>
+        </div>
+        <div class="my-1 flex" style="gap: 5px;">
+          <div class="box-code"><span class="font-bold">${d1}</span></div>
+          <div class="box-code"><span class="font-bold">${d2}</span></div>
+          <div class="box-code"><span class="font-bold">${d3}</span></div>
+        </div>
+      </div>
+
+      <div class="border-botton mt-2"></div>
+    `
+    : '';
+
   const templatePath = path.resolve(__dirname, '../resources/templates/yape.html');
   const html = fs.readFileSync(templatePath, 'utf-8');
 
@@ -114,13 +137,11 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
     .replace('{{NOMBRE}}', nombre)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)
-    .replace('{{D1}}', d1)
-    .replace('{{D2}}', d2)
-    .replace('{{D3}}', d3)
     .replace('{{DIGITOS}}', digitos)
     .replace('{{OPERACION}}', operacion)
     .replace('{{MENSAJE}}', mensajeHtml)
     .replace('{{DESTINO}}', destino)
+    .replace('{{CODIGO_SEGURIDAD}}', codigoHtml)
     .replace('{{CDN_LOGO}}', CDN_LOGO)
     .replace('{{CDN_BANNER}}', CDN_BANNER);
 }
