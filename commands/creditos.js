@@ -1,18 +1,30 @@
 const User = require('../models/users');
+const Admin = require('../models/admins');
 const CreditsLog = require('../models/credit_logs');
 const { TARIFARIO } = require('../utils/constants');
 const isAdmin = require('../middleware/isAdmin');
+const { formatDateTime } = require('../utils/functions');
+const { getUnlimitedStatus } = require('../utils/unlimited');
 
 const creditosProcessingUsers = new Set();
 const pendingCustomAmount = new Map();
+const pendingUnlimitedFlow = new Map();
+
+const UNLIMITED_OPTIONS = [
+  { label: '7 días', days: 7 },
+  { label: '15 días', days: 15 },
+  { label: '30 días', days: 30 },
+  { label: '60 días', days: 60 },
+];
 
 function getUserDisplayName(user) {
   return user.username ? `@${user.username}` : `ID ${user.telegramId}`;
 }
 
+// ─── MENSAJES ────────────────────────────────────────────────
+
 function buildUserCreditsAddedMessage(user, amount, previousCredits) {
   const displayName = getUserDisplayName(user);
-
   return `
 🎉 <b>¡Créditos añadidos!</b>
 
@@ -32,7 +44,6 @@ Ahora: <b>${user.credits}</b> créditos
 
 function buildUserCreditsDiscountedMessage(user, amount, previousCredits) {
   const displayName = getUserDisplayName(user);
-
   return `
 ⚠️ <b>Ajuste de créditos</b>
 
@@ -53,7 +64,6 @@ Si tienes alguna consulta, puedes contactarnos.
 function buildAdminCreditsMessage(user, amount, previousCredits) {
   const displayName = getUserDisplayName(user);
   const isAdd = amount > 0;
-
   return `
 ${isAdd ? '🎉 <b>¡Créditos actualizados!</b>' : '⚠️ <b>Ajuste de créditos</b>'}
 
@@ -68,35 +78,80 @@ Ahora: <b>${user.credits}</b> créditos
 `.trim();
 }
 
-function buildCreditsKeyboard(targetId) {
-  const activeItems = TARIFARIO.filter((item) => item.active);
+function buildCreditsMenuMessage(user) {
+  const displayName = getUserDisplayName(user);
+  const unlimitedStatus = getUnlimitedStatus(user);
+
+  let unlimitedLine = '';
+  if (unlimitedStatus.isUnlimited) {
+    unlimitedLine = `\n[♾️] <b>Ilimitado hasta:</b> ${formatDateTime(unlimitedStatus.expiresAt)}`;
+  }
+
+  return `
+💳 <b>Gestión de créditos</b>
+
+[⚡] <b>Usuario:</b> ${displayName}
+[🙎‍♂️] <b>Telegram ID:</b> ${user.telegramId}
+[💰] <b>Créditos actuales:</b> ${user.credits}${unlimitedLine}
+
+Selecciona una opción.
+`.trim();
+}
+
+function buildCreditsKeyboard(targetId, user) {
+  const unlimitedStatus = getUnlimitedStatus(user);
   const rows = [];
 
-  for (let i = 0; i < activeItems.length; i += 2) {
-    const row = activeItems.slice(i, i + 2).map((item) => ({
-      text: item.label || `${item.credits} créditos - S/ ${item.price}`,
-      callback_data: `creditos:add:${targetId}:${item.credits}`,
-    }));
+  if (unlimitedStatus.isUnlimited) {
+    // Si tiene ilimitado activo: solo opciones de ilimitado
+    rows.push([{ text: '➕ Agregar días', callback_data: `creditos:unlimited_menu:${targetId}` }]);
+    rows.push([{ text: '🚫 Anular suscripción', callback_data: `creditos:unlimited_revoke:${targetId}` }]);
+    rows.push([{ text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` }]);
+  } else {
+    // Sin ilimitado: mostrar tarifario
+    const activeItems = TARIFARIO.filter((item) => item.active);
+    for (let i = 0; i < activeItems.length; i += 2) {
+      const row = activeItems.slice(i, i + 2).map((item) => ({
+        text: item.label || `${item.credits} créditos - S/ ${item.price}`,
+        callback_data: `creditos:add:${targetId}:${item.credits}`,
+      }));
+      rows.push(row);
+    }
 
+    // Ilimitado solo si no tiene créditos
+    rows.push([{ text: '♾️ Ilimitado', callback_data: `creditos:unlimited_menu:${targetId}` }]);
+    rows.push([{ text: '✍️ Otro monto', callback_data: `creditos:custom:${targetId}` }]);
+    rows.push([{ text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` }]);
+  }
+
+  return { inline_keyboard: rows };
+}
+
+function buildUnlimitedDaysKeyboard(targetId) {
+  const rows = [];
+
+  for (let i = 0; i < UNLIMITED_OPTIONS.length; i += 2) {
+    const row = UNLIMITED_OPTIONS.slice(i, i + 2).map((opt) => ({
+      text: opt.label,
+      callback_data: `creditos:unlimited_days:${targetId}:${opt.days}`,
+    }));
     rows.push(row);
   }
 
-  rows.push([
-    {
-      text: '✍️ Otro monto',
-      callback_data: `creditos:custom:${targetId}`,
-    },
-  ]);
+  rows.push([{ text: '⬅️ Regresar', callback_data: `creditos:back_to_menu:${targetId}` }]);
+  rows.push([{ text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` }]);
 
-  rows.push([
-    {
-      text: '❌ Cancelar',
-      callback_data: `creditos:cancel:${targetId}`,
-    },
-  ]);
+  return { inline_keyboard: rows };
+}
 
+function buildUnlimitedConfirmKeyboard(targetId) {
   return {
-    inline_keyboard: rows,
+    inline_keyboard: [
+      [
+        { text: '✅ CONFIRMAR', callback_data: `creditos:unlimited_confirm:${targetId}` },
+        { text: '❌ CANCELAR', callback_data: `creditos:cancel:${targetId}` },
+      ],
+    ],
   };
 }
 
@@ -104,30 +159,95 @@ function buildCustomAmountKeyboard(targetId) {
   return {
     inline_keyboard: [
       [
-        {
-          text: '⬅️ Regresar',
-          callback_data: `creditos:back:${targetId}`,
-        },
-        {
-          text: '❌ Cancelar',
-          callback_data: `creditos:cancel:${targetId}`,
-        },
+        { text: '⬅️ Regresar', callback_data: `creditos:back:${targetId}` },
+        { text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` },
       ],
     ],
   };
 }
 
-function buildCreditsMenuMessage(user) {
-  const displayName = getUserDisplayName(user);
+function buildUnlimitedDaysMessage(targetUser) {
+  const displayName = getUserDisplayName(targetUser);
+  const unlimitedStatus = getUnlimitedStatus(targetUser);
+
+  const currentLine = unlimitedStatus.isUnlimited
+    ? `[♾️] <b>Vence actualmente:</b> ${formatDateTime(unlimitedStatus.expiresAt)}\n`
+    : '';
 
   return `
-💳 <b>Gestión de créditos</b>
+♾️ <b>Activar / Extender Ilimitado</b>
 
-[⚡] <b>Usuario:</b> ${displayName}
-[🙎‍♂️] <b>Telegram ID:</b> ${user.telegramId}
-[💰] <b>Créditos actuales:</b> ${user.credits}
+[🙎‍♂️] <b>Usuario:</b> ${displayName}
+[💳] <b>Telegram ID:</b> ${targetUser.telegramId}
+${currentLine}
+Selecciona el período a agregar:
+`.trim();
+}
 
-Selecciona una opción o usa <b>Otro monto</b> para otro valor.
+function buildAwaitingResellerMessage(targetUser, days) {
+  const displayName = getUserDisplayName(targetUser);
+  return `
+♾️ <b>Activar Ilimitado</b>
+
+[🙎‍♂️] <b>Usuario:</b> ${displayName}
+[📅] <b>Período:</b> ${days} días
+
+Escribe el <b>ID</b> del <b>RESELLER</b> a asignar:
+`.trim();
+}
+
+function buildUnlimitedConfirmMessage(targetUser, reseller, days, isExtension) {
+  const userDisplay = getUserDisplayName(targetUser);
+  const unlimitedStatus = getUnlimitedStatus(targetUser);
+
+  let expiresAt;
+  if (isExtension && unlimitedStatus.isUnlimited) {
+    expiresAt = new Date(unlimitedStatus.expiresAt);
+    expiresAt.setDate(expiresAt.getDate() + days);
+  } else {
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+  }
+
+  const accion = isExtension ? 'EXTENDER' : 'ACTIVAR';
+
+  return `
+♾️ <b>CONFIRMAR ${accion} ILIMITADO</b>
+
+•···························•····························•
+[🙎‍♂️] <b>Usuario:</b> ${userDisplay}
+[📅] <b>Días a agregar:</b> ${days}
+[📆] <b>Nueva fecha vencimiento:</b> ${formatDateTime(expiresAt)}
+[🏷] <b>Reseller:</b> ${reseller.username}
+[🆔] <b>Reseller ID:</b> <code>${reseller._id}</code>
+•···························•····························•
+
+¿Confirmas?
+`.trim();
+}
+
+function buildUnlimitedSuccessMessage(targetUser, reseller, days, isExtension) {
+  const userDisplay = getUserDisplayName(targetUser);
+  const unlimitedStatus = getUnlimitedStatus(targetUser);
+
+  let expiresAt;
+  if (isExtension && unlimitedStatus.isUnlimited) {
+    expiresAt = new Date(unlimitedStatus.expiresAt);
+    expiresAt.setDate(expiresAt.getDate() + days);
+  } else {
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+  }
+
+  return `
+✅ <b>ILIMITADO ${isExtension ? 'EXTENDIDO' : 'ACTIVADO'}</b>
+
+•···························•····························•
+[🙎‍♂️] <b>Usuario:</b> ${userDisplay}
+[📅] <b>Días agregados:</b> ${days}
+[📆] <b>Vence:</b> ${formatDateTime(expiresAt)}
+[🏷] <b>Reseller:</b> @${reseller.username}
+•···························•····························•
 `.trim();
 }
 
@@ -137,15 +257,14 @@ function buildCustomAmountMessage(targetId) {
 
 Escribe el monto para el usuario <b>${targetId}</b>.
 
-Ejemplos: <b>-50</b>
+Ejemplos: <code>50</code> para agregar, <code>-50</code> para descontar.
 `.trim();
 }
 
-async function safeDeleteMessage(bot, chatId, messageId) {
-  if (!chatId || !messageId) {
-    return;
-  }
+// ─── HELPERS ─────────────────────────────────────────────────
 
+async function safeDeleteMessage(bot, chatId, messageId) {
+  if (!chatId || !messageId) return;
   try {
     await bot.deleteMessage(chatId, messageId);
   } catch (error) {}
@@ -170,7 +289,6 @@ async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, rea
   }
 
   const previousCredits = user.credits;
-
   user.credits += amount;
   await user.save();
 
@@ -190,7 +308,6 @@ async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, rea
       amount > 0
         ? buildUserCreditsAddedMessage(user, amount, previousCredits)
         : buildUserCreditsDiscountedMessage(user, amount, previousCredits);
-
     await bot.sendMessage(targetId, userMessage, { parse_mode: 'HTML' });
   } catch (notifyError) {
     console.error('No se pudo notificar al usuario:', notifyError.message);
@@ -199,6 +316,8 @@ async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, rea
   const adminMessage = buildAdminCreditsMessage(user, amount, previousCredits);
   await bot.sendMessage(chatId, adminMessage, { parse_mode: 'HTML' });
 }
+
+// ─── COMANDO PRINCIPAL ────────────────────────────────────────
 
 function registerCreditosCommand(bot) {
   bot.onText(/\/creditos(?:\s+(.+))?/, async (msg, match) => {
@@ -211,10 +330,7 @@ function registerCreditosCommand(bot) {
 
     try {
       const admin = await isAdmin(senderId);
-
-      if (!admin) {
-        return bot.sendMessage(chatId, 'No autorizado');
-      }
+      if (!admin) return bot.sendMessage(chatId, 'No autorizado');
 
       const rawArgs = (match[1] || '').trim();
 
@@ -226,22 +342,19 @@ function registerCreditosCommand(bot) {
 
       if (args.length === 1) {
         const targetId = Number(args[0]);
-
         if (!Number.isInteger(targetId) || targetId <= 0) {
           return bot.sendMessage(chatId, 'El userId no es válido');
         }
 
         const user = await User.findOne({ telegramId: targetId });
-
-        if (!user) {
-          return bot.sendMessage(chatId, 'Usuario no encontrado');
-        }
+        if (!user) return bot.sendMessage(chatId, 'Usuario no encontrado');
 
         pendingCustomAmount.delete(senderId);
+        pendingUnlimitedFlow.delete(senderId);
 
         return bot.sendMessage(chatId, buildCreditsMenuMessage(user), {
           parse_mode: 'HTML',
-          reply_markup: buildCreditsKeyboard(targetId),
+          reply_markup: buildCreditsKeyboard(targetId, user),
         });
       }
 
@@ -255,9 +368,9 @@ function registerCreditosCommand(bot) {
 
         creditosProcessingUsers.add(senderId);
         pendingCustomAmount.delete(senderId);
+        pendingUnlimitedFlow.delete(senderId);
 
         await processCreditsUpdate(bot, chatId, senderId, targetId, amount, 'Ajuste manual de créditos', match[0]);
-
         creditosProcessingUsers.delete(senderId);
         return;
       }
@@ -266,10 +379,13 @@ function registerCreditosCommand(bot) {
     } catch (error) {
       creditosProcessingUsers.delete(senderId);
       pendingCustomAmount.delete(senderId);
+      pendingUnlimitedFlow.delete(senderId);
       console.error('Error en /creditos:', error.message);
       await bot.sendMessage(chatId, 'Error al actualizar créditos');
     }
   });
+
+  // ─── CALLBACKS ───────────────────────────────────────────────
 
   bot.on('callback_query', async (query) => {
     const senderId = query.from.id;
@@ -277,58 +393,270 @@ function registerCreditosCommand(bot) {
     const messageId = query.message?.message_id;
     const data = query.data || '';
 
-    if (!data.startsWith('creditos:')) {
-      return;
-    }
-
+    if (!data.startsWith('creditos:')) return;
     if (!chatId || !messageId) {
-      return bot.answerCallbackQuery(query.id, {
-        text: 'No se pudo procesar la solicitud',
-        show_alert: false,
-      });
+      return bot.answerCallbackQuery(query.id, { text: 'No se pudo procesar la solicitud' });
     }
 
     if (creditosProcessingUsers.has(senderId)) {
-      return bot.answerCallbackQuery(query.id, {
-        text: 'Ya tienes una solicitud en proceso',
-        show_alert: false,
-      });
+      return bot.answerCallbackQuery(query.id, { text: 'Ya tienes una solicitud en proceso' });
     }
 
     try {
       const admin = await isAdmin(senderId);
-
       if (!admin) {
-        return bot.answerCallbackQuery(query.id, {
-          text: 'No autorizado',
-          show_alert: false,
-        });
+        return bot.answerCallbackQuery(query.id, { text: 'No autorizado' });
       }
 
       creditosProcessingUsers.add(senderId);
 
-      const [, action, targetIdRaw, amountRaw] = data.split(':');
+      const parts = data.split(':');
+      const action = parts[1];
+      const targetIdRaw = parts[2];
+      const extra = parts[3];
       const targetId = Number(targetIdRaw);
 
       if (!Number.isInteger(targetId) || targetId <= 0) {
         creditosProcessingUsers.delete(senderId);
-        return bot.answerCallbackQuery(query.id, {
-          text: 'Usuario inválido',
-          show_alert: false,
-        });
+        return bot.answerCallbackQuery(query.id, { text: 'Usuario inválido' });
       }
 
-      if (action === 'add') {
-        const amount = Number(amountRaw);
+      // ── Menú de días ilimitado ────────────────────────────
+      if (action === 'unlimited_menu') {
+        const targetUser = await User.findOne({ telegramId: targetId });
 
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Procesando...',
-          show_alert: false,
+        if (!targetUser) {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+          return;
+        }
+
+        await bot.answerCallbackQuery(query.id, { text: 'Selecciona el período' });
+        await bot.editMessageText(buildUnlimitedDaysMessage(targetUser), {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'HTML',
+          reply_markup: buildUnlimitedDaysKeyboard(targetId),
         });
 
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Seleccionó días → pide reseller ID via reply ──────
+      if (action === 'unlimited_days') {
+        const days = Number(extra);
+
+        if (!days || days <= 0) {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Período inválido' });
+          return;
+        }
+
+        const targetUser = await User.findOne({ telegramId: targetId });
+
+        if (!targetUser) {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+          return;
+        }
+
+        const isExtension = getUnlimitedStatus(targetUser).isUnlimited;
+
+        await bot.answerCallbackQuery(query.id, { text: 'Ingresa el reseller ID' });
+
+        // Eliminar el mensaje anterior y enviar uno nuevo con force_reply
+        await safeDeleteMessage(bot, chatId, messageId);
+
+        const sentMessage = await bot.sendMessage(chatId, buildAwaitingResellerMessage(targetUser, days), {
+          parse_mode: 'HTML',
+          reply_markup: { force_reply: true, selective: true },
+        });
+
+        pendingUnlimitedFlow.set(senderId, {
+          step: 'awaiting_reseller_id',
+          targetId,
+          days,
+          isExtension,
+          chatId,
+          messageId: sentMessage.message_id,
+        });
+
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Anular suscripción: confirmación ──────────────────
+      if (action === 'unlimited_revoke') {
+        const targetUser = await User.findOne({ telegramId: targetId });
+
+        if (!targetUser) {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+          return;
+        }
+
+        await bot.answerCallbackQuery(query.id, { text: 'Confirma la anulación' });
+
+        await bot.editMessageText(
+          `🚫 <b>ANULAR SUSCRIPCIÓN ILIMITADA</b>\n\n[🙎‍♂️] <b>Usuario:</b> ${getUserDisplayName(targetUser)}\n[💳] <b>Telegram ID:</b> ${targetUser.telegramId}\n\n¿Confirmas que deseas anular el período ilimitado?`,
+          {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '✅ Sí, anular', callback_data: `creditos:unlimited_revoke_confirm:${targetId}` },
+                  { text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` },
+                ],
+              ],
+            },
+          },
+        );
+
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Anular suscripción: ejecutar ──────────────────────
+      if (action === 'unlimited_revoke_confirm') {
+        const targetUser = await User.findOne({ telegramId: targetId });
+
+        if (!targetUser) {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+          return;
+        }
+
+        targetUser.unlimited = {
+          active: false,
+          expiresAt: null,
+          resellerId: null,
+        };
+
+        await targetUser.save();
+
+        await bot.answerCallbackQuery(query.id, { text: 'Suscripción anulada' });
+
+        await bot.editMessageText(
+          `✅ <b>SUSCRIPCIÓN ANULADA</b>\n\n[🙎‍♂️] <b>Usuario:</b> ${getUserDisplayName(targetUser)}\n[💳] <b>Telegram ID:</b> ${targetUser.telegramId}\n\nEl período ilimitado fue eliminado correctamente.`,
+          {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: [] },
+          },
+        );
+
+        try {
+          await bot.sendMessage(
+            targetUser.telegramId,
+            `⚠️ <b>Tu suscripción ilimitada ha sido cancelada.</b>\n\nA partir de ahora tus activaciones consumirán créditos.\nSi esto fue un error, comunicate inmediatamente con @dev_lguss`,
+            { parse_mode: 'HTML' },
+          );
+        } catch (e) {}
+
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Confirmar ilimitado ───────────────────────────────
+      if (action === 'unlimited_confirm') {
+        const flow = pendingUnlimitedFlow.get(senderId);
+
+        if (!flow || flow.step !== 'awaiting_confirm') {
+          creditosProcessingUsers.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Sesión expirada, vuelve a intentarlo' });
+          return;
+        }
+
+        const targetUser = await User.findOne({ telegramId: flow.targetId });
+        const reseller = await Admin.findById(flow.resellerId);
+
+        if (!targetUser || !reseller) {
+          creditosProcessingUsers.delete(senderId);
+          pendingUnlimitedFlow.delete(senderId);
+          await bot.answerCallbackQuery(query.id, { text: 'Error al obtener datos' });
+          return;
+        }
+
+        await bot.answerCallbackQuery(query.id, { text: 'Activando...' });
+
+        const unlimitedStatus = getUnlimitedStatus(targetUser);
+        let expiresAt;
+
+        if (flow.isExtension && unlimitedStatus.isUnlimited) {
+          expiresAt = new Date(unlimitedStatus.expiresAt);
+          expiresAt.setDate(expiresAt.getDate() + flow.days);
+        } else {
+          expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + flow.days);
+        }
+
+        targetUser.unlimited = {
+          active: true,
+          expiresAt,
+          resellerId: String(reseller._id),
+        };
+
+        await targetUser.save();
+
+        pendingUnlimitedFlow.delete(senderId);
+
+        await bot.editMessageText(buildUnlimitedSuccessMessage(targetUser, reseller, flow.days, flow.isExtension), {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'HTML',
+          reply_markup: { inline_keyboard: [] },
+        });
+
+        try {
+          await bot.sendMessage(
+            targetUser.telegramId,
+            `♾️ <b>¡Tu cuenta tiene acceso ilimitado!</b>\n\nPuedes activar sin límite de créditos durante <b>${flow.days} días</b> adicionales.\n📆 Vence: ${formatDateTime(expiresAt)}`,
+            { parse_mode: 'HTML' },
+          );
+        } catch (e) {}
+
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Regresar al menú principal ────────────────────────
+      if (action === 'back_to_menu') {
+        const targetUser = await User.findOne({ telegramId: targetId });
+
+        pendingUnlimitedFlow.delete(senderId);
+        pendingCustomAmount.delete(senderId);
+
+        await bot.answerCallbackQuery(query.id, { text: 'Regresando...' });
+
+        if (targetUser) {
+          await bot.editMessageText(buildCreditsMenuMessage(targetUser), {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'HTML',
+            reply_markup: buildCreditsKeyboard(targetId, targetUser),
+          });
+        } else {
+          await safeDeleteMessage(bot, chatId, messageId);
+          await bot.sendMessage(chatId, 'Usuario no encontrado');
+        }
+
+        creditosProcessingUsers.delete(senderId);
+        return;
+      }
+
+      // ── Agregar créditos por tarifario ────────────────────
+      if (action === 'add') {
+        const amount = Number(extra);
+
+        await bot.answerCallbackQuery(query.id, { text: 'Procesando...' });
         await safeDeleteMessage(bot, chatId, messageId);
 
         pendingCustomAmount.delete(senderId);
+        pendingUnlimitedFlow.delete(senderId);
 
         await processCreditsUpdate(
           bot,
@@ -344,17 +672,17 @@ function registerCreditosCommand(bot) {
         return;
       }
 
+      // ── Monto custom ──────────────────────────────────────
       if (action === 'custom') {
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Ingresa el monto manual',
-          show_alert: false,
-        });
-
+        await bot.answerCallbackQuery(query.id, { text: 'Ingresa el monto manual' });
         await safeDeleteMessage(bot, chatId, messageId);
 
         const sentMessage = await bot.sendMessage(chatId, buildCustomAmountMessage(targetId), {
           parse_mode: 'HTML',
-          reply_markup: buildCustomAmountKeyboard(targetId),
+          reply_markup: {
+            force_reply: true,
+            selective: true,
+          },
         });
 
         pendingCustomAmount.set(senderId, {
@@ -367,22 +695,19 @@ function registerCreditosCommand(bot) {
         return;
       }
 
+      // ── Regresar al menú desde custom ─────────────────────
       if (action === 'back') {
         const user = await User.findOne({ telegramId: targetId });
 
         pendingCustomAmount.delete(senderId);
 
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Regresando...',
-          show_alert: false,
-        });
-
+        await bot.answerCallbackQuery(query.id, { text: 'Regresando...' });
         await safeDeleteMessage(bot, chatId, messageId);
 
         if (user) {
           await bot.sendMessage(chatId, buildCreditsMenuMessage(user), {
             parse_mode: 'HTML',
-            reply_markup: buildCreditsKeyboard(targetId),
+            reply_markup: buildCreditsKeyboard(targetId, user),
           });
         } else {
           await bot.sendMessage(chatId, 'Usuario no encontrado');
@@ -392,14 +717,12 @@ function registerCreditosCommand(bot) {
         return;
       }
 
+      // ── Cancelar ──────────────────────────────────────────
       if (action === 'cancel') {
         pendingCustomAmount.delete(senderId);
+        pendingUnlimitedFlow.delete(senderId);
 
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Cancelado',
-          show_alert: false,
-        });
-
+        await bot.answerCallbackQuery(query.id, { text: 'Cancelado' });
         await safeDeleteMessage(bot, chatId, messageId);
 
         creditosProcessingUsers.delete(senderId);
@@ -407,44 +730,109 @@ function registerCreditosCommand(bot) {
       }
 
       creditosProcessingUsers.delete(senderId);
-
-      return bot.answerCallbackQuery(query.id, {
-        text: 'Acción no válida',
-        show_alert: false,
-      });
+      return bot.answerCallbackQuery(query.id, { text: 'Acción no válida' });
     } catch (error) {
       creditosProcessingUsers.delete(senderId);
       pendingCustomAmount.delete(senderId);
+      pendingUnlimitedFlow.delete(senderId);
       console.error('Error en callback de /creditos:', error.message);
-      await bot.answerCallbackQuery(query.id, {
-        text: 'Error al procesar',
-        show_alert: false,
-      });
+      await bot.answerCallbackQuery(query.id, { text: 'Error al procesar' });
     }
   });
+
+  // ─── LISTENER DE MENSAJES (reply + custom amount) ────────────
 
   bot.on('message', async (msg) => {
     const senderId = msg.from?.id;
     const chatId = msg.chat?.id;
     const text = msg.text?.trim();
 
-    if (!senderId || !chatId || !text) {
+    if (!senderId || !chatId || !text || text.startsWith('/')) return;
+
+    // ── Flujo ilimitado: esperando reseller ID via reply ──
+    const flow = pendingUnlimitedFlow.get(senderId);
+
+    if (flow && flow.step === 'awaiting_reseller_id' && flow.chatId === chatId) {
+      if (creditosProcessingUsers.has(senderId)) return;
+
+      try {
+        const admin = await isAdmin(senderId);
+        if (!admin) {
+          pendingUnlimitedFlow.delete(senderId);
+          return bot.sendMessage(chatId, 'No autorizado');
+        }
+
+        // Eliminar el mensaje del admin y el prompt
+        await safeDeleteMessage(bot, chatId, flow.messageId);
+
+        // Mostrar loading
+        const loadingMsg = await bot.sendMessage(chatId, '⏳ Validando reseller...', {
+          reply_to_message_id: msg.message_id,
+        });
+
+        let reseller;
+        try {
+          reseller = await Admin.findById(text.trim());
+        } catch (e) {
+          reseller = null;
+        }
+        if (!reseller) {
+          await bot.editMessageText(
+            `❌ No se encontró ningún reseller con el ID <code>${text}</code>.\n\nEscribe el ID correcto:`,
+            {
+              chat_id: chatId,
+              message_id: loadingMsg.message_id,
+              parse_mode: 'HTML',
+              reply_markup: { force_reply: true, selective: true },
+            },
+          );
+
+          pendingUnlimitedFlow.set(senderId, {
+            ...flow,
+            messageId: loadingMsg.message_id,
+          });
+
+          return;
+        }
+        // Reseller encontrado → editar el loading con la confirmación
+        const targetUser = await User.findOne({ telegramId: flow.targetId });
+
+        if (!targetUser) {
+          pendingUnlimitedFlow.delete(senderId);
+          await bot.editMessageText('❌ Usuario no encontrado', {
+            chat_id: chatId,
+            message_id: loadingMsg.message_id,
+            parse_mode: 'HTML',
+          });
+          return;
+        }
+
+        pendingUnlimitedFlow.set(senderId, {
+          ...flow,
+          step: 'awaiting_confirm',
+          resellerId: String(reseller._id),
+          messageId: loadingMsg.message_id,
+        });
+
+        await bot.editMessageText(buildUnlimitedConfirmMessage(targetUser, reseller, flow.days, flow.isExtension), {
+          chat_id: chatId,
+          message_id: loadingMsg.message_id,
+          parse_mode: 'HTML',
+          reply_markup: buildUnlimitedConfirmKeyboard(flow.targetId),
+        });
+      } catch (error) {
+        pendingUnlimitedFlow.delete(senderId);
+        console.error('Error validando reseller:', error.message);
+        await bot.sendMessage(chatId, 'Error al validar el reseller');
+      }
+
       return;
     }
 
-    if (text.startsWith('/')) {
-      return;
-    }
-
+    // ── Flujo normal: monto custom via reply ──────────────
     const pending = pendingCustomAmount.get(senderId);
 
-    if (!pending) {
-      return;
-    }
-
-    if (pending.chatId !== chatId) {
-      return;
-    }
+    if (!pending || pending.chatId !== chatId) return;
 
     if (creditosProcessingUsers.has(senderId)) {
       return bot.sendMessage(chatId, 'Ya tienes una solicitud de créditos en proceso. Espera un momento.');
@@ -452,15 +840,17 @@ function registerCreditosCommand(bot) {
 
     try {
       const admin = await isAdmin(senderId);
-
       if (!admin) {
         pendingCustomAmount.delete(senderId);
         return bot.sendMessage(chatId, 'No autorizado');
       }
 
+      // Eliminar el mensaje del admin y el prompt
+      await safeDeleteMessage(bot, chatId, msg.message_id);
+      await safeDeleteMessage(bot, chatId, pending.messageId);
+
       if (/^cancelar$/i.test(text)) {
         pendingCustomAmount.delete(senderId);
-        await safeDeleteMessage(bot, chatId, pending.messageId);
         return;
       }
 
@@ -468,15 +858,12 @@ function registerCreditosCommand(bot) {
 
       if (!Number.isInteger(amount) || amount === 0) {
         pendingCustomAmount.delete(senderId);
-        await safeDeleteMessage(bot, chatId, pending.messageId);
-        await bot.sendMessage(chatId, 'Debes ingresar un número entero, por lo tanto la operación fue cancelada.');
+        await bot.sendMessage(chatId, 'Debes ingresar un número entero, la operación fue cancelada.');
         return;
       }
 
       creditosProcessingUsers.add(senderId);
       pendingCustomAmount.delete(senderId);
-
-      await safeDeleteMessage(bot, chatId, pending.messageId);
 
       await processCreditsUpdate(
         bot,

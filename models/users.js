@@ -15,6 +15,11 @@ const UserSchema = new mongoose.Schema(
       bbva:  { type: Number, default: 0 },
       total: { type: Number, default: 0 },
     },
+    unlimited: {
+      active:     { type: Boolean, default: false },
+      expiresAt:  { type: Date, default: null },
+      resellerId: { type: String, default: null },
+    },
   },
   { versionKey: false, collection: 'users' },
 );

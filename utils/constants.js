@@ -17,7 +17,7 @@ const RESELLERS = [
 ];
 
 const TARIFARIO = [
-  { credits: 50, price: 50, active: true },
+  { credits: 40, price: 40, active: true },
   { credits: 100, price: 95, active: true },
   { credits: 200, price: 180, active: true },
   { credits: 500, price: 400, active: true, label: null },

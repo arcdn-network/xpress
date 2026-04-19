@@ -52,7 +52,7 @@ async function takeScreenshot(html) {
 
 function isDentroDeHorario() {
   const hora = new Date().getHours();
-  return hora >= 6 && hora < 22;
+  return hora >= 8 && hora < 22;
 }
 
 function isEnCooldown(userId) {

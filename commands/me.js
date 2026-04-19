@@ -1,8 +1,9 @@
 const User = require('../models/users');
 const { APP_NAME, LOCAL } = require('../utils/constants');
 const { sendMessage } = require('../utils/sender');
-const { formatDate } = require('../utils/functions');
-const { getFiles } = require('../utils/files');
+const { formatDate, formatDateTime } = require('../utils/functions');
+const { getFiles, saveFileTelegram } = require('../utils/files');
+const { getUnlimitedStatus } = require('../utils/unlimited');
 
 function registerMeCommand(bot) {
   bot.onText(/\/me/, async (msg) => {
@@ -40,19 +41,30 @@ function registerMeCommand(bot) {
 }
 
 function buildProfileTemplate(user, msg) {
+  const unlimitedStatus = getUnlimitedStatus(user);
+
+  const creditosLine = unlimitedStatus.isUnlimited
+    ? `[♾️] ILIMITADO ➤ ${formatDateTime(unlimitedStatus.expiresAt)}`
+    : `[💰] CREDITOS ➤ ${user.credits}`;
+
+  const estadoLine = `[👾] ESTADO ➤ ${user.status === 'activo' ? 'ACTIVO' : 'NO ACTIVO'}`;
+  const registradoLine = `[📅] REGISTRADO ➤ ${formatDate(user.registeredAt)}`;
+
+  const bottomLines = unlimitedStatus.isUnlimited
+    ? `${estadoLine}\n${registradoLine}\n${creditosLine}`
+    : `${registradoLine}\n${estadoLine}\n${creditosLine}`;
+
   return `
 <b>[#${APP_NAME}]</b> <b>PERFIL DE USUARIO</b>
-•···························•····························•
+- ···························•····························•
 ➤ <b>INFORMACIÓN DE USUARIO</b>
 
 [🙎‍♂️] ID ➤ <code>${user.telegramId}</code>
 [🗒] NOMBRE ➤ ${msg.from.first_name || 'No disponible'}
 [⚡] USERNAME ➤ ${user.username ? '@' + user.username : 'Sin username'}
 
-[📅] REGISTRADO ➤ ${formatDate(user.registeredAt)}
-[👾] ESTADO ➤ ${user.status === 'activo' ? 'ACTIVO' : 'NO ACTIVO'}
-[💰] CREDITOS ➤ ${user.credits}
-•···························•····························•
+${bottomLines}
+- ···························•····························•
 `.trim();
 }
 

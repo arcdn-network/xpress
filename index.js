@@ -30,11 +30,10 @@ async function startApp() {
   const bot = new TelegramBot(token, { polling: true });
 
   await bot.setMyCommands([
-    { command: 'start', description: 'Iniciar el bot' },
-    { command: 'register', description: 'Registrarte en el sistema' },
-    { command: 'cmds', description: 'Ver comandos disponibles' },
     { command: 'me', description: 'Ver tu perfil' },
+    { command: 'cmds', description: 'Ver comandos disponibles' },
     { command: 'buy', description: 'Ver precios y compras' },
+    { command: 'activate', description: 'Activar licencias' },
     { command: 'historial', description: 'Ver historial de activaciones' },
     { command: 'tutorial', description: 'Ver tutorial de activaciones' },
     { command: 'yape', description: 'Generar Voucher' },

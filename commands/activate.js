@@ -4,11 +4,13 @@ const { findClientByEmail, updateClientById } = require('../sevices/clients');
 const { sendMessage } = require('../utils/sender');
 const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
+const { getUnlimitedStatus } = require('../utils/unlimited');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ACTIVATION_TTL_MS = 2 * 60 * 1000;
+const DEFAULT_RESELLER_ID = '698bcab283fedfc8230cbc65';
 
 const pendingActivations = new Map();
 const processingActivations = new Set();
@@ -108,7 +110,7 @@ function getActivationCost(licenses) {
   return cost;
 }
 
-function buildClientUpdateData(pendingLicenses, currentClient) {
+function buildClientUpdateData(pendingLicenses, currentClient, resellerId) {
   const updateData = {};
 
   if (pendingLicenses.includes('YAPE')) {
@@ -128,7 +130,7 @@ function buildClientUpdateData(pendingLicenses, currentClient) {
   }
 
   if (!currentClient?.reseller) {
-    updateData.reseller = '698bcab283fedfc8230cbc65';
+    updateData.reseller = resellerId ?? DEFAULT_RESELLER_ID;
   }
 
   updateData.currentToken = null;
@@ -240,22 +242,25 @@ function getMinimumActivationCost(client) {
   return 0;
 }
 
-function buildActivationSuccessMessage(client, user, activatedLicenses, cost, resellerName) {
+function buildActivationSuccessMessage(client, user, activatedLicenses, cost, resellerName, unlimitedStatus) {
+  const detalle = unlimitedStatus?.isUnlimited
+    ? `• Costo ➣ 0 créditos`
+    : `• Costo ➣ ${cost} créditos\n• Créditos restantes ➣ ${user.credits}`;
+
   return `<b>[#${APP_NAME}]</b> ➣ ACTIVACIÓN COMPLETADA
 
 <b>[📧] CLIENTE</b>
-• Correo ➣ <code>${client.email}</code>
-• Solicitado por ➣ ${resellerName}
+- Correo ➣ <code>${client.email}</code>
+- Solicitado por ➣ ${resellerName}
 
 <b>[🔐] LICENCIAS ACTIVADAS</b>
-• Licencias ➣ ${activatedLicenses.join(', ')}
+- Licencias ➣ ${activatedLicenses.join(', ')}
 
 <b>[💳] DETALLE</b>
-• Costo ➣ ${cost} créditos
-• Créditos restantes ➣ ${user.credits}
+${detalle}
 
 <b>[✅] RESULTADO</b>
-• La activación se completó correctamente.`;
+- La activación se completó correctamente.`;
 }
 
 function buildAlreadyActivatedMessage(client, resellerName, requestedLicenses) {
@@ -302,7 +307,7 @@ function buildInsufficientCreditsMessage(user, cost) {
 • Para recargar créditos usa /buy`;
 }
 
-function buildConfirmActivationMessage(client, pendingLicenses, cost) {
+function buildConfirmActivationMessage(client, pendingLicenses, cost, unlimitedStatus) {
   return `<b>[#${APP_NAME}]</b> ➣ CONFIRMAR ACTIVACIÓN
 
 <b>[📧] CLIENTE</b>
@@ -312,7 +317,7 @@ function buildConfirmActivationMessage(client, pendingLicenses, cost) {
 • Productos ➣ ${pendingLicenses.join(' + ')}
 
 <b>[💰] COSTO</b>
-• Créditos ➣ ${cost}`;
+• Créditos ➣ ${unlimitedStatus?.isUnlimited ? '0 créditos' : cost}`;
 }
 
 function buildCanceledActivationMessage() {
@@ -327,7 +332,8 @@ function buildActivationSelectorMessage(client, user, selectedBanks = []) {
   const requestedLicenses = getRequestedLicensesFromSelection(selectedBanks);
   const pendingLicenses = getPendingLicenses(client, requestedLicenses);
   const cost = getActivationCost(pendingLicenses);
-  const insufficientCredits = cost > user.credits;
+  const unlimitedStatus = getUnlimitedStatus(user);
+  const insufficientCredits = !unlimitedStatus.isUnlimited && cost > user.credits;
 
   return `<b>[#${APP_NAME}]</b> ➣ ACTIVAR LICENCIAS
 
@@ -335,7 +341,7 @@ function buildActivationSelectorMessage(client, user, selectedBanks = []) {
 • Correo ➣ <code>${client.email}</code>
 
 <b>[🙎‍♂️] TU ESTADO</b>
-• Saldo ➣ ${user.credits} créditos
+• Saldo ➣ ${unlimitedStatus.isUnlimited ? '♾️ ILIMITADO' : `${user.credits} créditos`}
 
 <b>[🔐] LICENCIAS DISPONIBLES</b>
 ${status.YAPE ? '🔒 <b>YAPE</b> ya activo' : '✅ <b>YAPE</b>'}
@@ -344,7 +350,7 @@ ${status.IBK ? '🔒 <b>INTERBANK</b> ya activo' : `${selectedBanks.includes('IB
 ${status.BBVA ? '🔒 <b>BBVA</b> ya activo' : `${selectedBanks.includes('BBVA') ? '✅' : '⬜'} <b>BBVA</b>`}
 
 <b>[${insufficientCredits ? '⚠️' : '💰'}] COSTO</b>
-• Total ➣ ${insufficientCredits ? 'No tienes créditos suficientes.' : `${cost} créditos`}`;
+• Total ➣ ${unlimitedStatus.isUnlimited ? '0 créditos' : insufficientCredits ? 'No tienes créditos suficientes.' : `${cost} créditos`}`;
 }
 
 function buildActivationSelectorKeyboard(telegramId, client, user, selectedBanks = []) {
@@ -543,7 +549,8 @@ async function openActivationConfirmation(
     return;
   }
 
-  if (user.credits < cost) {
+  const unlimitedStatus = getUnlimitedStatus(user);
+  if (!unlimitedStatus.isUnlimited && user.credits < cost) {
     await safeDeleteMessage(bot, chatId, messageId);
     await sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, cost));
     return;
@@ -552,7 +559,7 @@ async function openActivationConfirmation(
   await replacePendingActivation(bot, telegramId);
 
   const confirmId = `${telegramId}_${Date.now()}`;
-  const confirmText = buildConfirmActivationMessage(freshClient, pendingLicenses, cost);
+  const confirmText = buildConfirmActivationMessage(freshClient, pendingLicenses, cost, unlimitedStatus);
 
   await safeEditCaption(bot, chatId, messageId, confirmText, buildActivationConfirmKeyboard(confirmId));
 
@@ -721,14 +728,9 @@ function registerActivateCallback(bot) {
 
         if (!user) {
           clearActivationState(confirmId);
-
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Usuario no encontrado',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
           await safeDeleteMessage(bot, chatId, messageId);
           await bot.sendMessage(chatId, '❌ No fue posible completar la activación.');
-
           return;
         }
 
@@ -736,27 +738,17 @@ function registerActivateCallback(bot) {
 
         if (!client || String(client._id) !== String(clientId)) {
           clearActivationState(confirmId);
-
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Cliente no disponible',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Cliente no disponible' });
           await safeDeleteMessage(bot, chatId, messageId);
           await bot.sendMessage(chatId, '❌ El cliente ya no se encuentra disponible.');
-
           return;
         }
 
         if (client.banned) {
           clearActivationState(confirmId);
-
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Cliente baneado',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Cliente baneado' });
           await safeDeleteMessage(bot, chatId, messageId);
           await bot.sendMessage(chatId, '❌ No es posible activar esta cuenta porque el cliente se encuentra baneado.');
-
           return;
         }
 
@@ -765,39 +757,33 @@ function registerActivateCallback(bot) {
 
         if (pendingLicenses.length === 0) {
           clearActivationState(confirmId);
-
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Ya estaba activado',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Ya estaba activado' });
           await safeDeleteMessage(bot, chatId, messageId);
           await bot.sendMessage(
             chatId,
             buildAlreadyActivatedMessage(client, getUserDisplayName(user), requestedLicenses),
-            {
-              parse_mode: 'HTML',
-            },
+            { parse_mode: 'HTML' },
           );
-
           return;
         }
 
-        if (user.credits < cost) {
+        const unlimitedStatus = getUnlimitedStatus(user);
+
+        if (!unlimitedStatus.isUnlimited && user.credits < cost) {
           clearActivationState(confirmId);
-
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Créditos insuficientes',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Créditos insuficientes' });
           await safeDeleteMessage(bot, chatId, messageId);
           await sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, cost));
-
           return;
         }
 
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Procesando activación...',
-        });
+        const resellerId = unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID;
+
+        if (!unlimitedStatus.isUnlimited) {
+          user.credits -= cost;
+        }
+
+        await bot.answerCallbackQuery(query.id, { text: 'Procesando activación...' });
 
         await safeEditCaption(bot, chatId, messageId, `<b>[#${APP_NAME}]</b> ➣ PROCESANDO ACTIVACIÓN`, {
           inline_keyboard: [],
@@ -805,9 +791,8 @@ function registerActivateCallback(bot) {
 
         await delay(2000);
 
-        const updateData = buildClientUpdateData(pendingLicenses);
+        const updateData = buildClientUpdateData(pendingLicenses, client, resellerId);
 
-        user.credits -= cost;
         updateUserActivationStats(user, pendingLicenses);
         await user.save();
 
@@ -833,7 +818,7 @@ function registerActivateCallback(bot) {
           bot,
           chatId,
           messageId,
-          buildActivationSuccessMessage(client, user, pendingLicenses, cost, resellerName),
+          buildActivationSuccessMessage(client, user, pendingLicenses, cost, resellerName, unlimitedStatus),
           { inline_keyboard: [] },
         );
 
@@ -874,10 +859,7 @@ function registerActivateCallback(bot) {
         processingActivationFlows.add(telegramId);
 
         if (action === 'cancel') {
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Cancelado',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Cancelado' });
           await safeDeleteMessage(bot, chatId, messageId);
           clearActivationFlow(telegramId);
           return;
@@ -886,9 +868,7 @@ function registerActivateCallback(bot) {
         if (action === 'toggle') {
           if (!getAvailableBanks(flow.client).includes(value)) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, {
-              text: 'Esa licencia ya está activa',
-            });
+            await bot.answerCallbackQuery(query.id, { text: 'Esa licencia ya está activa' });
             return;
           }
 
@@ -906,15 +886,9 @@ function registerActivateCallback(bot) {
             }
           }
 
-          const nextFlow = {
-            ...flow,
-            selectedBanks: uniqueBanks,
-          };
+          const nextFlow = { ...flow, selectedBanks: uniqueBanks };
 
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Actualizado',
-          });
-
+          await bot.answerCallbackQuery(query.id, { text: 'Actualizado' });
           await openActivationSelector(bot, nextFlow);
           processingActivationFlows.delete(telegramId);
           return;
@@ -925,9 +899,7 @@ function registerActivateCallback(bot) {
 
           if (!freshUser) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, {
-              text: 'Usuario no encontrado',
-            });
+            await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
             return;
           }
 
@@ -937,13 +909,13 @@ function registerActivateCallback(bot) {
 
           if (pendingLicenses.length === 0) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, {
-              text: 'No hay licencias pendientes para activar',
-            });
+            await bot.answerCallbackQuery(query.id, { text: 'No hay licencias pendientes para activar' });
             return;
           }
 
-          if (cost > freshUser.credits) {
+          const unlimitedStatus = getUnlimitedStatus(freshUser);
+
+          if (!unlimitedStatus.isUnlimited && cost > freshUser.credits) {
             processingActivationFlows.delete(telegramId);
             await bot.answerCallbackQuery(query.id, {
               text: 'No tienes créditos suficientes',
@@ -958,19 +930,13 @@ function registerActivateCallback(bot) {
               buildActivationSelectorKeyboard(telegramId, flow.client, freshUser, flow.selectedBanks),
             );
 
-            pendingActivationFlows.set(telegramId, {
-              ...flow,
-              user: freshUser,
-            });
-
+            pendingActivationFlows.set(telegramId, { ...flow, user: freshUser });
             return;
           }
 
           const rawValue = licensesToRawValue(flow.client.email, requestedLicenses);
 
-          await bot.answerCallbackQuery(query.id, {
-            text: 'Continuando...',
-          });
+          await bot.answerCallbackQuery(query.id, { text: 'Continuando...' });
 
           clearActivationFlow(telegramId);
 
@@ -990,10 +956,7 @@ function registerActivateCallback(bot) {
         }
 
         processingActivationFlows.delete(telegramId);
-
-        await bot.answerCallbackQuery(query.id, {
-          text: 'Acción no válida',
-        });
+        await bot.answerCallbackQuery(query.id, { text: 'Acción no válida' });
       }
     } catch (error) {
       if (confirmId) {
@@ -1056,9 +1019,10 @@ function registerActivateCommand(bot) {
         });
       }
 
+      const unlimitedStatus = getUnlimitedStatus(user);
       const minimumCost = getMinimumActivationCost(client);
 
-      if (minimumCost > 0 && user.credits < minimumCost) {
+      if (!unlimitedStatus.isUnlimited && minimumCost > 0 && user.credits < minimumCost) {
         return sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, minimumCost));
       }
 
