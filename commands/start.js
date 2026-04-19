@@ -1,8 +1,8 @@
-const User = require('../models/users');
 const { sendMessage } = require('../utils/sender');
 const { formatDate } = require('../utils/functions');
 const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
+const { getUser, createUser } = require('../utils/api');
 
 function buildStartMessage(firstName) {
   return `
@@ -78,7 +78,7 @@ function registerStartCommand(bot) {
       const telegramId = msg.from.id;
       const username = msg.from.username || '';
 
-      let user = await User.findOne({ telegramId });
+      let user = await getUser(telegramId);
 
       if (user) {
         if (user.username !== username) {
@@ -95,14 +95,16 @@ function registerStartCommand(bot) {
         return;
       }
 
-      user = await User.create({
+      const body = {
         telegramId,
         username,
         registeredAt: new Date(),
         credits: 0,
         status: 'activo',
         role: 'user',
-      });
+      };
+
+      user = await createUser(body);
 
       const response = buildRegisterSuccessMessage(firstName, user);
       await sendWelcomeMessage(bot, chatId, response, buildButtonsCredits());

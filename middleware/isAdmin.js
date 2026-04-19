@@ -1,7 +1,7 @@
-const User = require('../models/users');
+const { getUser } = require('../utils/api');
 
 async function isAdmin(telegramId) {
-  const user = await User.findOne({ telegramId });
+  const user = await getUser(telegramId);
 
   if (!user) return false;
 

@@ -1,9 +1,9 @@
-const User = require('../models/users');
 const { APP_NAME, LOCAL } = require('../utils/constants');
 const { findClientByEmail } = require('../sevices/clients');
 const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
+const { getUser } = require('../utils/api');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -85,7 +85,7 @@ function registerInfoCommand(bot) {
     const telegramId = msg.from.id;
 
     try {
-      const user = await User.findOne({ telegramId });
+      const user = await getUser(telegramId);
 
       if (!user) {
         return bot.sendMessage(chatId, 'No estás registrado. Usa /register');

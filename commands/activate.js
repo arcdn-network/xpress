@@ -1,6 +1,4 @@
-const User = require('../models/users');
-const ActivationLog = require('../models/activation_logs');
-const { findClientByEmail, updateClientById } = require('../sevices/clients');
+const { getUser, updateUser, getYapeClient, updateYapeClient, createActivacionLog } = require('../utils/api');
 const { sendMessage } = require('../utils/sender');
 const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
@@ -166,6 +164,8 @@ function updateUserActivationStats(user, activatedLicenses) {
   }
 
   user.activationStats.total += activatedLicenses.length;
+
+  return user.activationStats;
 }
 
 function getClientStatus(client) {
@@ -267,64 +267,64 @@ function buildAlreadyActivatedMessage(client, resellerName, requestedLicenses) {
   return `<b>[#${APP_NAME}]</b> ➣ SIN CAMBIOS
 
 <b>[📧] CLIENTE</b>
-• Correo ➣ <code>${client.email}</code>
-• Solicitado por ➣ ${resellerName}
+- Correo ➣ <code>${client.email}</code>
+- Solicitado por ➣ ${resellerName}
 
 <b>[🔐] LICENCIAS SOLICITADAS</b>
-• Licencias ➣ ${requestedLicenses.join(', ')}
+- Licencias ➣ ${requestedLicenses.join(', ')}
 
 <b>[📌] INFORMACIÓN</b>
-• Todas las licencias solicitadas ya se encontraban activas.
-• No se descontaron créditos.`;
+- Todas las licencias solicitadas ya se encontraban activas.
+- No se descontaron créditos.`;
 }
 
 function buildFullyActivatedMessage(client, resellerName) {
   return `<b>[#${APP_NAME}]</b> ➣ CUENTA YA ACTIVADA
 
 <b>[📧] CLIENTE</b>
-• Correo ➣ <code>${client.email}</code>
-• Solicitado por ➣ ${resellerName}
+- Correo ➣ <code>${client.email}</code>
+- Solicitado por ➣ ${resellerName}
 
 <b>[🔐] LICENCIAS DISPONIBLES</b>
-• Estado ➣ YAPE, BCP, IBK y BBVA ya están activas
+- Estado ➣ YAPE, BCP, IBK y BBVA ya están activas
 
 <b>[📌] INFORMACIÓN</b>
-• Esta cuenta ya tiene activadas todas las licencias disponibles.
-• No hay productos pendientes por activar.`;
+- Esta cuenta ya tiene activadas todas las licencias disponibles.
+- No hay productos pendientes por activar.`;
 }
 
 function buildInsufficientCreditsMessage(user, cost) {
   return `<b>[#${APP_NAME}]</b> ➣ CRÉDITOS INSUFICIENTES
 
 <b>[⚠️] REQUISITO</b>
-• Créditos necesarios ➣ ${cost}
+- Créditos necesarios ➣ ${cost}
 
 <b>[🙎‍♂️] TU ESTADO</b>
-• Créditos actuales ➣ ${user.credits}
+- Créditos actuales ➣ ${user.credits}
 
 <b>[📌] INFORMACIÓN</b>
-• No cuentas con créditos suficientes.
-• Para recargar créditos usa /buy`;
+- No cuentas con créditos suficientes.
+- Para recargar créditos usa /buy`;
 }
 
 function buildConfirmActivationMessage(client, pendingLicenses, cost, unlimitedStatus) {
   return `<b>[#${APP_NAME}]</b> ➣ CONFIRMAR ACTIVACIÓN
 
 <b>[📧] CLIENTE</b>
-• Correo ➣ <code>${client.email}</code>
+- Correo ➣ <code>${client.email}</code>
 
 <b>[🔐] LICENCIAS</b>
-• Productos ➣ ${pendingLicenses.join(' + ')}
+- Productos ➣ ${pendingLicenses.join(' + ')}
 
 <b>[💰] COSTO</b>
-• Créditos ➣ ${unlimitedStatus?.isUnlimited ? '0 créditos' : cost}`;
+- Créditos ➣ ${unlimitedStatus?.isUnlimited ? '0 créditos' : cost}`;
 }
 
 function buildCanceledActivationMessage() {
   return `<b>[#${APP_NAME}]</b> ➣ ACTIVACIÓN CANCELADA
 
 <b>[📌] INFORMACIÓN</b>
-• La activación fue cancelada correctamente.`;
+- La activación fue cancelada correctamente.`;
 }
 
 function buildActivationSelectorMessage(client, user, selectedBanks = []) {
@@ -338,10 +338,10 @@ function buildActivationSelectorMessage(client, user, selectedBanks = []) {
   return `<b>[#${APP_NAME}]</b> ➣ ACTIVAR LICENCIAS
 
 <b>[📧] CLIENTE</b>
-• Correo ➣ <code>${client.email}</code>
+- Correo ➣ <code>${client.email}</code>
 
 <b>[🙎‍♂️] TU ESTADO</b>
-• Saldo ➣ ${unlimitedStatus.isUnlimited ? '♾️ ILIMITADO' : `${user.credits} créditos`}
+- Saldo ➣ ${unlimitedStatus.isUnlimited ? '♾️ ILIMITADO' : `${user.credits} créditos`}
 
 <b>[🔐] LICENCIAS DISPONIBLES</b>
 ${status.YAPE ? '🔒 <b>YAPE</b> ya activo' : '✅ <b>YAPE</b>'}
@@ -350,7 +350,7 @@ ${status.IBK ? '🔒 <b>INTERBANK</b> ya activo' : `${selectedBanks.includes('IB
 ${status.BBVA ? '🔒 <b>BBVA</b> ya activo' : `${selectedBanks.includes('BBVA') ? '✅' : '⬜'} <b>BBVA</b>`}
 
 <b>[${insufficientCredits ? '⚠️' : '💰'}] COSTO</b>
-• Total ➣ ${unlimitedStatus.isUnlimited ? '0 créditos' : insufficientCredits ? 'No tienes créditos suficientes.' : `${cost} créditos`}`;
+- Total ➣ ${unlimitedStatus.isUnlimited ? '0 créditos' : insufficientCredits ? 'No tienes créditos suficientes.' : `${cost} créditos`}`;
 }
 
 function buildActivationSelectorKeyboard(telegramId, client, user, selectedBanks = []) {
@@ -488,7 +488,7 @@ async function replacePendingActivationFlow(bot, telegramId) {
 }
 
 async function openActivationSelector(bot, flow) {
-  const freshUser = await User.findOne({ telegramId: flow.telegramId });
+  const freshUser = await getUser(flow.telegramId);
 
   if (!freshUser) {
     await safeDeleteMessage(bot, flow.chatId, flow.messageId);
@@ -518,14 +518,14 @@ async function openActivationConfirmation(
   rawValue,
   previousSelectedBanks = [],
 ) {
-  const user = await User.findOne({ telegramId });
+  const user = await getUser(telegramId);
 
   if (!user) {
     await bot.sendMessage(chatId, 'No estás registrado. Usa /register');
     return;
   }
 
-  const freshClient = await findClientByEmail(client.email);
+  const freshClient = await getYapeClient(client.email);
 
   if (!freshClient) {
     await bot.sendMessage(chatId, 'El correo ingresado no existe');
@@ -656,8 +656,8 @@ function registerActivateCallback(bot) {
           return;
         }
 
-        const user = await User.findOne({ telegramId: payload.telegramId });
-        const client = await findClientByEmail(payload.clientEmail);
+        const user = await getUser(payload.telegramId);
+        const client = await getYapeClient(payload.clientEmail);
 
         clearActivationState(confirmId);
 
@@ -724,7 +724,7 @@ function registerActivateCallback(bot) {
 
         const { telegramId, clientId, clientEmail, requestedLicenses, rawValue } = payload;
 
-        const user = await User.findOne({ telegramId });
+        const user = await getUser(telegramId);
 
         if (!user) {
           clearActivationState(confirmId);
@@ -734,7 +734,7 @@ function registerActivateCallback(bot) {
           return;
         }
 
-        const client = await findClientByEmail(clientEmail);
+        const client = await getYapeClient(clientEmail);
 
         if (!client || String(client._id) !== String(clientId)) {
           clearActivationState(confirmId);
@@ -779,9 +779,7 @@ function registerActivateCallback(bot) {
 
         const resellerId = unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID;
 
-        if (!unlimitedStatus.isUnlimited) {
-          user.credits -= cost;
-        }
+        const newCredits = unlimitedStatus.isUnlimited ? user.credits : user.credits - cost;
 
         await bot.answerCallbackQuery(query.id, { text: 'Procesando activación...' });
 
@@ -792,15 +790,18 @@ function registerActivateCallback(bot) {
         await delay(2000);
 
         const updateData = buildClientUpdateData(pendingLicenses, client, resellerId);
+        const newActivationStats = updateUserActivationStats(user, pendingLicenses);
 
-        updateUserActivationStats(user, pendingLicenses);
-        await user.save();
+        await updateUser(telegramId, {
+          credits: newCredits,
+          activationStats: newActivationStats,
+        });
 
-        await updateClientById(client._id, updateData);
+        await updateYapeClient(client._id, updateData);
         Object.assign(client, updateData);
 
         try {
-          await ActivationLog.create({
+          await createActivacionLog({
             resellerTelegramId: user.telegramId,
             clientId: client._id ? String(client._id) : null,
             clientEmail: client.email,
@@ -812,13 +813,14 @@ function registerActivateCallback(bot) {
           console.error('Error guardando activation log:', logError.message);
         }
 
-        const resellerName = getUserDisplayName(user);
+        const updatedUser = { ...user, credits: newCredits };
+        const resellerName = getUserDisplayName(updatedUser);
 
         await safeEditCaption(
           bot,
           chatId,
           messageId,
-          buildActivationSuccessMessage(client, user, pendingLicenses, cost, resellerName, unlimitedStatus),
+          buildActivationSuccessMessage(updatedUser, updatedUser, pendingLicenses, cost, resellerName, unlimitedStatus),
           { inline_keyboard: [] },
         );
 
@@ -895,7 +897,7 @@ function registerActivateCallback(bot) {
         }
 
         if (action === 'continue') {
-          const freshUser = await User.findOne({ telegramId });
+          const freshUser = await getUser(telegramId);
 
           if (!freshUser) {
             processingActivationFlows.delete(telegramId);
@@ -985,7 +987,7 @@ function registerActivateCommand(bot) {
     const rawValue = match[1].trim();
 
     try {
-      const user = await User.findOne({ telegramId });
+      const user = await getUser(telegramId);
 
       if (!user) {
         return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
@@ -1001,7 +1003,7 @@ function registerActivateCommand(bot) {
         return bot.sendMessage(chatId, 'Debes ingresar un correo válido');
       }
 
-      const client = await findClientByEmail(email);
+      const client = await getYapeClient(email);
 
       if (!client) {
         return bot.sendMessage(chatId, 'El correo ingresado no existe');

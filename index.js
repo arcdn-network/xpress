@@ -3,7 +3,6 @@ require('dotenv').config({ quiet: true });
 const { APP_NAME } = require('./utils/constants');
 
 const TelegramBot = require('node-telegram-bot-api');
-const connectDB = require('./config/database');
 
 const registerMeCommand = require('./commands/me');
 const registerStartCommand = require('./commands/start');
@@ -24,8 +23,6 @@ async function startApp() {
   if (!token) {
     throw new Error('Falta BOT_TOKEN en el archivo .env');
   }
-
-  await connectDB();
 
   const bot = new TelegramBot(token, { polling: true });
 

@@ -1,6 +1,6 @@
-const ActivationLog = require('../models/activation_logs');
 const { formatDateTime } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
+const { getHistory } = require('../utils/api');
 
 const PAGE_SIZE = 5;
 
@@ -61,33 +61,8 @@ function buildHistorialKeyboard(page, totalPages) {
   };
 }
 
-async function getHistorialPage(telegramId, page) {
-  const totalItems = await ActivationLog.countDocuments({
-    resellerTelegramId: telegramId,
-  });
-
-  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const skip = (safePage - 1) * PAGE_SIZE;
-
-  const logs = await ActivationLog.find({
-    resellerTelegramId: telegramId,
-  })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(PAGE_SIZE)
-    .lean();
-
-  return {
-    logs,
-    page: safePage,
-    totalPages,
-    totalItems,
-  };
-}
-
 async function renderHistorial(bot, chatId, telegramId, page, messageId) {
-  const { logs, totalPages, totalItems } = await getHistorialPage(telegramId, page);
+  const { logs, totalPages, totalItems } = await getHistory(telegramId, page);
   const safePage = Math.min(Math.max(page, 1), totalPages);
 
   const text = buildHistorialMessage(logs, safePage, totalPages, totalItems);

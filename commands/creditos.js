@@ -1,6 +1,4 @@
-const User = require('../models/users');
-const Admin = require('../models/admins');
-const CreditsLog = require('../models/credit_logs');
+const { getUser, updateUser, searchReseller, createCreditLog } = require('../utils/api');
 const { TARIFARIO } = require('../utils/constants');
 const isAdmin = require('../middleware/isAdmin');
 const { formatDateTime } = require('../utils/functions');
@@ -103,22 +101,19 @@ function buildCreditsKeyboard(targetId, user) {
   const rows = [];
 
   if (unlimitedStatus.isUnlimited) {
-    // Si tiene ilimitado activo: solo opciones de ilimitado
     rows.push([{ text: '➕ Agregar días', callback_data: `creditos:unlimited_menu:${targetId}` }]);
     rows.push([{ text: '🚫 Anular suscripción', callback_data: `creditos:unlimited_revoke:${targetId}` }]);
     rows.push([{ text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` }]);
   } else {
-    // Sin ilimitado: mostrar tarifario
     const activeItems = TARIFARIO.filter((item) => item.active);
     for (let i = 0; i < activeItems.length; i += 2) {
       const row = activeItems.slice(i, i + 2).map((item) => ({
-        text: item.label || `${item.credits} créditos - S/ ${item.price}`,
+        text: item.label || `${item.credits} créditos •S/ ${item.price}`,
         callback_data: `creditos:add:${targetId}:${item.credits}`,
       }));
       rows.push(row);
     }
 
-    // Ilimitado solo si no tiene créditos
     rows.push([{ text: '♾️ Ilimitado', callback_data: `creditos:unlimited_menu:${targetId}` }]);
     rows.push([{ text: '✍️ Otro monto', callback_data: `creditos:custom:${targetId}` }]);
     rows.push([{ text: '❌ Cancelar', callback_data: `creditos:cancel:${targetId}` }]);
@@ -271,7 +266,7 @@ async function safeDeleteMessage(bot, chatId, messageId) {
 }
 
 async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, reason, commandRaw) {
-  const user = await User.findOne({ telegramId: targetId });
+  const user = await getUser(targetId);
 
   if (!user) {
     await bot.sendMessage(chatId, 'Usuario no encontrado');
@@ -289,15 +284,16 @@ async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, rea
   }
 
   const previousCredits = user.credits;
-  user.credits += amount;
-  await user.save();
+  const newCredits = previousCredits + amount;
 
-  await CreditsLog.create({
+  const updatedUser = await updateUser(targetId, { credits: newCredits });
+
+  await createCreditLog({
     targetTelegramId: user.telegramId,
     adminTelegramId: senderId,
     amount,
     previousCredits,
-    currentCredits: user.credits,
+    currentCredits: newCredits,
     movementType: amount > 0 ? 'add' : 'discount',
     reason,
     commandRaw,
@@ -306,14 +302,14 @@ async function processCreditsUpdate(bot, chatId, senderId, targetId, amount, rea
   try {
     const userMessage =
       amount > 0
-        ? buildUserCreditsAddedMessage(user, amount, previousCredits)
-        : buildUserCreditsDiscountedMessage(user, amount, previousCredits);
+        ? buildUserCreditsAddedMessage(updatedUser, amount, previousCredits)
+        : buildUserCreditsDiscountedMessage(updatedUser, amount, previousCredits);
     await bot.sendMessage(targetId, userMessage, { parse_mode: 'HTML' });
   } catch (notifyError) {
     console.error('No se pudo notificar al usuario:', notifyError.message);
   }
 
-  const adminMessage = buildAdminCreditsMessage(user, amount, previousCredits);
+  const adminMessage = buildAdminCreditsMessage(updatedUser, amount, previousCredits);
   await bot.sendMessage(chatId, adminMessage, { parse_mode: 'HTML' });
 }
 
@@ -346,7 +342,7 @@ function registerCreditosCommand(bot) {
           return bot.sendMessage(chatId, 'El userId no es válido');
         }
 
-        const user = await User.findOne({ telegramId: targetId });
+        const user = await getUser(targetId);
         if (!user) return bot.sendMessage(chatId, 'Usuario no encontrado');
 
         pendingCustomAmount.delete(senderId);
@@ -423,7 +419,7 @@ function registerCreditosCommand(bot) {
 
       // ── Menú de días ilimitado ────────────────────────────
       if (action === 'unlimited_menu') {
-        const targetUser = await User.findOne({ telegramId: targetId });
+        const targetUser = await getUser(targetId);
 
         if (!targetUser) {
           creditosProcessingUsers.delete(senderId);
@@ -444,6 +440,7 @@ function registerCreditosCommand(bot) {
       }
 
       // ── Seleccionó días → pide reseller ID via reply ──────
+      // ── Seleccionó días → pide reseller ID via reply ──────
       if (action === 'unlimited_days') {
         const days = Number(extra);
 
@@ -453,7 +450,7 @@ function registerCreditosCommand(bot) {
           return;
         }
 
-        const targetUser = await User.findOne({ telegramId: targetId });
+        const targetUser = await getUser(targetId);
 
         if (!targetUser) {
           creditosProcessingUsers.delete(senderId);
@@ -463,9 +460,45 @@ function registerCreditosCommand(bot) {
 
         const isExtension = getUnlimitedStatus(targetUser).isUnlimited;
 
-        await bot.answerCallbackQuery(query.id, { text: 'Ingresa el reseller ID' });
+        // ── Si ya tiene ilimitado, usa el reseller existente ──
+        if (isExtension) {
+          await bot.answerCallbackQuery(query.id, { text: 'Confirmando extensión...' });
+          await safeDeleteMessage(bot, chatId, messageId);
 
-        // Eliminar el mensaje anterior y enviar uno nuevo con force_reply
+          const resellerId = targetUser.unlimited?.resellerId;
+          const reseller = await searchReseller(resellerId);
+
+          if (!reseller) {
+            await bot.sendMessage(chatId, '❌ No se encontró el reseller asignado.');
+            creditosProcessingUsers.delete(senderId);
+            return;
+          }
+
+          const sentMessage = await bot.sendMessage(
+            chatId,
+            buildUnlimitedConfirmMessage(targetUser, reseller, days, true),
+            {
+              parse_mode: 'HTML',
+              reply_markup: buildUnlimitedConfirmKeyboard(targetId),
+            },
+          );
+
+          pendingUnlimitedFlow.set(senderId, {
+            step: 'awaiting_confirm',
+            targetId,
+            days,
+            isExtension: true,
+            chatId,
+            messageId: sentMessage.message_id,
+            resellerId: String(reseller._id),
+          });
+
+          creditosProcessingUsers.delete(senderId);
+          return;
+        }
+
+        // ── Si NO tiene ilimitado, pide reseller ID ───────────
+        await bot.answerCallbackQuery(query.id, { text: 'Ingresa el reseller ID' });
         await safeDeleteMessage(bot, chatId, messageId);
 
         const sentMessage = await bot.sendMessage(chatId, buildAwaitingResellerMessage(targetUser, days), {
@@ -477,7 +510,7 @@ function registerCreditosCommand(bot) {
           step: 'awaiting_reseller_id',
           targetId,
           days,
-          isExtension,
+          isExtension: false,
           chatId,
           messageId: sentMessage.message_id,
         });
@@ -488,7 +521,7 @@ function registerCreditosCommand(bot) {
 
       // ── Anular suscripción: confirmación ──────────────────
       if (action === 'unlimited_revoke') {
-        const targetUser = await User.findOne({ telegramId: targetId });
+        const targetUser = await getUser(targetId);
 
         if (!targetUser) {
           creditosProcessingUsers.delete(senderId);
@@ -521,7 +554,7 @@ function registerCreditosCommand(bot) {
 
       // ── Anular suscripción: ejecutar ──────────────────────
       if (action === 'unlimited_revoke_confirm') {
-        const targetUser = await User.findOne({ telegramId: targetId });
+        const targetUser = await getUser(targetId);
 
         if (!targetUser) {
           creditosProcessingUsers.delete(senderId);
@@ -529,13 +562,9 @@ function registerCreditosCommand(bot) {
           return;
         }
 
-        targetUser.unlimited = {
-          active: false,
-          expiresAt: null,
-          resellerId: null,
-        };
-
-        await targetUser.save();
+        await updateUser(targetId, {
+          unlimited: { active: false, expiresAt: null, resellerId: null },
+        });
 
         await bot.answerCallbackQuery(query.id, { text: 'Suscripción anulada' });
 
@@ -571,8 +600,8 @@ function registerCreditosCommand(bot) {
           return;
         }
 
-        const targetUser = await User.findOne({ telegramId: flow.targetId });
-        const reseller = await Admin.findById(flow.resellerId);
+        const targetUser = await getUser(flow.targetId);
+        const reseller = await searchReseller(flow.resellerId);
 
         if (!targetUser || !reseller) {
           creditosProcessingUsers.delete(senderId);
@@ -594,13 +623,9 @@ function registerCreditosCommand(bot) {
           expiresAt.setDate(expiresAt.getDate() + flow.days);
         }
 
-        targetUser.unlimited = {
-          active: true,
-          expiresAt,
-          resellerId: String(reseller._id),
-        };
-
-        await targetUser.save();
+        await updateUser(flow.targetId, {
+          unlimited: { active: true, expiresAt, resellerId: String(reseller._id) },
+        });
 
         pendingUnlimitedFlow.delete(senderId);
 
@@ -625,7 +650,7 @@ function registerCreditosCommand(bot) {
 
       // ── Regresar al menú principal ────────────────────────
       if (action === 'back_to_menu') {
-        const targetUser = await User.findOne({ telegramId: targetId });
+        const targetUser = await getUser(targetId);
 
         pendingUnlimitedFlow.delete(senderId);
         pendingCustomAmount.delete(senderId);
@@ -697,7 +722,7 @@ function registerCreditosCommand(bot) {
 
       // ── Regresar al menú desde custom ─────────────────────
       if (action === 'back') {
-        const user = await User.findOne({ telegramId: targetId });
+        const user = await getUser(targetId);
 
         pendingCustomAmount.delete(senderId);
 
@@ -762,26 +787,26 @@ function registerCreditosCommand(bot) {
           return bot.sendMessage(chatId, 'No autorizado');
         }
 
-        // Eliminar el mensaje del admin y el prompt
         await safeDeleteMessage(bot, chatId, flow.messageId);
 
-        // Mostrar loading
         const loadingMsg = await bot.sendMessage(chatId, '⏳ Validando reseller...', {
           reply_to_message_id: msg.message_id,
         });
 
         let reseller;
         try {
-          reseller = await Admin.findById(text.trim());
+          reseller = await searchReseller(text.trim());
         } catch (e) {
           reseller = null;
         }
+
         if (!reseller) {
-          await bot.editMessageText(
+          await safeDeleteMessage(bot, chatId, loadingMsg.message_id);
+
+          const newPrompt = await bot.sendMessage(
+            chatId,
             `❌ No se encontró ningún reseller con el ID <code>${text}</code>.\n\nEscribe el ID correcto:`,
             {
-              chat_id: chatId,
-              message_id: loadingMsg.message_id,
               parse_mode: 'HTML',
               reply_markup: { force_reply: true, selective: true },
             },
@@ -794,8 +819,8 @@ function registerCreditosCommand(bot) {
 
           return;
         }
-        // Reseller encontrado → editar el loading con la confirmación
-        const targetUser = await User.findOne({ telegramId: flow.targetId });
+
+        const targetUser = await getUser(flow.targetId);
 
         if (!targetUser) {
           pendingUnlimitedFlow.delete(senderId);
@@ -818,9 +843,11 @@ function registerCreditosCommand(bot) {
           chat_id: chatId,
           message_id: loadingMsg.message_id,
           parse_mode: 'HTML',
-          reply_markup: buildUnlimitedConfirmKeyboard(flow.targetId),
+          reply_markup: JSON.stringify(buildUnlimitedConfirmKeyboard(flow.targetId)),
         });
       } catch (error) {
+        console.log(error);
+
         pendingUnlimitedFlow.delete(senderId);
         console.error('Error validando reseller:', error.message);
         await bot.sendMessage(chatId, 'Error al validar el reseller');
@@ -845,7 +872,6 @@ function registerCreditosCommand(bot) {
         return bot.sendMessage(chatId, 'No autorizado');
       }
 
-      // Eliminar el mensaje del admin y el prompt
       await safeDeleteMessage(bot, chatId, msg.message_id);
       await safeDeleteMessage(bot, chatId, pending.messageId);
 

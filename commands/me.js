@@ -1,9 +1,9 @@
-const User = require('../models/users');
 const { APP_NAME, LOCAL } = require('../utils/constants');
-const { sendMessage } = require('../utils/sender');
 const { formatDate, formatDateTime } = require('../utils/functions');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
+const { sendMessage } = require('../utils/sender');
+const { getUser } = require('../utils/api');
 
 function registerMeCommand(bot) {
   bot.onText(/\/me/, async (msg) => {
@@ -11,7 +11,7 @@ function registerMeCommand(bot) {
 
     try {
       const telegramId = msg.from.id;
-      const user = await User.findOne({ telegramId });
+      const user = await getUser(telegramId);
 
       if (!user) {
         return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
@@ -34,6 +34,8 @@ function registerMeCommand(bot) {
 
       saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
     } catch (error) {
+      console.log(error);
+
       console.error('Error en /me:', error.message);
       await bot.sendMessage(chatId, 'Error al obtener tu información');
     }
