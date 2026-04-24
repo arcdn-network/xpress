@@ -29,17 +29,29 @@ async function takeScreenshot(html) {
   return new Promise((resolve, reject) => {
     const task = async () => {
       activePages++;
+      let page = null;
       try {
         const browser = await getBrowser();
-        const page = await browser.newPage();
+        page = await browser.newPage();
         await page.setViewport({ width: 390, height: 844 });
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        const buffer = await page.screenshot({ type: 'png', fullPage: true });
-        await page.close();
+
+        await page.setContent(html, {
+          waitUntil: 'networkidle2', // tolera hasta 2 conexiones activas
+          timeout: 15000, // máximo 15 segundos
+        });
+
+        const buffer = await page.screenshot({
+          type: 'png',
+          fullPage: true,
+        });
+
         resolve(buffer);
       } catch (err) {
         reject(err);
       } finally {
+        if (page) {
+          await page.close().catch(() => {});
+        }
         activePages--;
         if (queue.length > 0) queue.shift()();
       }
