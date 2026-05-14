@@ -1,5 +1,5 @@
 const { APP_NAME, LOCAL } = require('../utils/constants');
-const { findClientByEmail } = require('../sevices/clients');
+const { findClientByEmail } = require('../services/clients');
 const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');

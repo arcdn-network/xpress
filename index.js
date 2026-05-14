@@ -17,7 +17,7 @@ const registerAppCommands = require('./commands/apk');
 const registerInfoCommand = require('./commands/info');
 const registerYapeCommand = require('./commands/yape');
 
-async function startApp() {
+async function startBot() {
   const token = process.env.BOT_TOKEN;
 
   if (!token) {
@@ -56,6 +56,27 @@ async function startApp() {
   });
 
   console.log(`Bot ${APP_NAME} iniciado`);
+}
+
+const express = require('express');
+const cors = require('cors');
+const API_YAPE = require('./api/yape');
+
+function startApi() {
+  const app = express();
+  app.use(cors());
+  app.use(express.json({ limit: '10mb' }));
+  app.use('/api', API_YAPE);
+  const PORT = process.env.PORT || 4000;
+
+  app.listen(PORT, () => {
+    console.log(`API iniciada en puerto ${PORT}`);
+  });
+}
+
+async function startApp() {
+ // await startBot();
+  startApi();
 }
 
 startApp().catch((error) => {
