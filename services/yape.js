@@ -1,23 +1,12 @@
-const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
+const { createBrowserPool } = require('../utils/browser');
 
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
 const CDN_BANNER = `${CDN_BASE}/banner.webp`;
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
 const CDN_CHAT = `${CDN_BASE}/chat.png`;
-
-let browser = null;
-
-async function getBrowser() {
-  if (!browser || !browser.connected) {
-    browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }
-
-  return browser;
-}
+const pool = createBrowserPool();
 
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -116,34 +105,13 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
 }
 
 async function generateVoucher(data) {
-  const browser = await getBrowser();
-
-  const page = await browser.newPage();
-
-  try {
-    await page.setViewport({
-      width: 390,
-      height: 844,
-    });
-
+  return pool.withPage(async (page) => {
+    await page.setViewport({ width: 480, height: 1020, deviceScaleFactor: 2 });
     const html = buildYapeHtml(data);
-
-    await page.setContent(html, {
-      waitUntil: 'networkidle2',
-    });
-
-    const buffer = await page.screenshot({
-      type: 'png',
-      fullPage: true,
-    });
-
-    return {
-      buffer,
-      base64: buffer.toString('base64'),
-    };
-  } finally {
-    await page.close();
-  }
+    await page.setContent(html, { waitUntil: 'networkidle2' });
+    const buffer = await page.screenshot({ type: 'png', fullPage: true });
+    return { buffer, base64: buffer.toString('base64') };
+  });
 }
 
 module.exports = {
