@@ -16,6 +16,7 @@ const registerCmdsCommand = require('./commands/cmds');
 const registerAppCommands = require('./commands/apk');
 const registerInfoCommand = require('./commands/info');
 const registerYapeCommand = require('./commands/yape');
+const registerPlinCommand = require('./commands/plin');
 
 async function startBot() {
   const token = process.env.BOT_TOKEN;
@@ -33,7 +34,8 @@ async function startBot() {
     { command: 'activate', description: 'Activar licencias' },
     { command: 'historial', description: 'Ver historial de activaciones' },
     { command: 'tutorial', description: 'Ver tutorial de activaciones' },
-    { command: 'yape', description: 'Generar Voucher' },
+    { command: 'yape', description: 'Generar Voucher Yape' },
+    { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
   ]);
@@ -50,6 +52,7 @@ async function startBot() {
   registerAppCommands(bot);
   registerInfoCommand(bot);
   registerYapeCommand(bot);
+  registerPlinCommand(bot);
 
   bot.on('polling_error', (error) => {
     console.error('Polling error:', error.message);
@@ -61,12 +64,14 @@ async function startBot() {
 const express = require('express');
 const cors = require('cors');
 const API_YAPE = require('./api/yape');
+const API_PLIN = require('./api/plin');
 
 function startApi() {
   const app = express();
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
   app.use('/api', API_YAPE);
+  app.use('/api', API_PLIN);
   const PORT = process.env.PORT || 4000;
 
   app.listen(PORT, () => {
