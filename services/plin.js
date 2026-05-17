@@ -59,7 +59,7 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Yape' }) {
 
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 1 });
+    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 2 });
     const html = buildPlinHtml(data);
     await page.setContent(html, { waitUntil: 'networkidle2' });
     const element = await page.$('.ticket-card');

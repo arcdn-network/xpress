@@ -2,11 +2,29 @@ const path = require('path');
 const fs = require('fs');
 const { createBrowserPool } = require('../utils/browser');
 
+const BANNERS_DIR = path.resolve(__dirname, '../resources/banners');
+
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
-const CDN_BANNER = `${CDN_BASE}/banner.webp`;
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
 const CDN_CHAT = `${CDN_BASE}/chat.png`;
+
 const pool = createBrowserPool();
+
+const bannerFiles = fs
+  .readdirSync(BANNERS_DIR)
+  .filter((file) => file.endsWith('.webp'))
+  .map((file) => {
+    const buffer = fs.readFileSync(path.join(BANNERS_DIR, file));
+    return `data:image/webp;base64,${buffer.toString('base64')}`;
+  });
+
+if (!bannerFiles.length) {
+  throw new Error('No hay banners disponibles');
+}
+
+function getRandomBanner() {
+  return bannerFiles[Math.floor(Math.random() * bannerFiles.length)];
+}
 
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -38,6 +56,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
   const { fecha, hora } = formatFecha();
 
   const operacion = randomOperacion();
+  const randomBanner = getRandomBanner();
 
   const [d1, d2, d3] = operacion.slice(-3).split('');
 
@@ -101,7 +120,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
     .replace('{{DESTINO}}', destino)
     .replace('{{CODIGO_SEGURIDAD}}', codigoHtml)
     .replace('{{CDN_LOGO}}', CDN_LOGO)
-    .replace('{{CDN_BANNER}}', CDN_BANNER);
+    .replace('{{CDN_BANNER}}', randomBanner);
 }
 
 async function generateVoucher(data) {
