@@ -820,7 +820,7 @@ function registerActivateCallback(bot) {
           bot,
           chatId,
           messageId,
-          buildActivationSuccessMessage(updatedUser, updatedUser, pendingLicenses, cost, resellerName, unlimitedStatus),
+          buildActivationSuccessMessage(client, updatedUser, pendingLicenses, cost, resellerName, unlimitedStatus),
           { inline_keyboard: [] },
         );
 
