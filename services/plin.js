@@ -37,8 +37,9 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Yape' }) {
   const operacion = randomOperacion();
 
   const montoFormateado = parseFloat(monto).toFixed(2);
-  const mostrarDigitos = !!digitos && /^\d{3}$/.test(String(digitos));
-  const celularTexto = mostrarDigitos ? `••• ••• ${digitos}` : '••• ••• •••';
+  const digitosLimpios = String(digitos || '').trim();
+  const mostrarDigitos = /^\d{3}$/.test(digitosLimpios);
+  const celularTexto = mostrarDigitos ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : '';
 
   const templatePath = path.resolve(__dirname, '../resources/templates/plin.html');
   const html = fs.readFileSync(templatePath, 'utf-8');
@@ -47,6 +48,7 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Yape' }) {
     .replace('{{MONTO}}', montoFormateado)
     .replace('{{NOMBRE}}', nombre)
     .replace('{{CELULAR}}', celularTexto)
+    .replace('{{SEPARADOR}}', mostrarDigitos ? ' - ' : '')
     .replace('{{DESTINO}}', destino)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)

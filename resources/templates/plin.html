@@ -144,6 +144,14 @@
     .voucher-phone {
       font-size: 1.5rem;
       color: #0D1414;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .voucher-phone-dots {
+      font-size: 0.8rem;
     }
 
     /* ───────── Monto ───────── */
@@ -228,7 +236,9 @@
         </div>
 
         <div class="voucher-phone">
-          {{CELULAR}} - {{DESTINO}}
+          {{CELULAR}}
+          {{SEPARADOR}}
+          {{DESTINO}}
         </div>
 
         <!-- Monto -->
