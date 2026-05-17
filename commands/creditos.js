@@ -13,6 +13,7 @@ const UNLIMITED_OPTIONS = [
   { label: '15 días', days: 15 },
   { label: '30 días', days: 30 },
   { label: '60 días', days: 60 },
+  { label: '♾️ Infinito', days: 0 },
 ];
 
 function getUserDisplayName(user) {
@@ -82,7 +83,9 @@ function buildCreditsMenuMessage(user) {
 
   let unlimitedLine = '';
   if (unlimitedStatus.isUnlimited) {
-    unlimitedLine = `\n[♾️] <b>Ilimitado hasta:</b> ${formatDateTime(unlimitedStatus.expiresAt)}`;
+    unlimitedLine = unlimitedStatus.expiresAt
+      ? `\n[♾️] <b>Ilimitado hasta:</b> ${formatDateTime(unlimitedStatus.expiresAt)}`
+      : `\n[♾️] <b>Ilimitado:</b> Sin vencimiento`;
   }
 
   return `
@@ -166,7 +169,9 @@ function buildUnlimitedDaysMessage(targetUser) {
   const unlimitedStatus = getUnlimitedStatus(targetUser);
 
   const currentLine = unlimitedStatus.isUnlimited
-    ? `[♾️] <b>Vence actualmente:</b> ${formatDateTime(unlimitedStatus.expiresAt)}\n`
+    ? unlimitedStatus.expiresAt
+      ? `[♾️] <b>Vence actualmente:</b> ${formatDateTime(unlimitedStatus.expiresAt)}\n`
+      : `[♾️] <b>Vence actualmente:</b> Sin vencimiento\n`
     : '';
 
   return `
@@ -185,7 +190,7 @@ function buildAwaitingResellerMessage(targetUser, days) {
 ♾️ <b>Activar Ilimitado</b>
 
 [🙎‍♂️] <b>Usuario:</b> ${displayName}
-[📅] <b>Período:</b> ${days} días
+[📅] <b>Período:</b> ${days === 0 ? '∞ Infinito' : `${days} días`}
 
 Escribe el <b>ID</b> del <b>RESELLER</b> a asignar:
 `.trim();
@@ -194,25 +199,29 @@ Escribe el <b>ID</b> del <b>RESELLER</b> a asignar:
 function buildUnlimitedConfirmMessage(targetUser, reseller, days, isExtension) {
   const userDisplay = getUserDisplayName(targetUser);
   const unlimitedStatus = getUnlimitedStatus(targetUser);
+  const isInfinite = days === 0;
 
-  let expiresAt;
-  if (isExtension && unlimitedStatus.isUnlimited) {
-    expiresAt = new Date(unlimitedStatus.expiresAt);
-    expiresAt.setDate(expiresAt.getDate() + days);
-  } else {
-    expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
+  let expiresAt = null;
+  if (!isInfinite) {
+    if (isExtension && unlimitedStatus.isUnlimited && unlimitedStatus.expiresAt) {
+      expiresAt = new Date(unlimitedStatus.expiresAt);
+      expiresAt.setDate(expiresAt.getDate() + days);
+    } else {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+    }
   }
 
   const accion = isExtension ? 'EXTENDER' : 'ACTIVAR';
+  const vencimientoLine = isInfinite ? 'Sin vencimiento' : formatDateTime(expiresAt);
 
   return `
 ♾️ <b>CONFIRMAR ${accion} ILIMITADO</b>
 
 •···························•····························•
 [🙎‍♂️] <b>Usuario:</b> ${userDisplay}
-[📅] <b>Días a agregar:</b> ${days}
-[📆] <b>Nueva fecha vencimiento:</b> ${formatDateTime(expiresAt)}
+[📅] <b>Días a agregar:</b> ${isInfinite ? '∞ Infinito' : days}
+[📆] <b>Nueva fecha vencimiento:</b> ${vencimientoLine}
 [🏷] <b>Reseller:</b> ${reseller.username}
 [🆔] <b>Reseller ID:</b> <code>${reseller._id}</code>
 •···························•····························•
@@ -224,23 +233,28 @@ function buildUnlimitedConfirmMessage(targetUser, reseller, days, isExtension) {
 function buildUnlimitedSuccessMessage(targetUser, reseller, days, isExtension) {
   const userDisplay = getUserDisplayName(targetUser);
   const unlimitedStatus = getUnlimitedStatus(targetUser);
+  const isInfinite = days === 0;
 
-  let expiresAt;
-  if (isExtension && unlimitedStatus.isUnlimited) {
-    expiresAt = new Date(unlimitedStatus.expiresAt);
-    expiresAt.setDate(expiresAt.getDate() + days);
-  } else {
-    expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
+  let expiresAt = null;
+  if (!isInfinite) {
+    if (isExtension && unlimitedStatus.isUnlimited && unlimitedStatus.expiresAt) {
+      expiresAt = new Date(unlimitedStatus.expiresAt);
+      expiresAt.setDate(expiresAt.getDate() + days);
+    } else {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+    }
   }
+
+  const vencimientoLine = isInfinite ? 'Sin vencimiento' : formatDateTime(expiresAt);
 
   return `
 ✅ <b>ILIMITADO ${isExtension ? 'EXTENDIDO' : 'ACTIVADO'}</b>
 
 •···························•····························•
 [🙎‍♂️] <b>Usuario:</b> ${userDisplay}
-[📅] <b>Días agregados:</b> ${days}
-[📆] <b>Vence:</b> ${formatDateTime(expiresAt)}
+[📅] <b>Días agregados:</b> ${isInfinite ? '∞ Infinito' : days}
+[📆] <b>Vence:</b> ${vencimientoLine}
 [🏷] <b>Reseller:</b> @${reseller.username}
 •···························•····························•
 `.trim();
@@ -444,7 +458,7 @@ function registerCreditosCommand(bot) {
       if (action === 'unlimited_days') {
         const days = Number(extra);
 
-        if (!days || days <= 0) {
+        if (days === null || days === undefined || days < 0) {
           creditosProcessingUsers.delete(senderId);
           await bot.answerCallbackQuery(query.id, { text: 'Período inválido' });
           return;
@@ -613,14 +627,17 @@ function registerCreditosCommand(bot) {
         await bot.answerCallbackQuery(query.id, { text: 'Activando...' });
 
         const unlimitedStatus = getUnlimitedStatus(targetUser);
-        let expiresAt;
+        const isInfinite = flow.days === 0;
+        let expiresAt = null;
 
-        if (flow.isExtension && unlimitedStatus.isUnlimited) {
-          expiresAt = new Date(unlimitedStatus.expiresAt);
-          expiresAt.setDate(expiresAt.getDate() + flow.days);
-        } else {
-          expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + flow.days);
+        if (!isInfinite) {
+          if (flow.isExtension && unlimitedStatus.isUnlimited && unlimitedStatus.expiresAt) {
+            expiresAt = new Date(unlimitedStatus.expiresAt);
+            expiresAt.setDate(expiresAt.getDate() + flow.days);
+          } else {
+            expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + flow.days);
+          }
         }
 
         await updateUser(flow.targetId, {
@@ -637,9 +654,14 @@ function registerCreditosCommand(bot) {
         });
 
         try {
+          const vencimientoText = isInfinite ? 'Sin fecha de vencimiento ♾️' : `📆 Vence: ${formatDateTime(expiresAt)}`;
           await bot.sendMessage(
             targetUser.telegramId,
-            `♾️ <b>¡Tu cuenta tiene acceso ilimitado!</b>\n\nPuedes activar sin límite de créditos durante <b>${flow.days} días</b> adicionales.\n📆 Vence: ${formatDateTime(expiresAt)}`,
+            `♾️ <b>¡Tu cuenta tiene acceso ilimitado!</b>\n\n${
+              isInfinite
+                ? 'Puedes activar sin límite de créditos.'
+                : `Puedes activar sin límite de créditos durante <b>${flow.days} días</b> adicionales.`
+            }\n${vencimientoText}`,
             { parse_mode: 'HTML' },
           );
         } catch (e) {}

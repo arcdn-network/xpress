@@ -9,21 +9,8 @@ function getUnlimitedStatus(user) {
   return {
     isUnlimited: true,
     resellerId: user.unlimited.resellerId,
-    expiresAt: user.unlimited.expiresAt,
+    expiresAt: user.unlimited.expiresAt ?? null,
   };
 }
 
-async function expireUnlimitedIfNeeded(user) {
-  const status = getUnlimitedStatus(user);
-
-  if (status.expired) {
-    user.unlimited.active = false;
-    user.unlimited.expiresAt = null;
-    user.unlimited.resellerId = null;
-    await user.save();
-  }
-
-  return status.expired ?? false;
-}
-
-module.exports = { getUnlimitedStatus, expireUnlimitedIfNeeded };
+module.exports = { getUnlimitedStatus };

@@ -46,7 +46,9 @@ function buildProfileTemplate(user, msg) {
   const unlimitedStatus = getUnlimitedStatus(user);
 
   const creditosLine = unlimitedStatus.isUnlimited
-    ? `[♾️] ILIMITADO ➤ ${formatDateTime(unlimitedStatus.expiresAt)}`
+    ? unlimitedStatus.expiresAt
+      ? `[♾️] ILIMITADO ➤ ${formatDateTime(unlimitedStatus.expiresAt)}`
+      : `[♾️] ILIMITADO ➤ Sin vencimiento`
     : `[💰] CREDITOS ➤ ${user.credits}`;
 
   const estadoLine = `[👾] ESTADO ➤ ${user.status === 'activo' ? 'ACTIVO' : 'NO ACTIVO'}`;
