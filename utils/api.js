@@ -17,6 +17,7 @@ const createActivacionLog = (body) => API.post(`/create_activacion_logs`, body).
 const getYapeClient = (email) => API.get(`/get_yape_client/${email}`).then((r) => r.data);
 const updateYapeClient = (id, body) => API.put(`/update_yape_client/${id}`, body).then((r) => r.data);
 const searchReseller = (id) => API.get(`/searchReseller/${id}`).then((r) => r.data);
+const createToken = (body) => API.post(`/create_token`, body).then((r) => r.data);
 
 module.exports = {
   getUser,
@@ -28,4 +29,5 @@ module.exports = {
   getYapeClient,
   updateYapeClient,
   searchReseller,
+  createToken,
 };

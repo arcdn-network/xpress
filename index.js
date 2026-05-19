@@ -10,6 +10,7 @@ const registerCreditosCommand = require('./commands/creditos');
 const registerActivateCommand = require('./commands/activate');
 const registerHistorialCommand = require('./commands/historial');
 const registerTutorialCommand = require('./commands/tutorial');
+const registerTokenCommand = require('./commands/token');
 
 const registerBuyCommand = require('./commands/buy');
 const registerCmdsCommand = require('./commands/cmds');
@@ -34,6 +35,7 @@ async function startBot() {
     { command: 'activate', description: 'Activar licencias' },
     { command: 'historial', description: 'Ver historial de activaciones' },
     { command: 'tutorial', description: 'Ver tutorial de activaciones' },
+    { command: 'token', description: 'Generar token autocompletado' },
     { command: 'yape', description: 'Generar Voucher Yape' },
     { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'apk', description: 'Obtener APK' },
@@ -46,6 +48,7 @@ async function startBot() {
   registerActivateCommand(bot);
   registerHistorialCommand(bot);
   registerTutorialCommand(bot);
+  registerTokenCommand(bot);
 
   registerBuyCommand(bot);
   registerCmdsCommand(bot);
