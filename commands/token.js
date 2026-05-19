@@ -18,7 +18,7 @@ function getTokenCost(days) {
   return TOKEN_PRICES[days] ?? null;
 }
 
-function buildTokenMessage(user, selectedDays = 3) {
+function buildTokenMessage(user, selectedDays = 5) {
   const cost = getTokenCost(selectedDays);
   const unlimitedStatus = getUnlimitedStatus(user);
 
@@ -72,7 +72,6 @@ function buildGeneratedTokenMessage(token, days) {
   return `<b>[✨] YAPE AUTOCOMPLETADO</b>
 
 Token de autocompletado por <b>${days} días</b> generado:
-
 <blockquote>
 <code>${token}</code>
 </blockquote>
@@ -84,8 +83,8 @@ Token de autocompletado por <b>${days} días</b> generado:
 4. Pega el token y confirma la activación
 
 <b>[⚡] IMPORTANTE</b>
-- Este token es válido para una única activación.
-- El token no tiene fecha de vencimiento hasta ser utilizado.
+- El token no tiene fecha de vencimiento.
+- El token es válido para una única activación.
 - Duración del servicio: <b>${days} días</b>.`;
 }
 
@@ -96,7 +95,7 @@ function buildCanceledMessage() {
 - El proceso fue cancelado correctamente.`;
 }
 
-function buildTokenKeyboard(telegramId, selectedDays = 3) {
+function buildTokenKeyboard(telegramId, selectedDays = 5) {
   const entries = Object.entries(TOKEN_PRICES);
   const keyboard = [];
 
@@ -464,7 +463,7 @@ function registerTokenCommand(bot) {
         }
       }
 
-      const selectedDays = 3;
+      const selectedDays = 5;
 
       const sentMessage = await bot.sendMessage(chatId, buildTokenMessage(user, selectedDays), {
         parse_mode: 'HTML',
