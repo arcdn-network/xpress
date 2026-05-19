@@ -251,7 +251,7 @@ function registerTokenCallback(bot) {
         if (unlimitedStatus.isUnlimited) {
           await bot.answerCallbackQuery(query.id, { text: 'Generando token...' });
 
-          const resp = await createToken({ days: config.days });
+          const resp = await createToken({ days: config.days, telegramId });
 
           if (!resp.status) {
             return bot.sendMessage(chatId, resp.msg || 'No se pudo generar el token');
@@ -348,7 +348,7 @@ function registerTokenCallback(bot) {
 
         await bot.answerCallbackQuery(query.id, { text: 'Generando token...' });
 
-        const resp = await createToken({ days: payload.days });
+        const resp = await createToken({ days: payload.days, telegramId: payload.telegramId });
 
         if (!resp.status) {
           clearConfirm(confirmId);
