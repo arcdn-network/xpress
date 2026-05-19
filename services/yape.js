@@ -125,7 +125,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
 
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 390, height: 800, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 2 });
     const html = buildYapeHtml(data);
     await page.setContent(html, { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'png', fullPage: true });
