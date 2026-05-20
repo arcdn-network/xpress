@@ -59,7 +59,7 @@ function formatFechaFilename() {
 }
 
 // ─── Handler genérico ─────────────────────────────────────────────────────────
-function createVoucherHandler(comando) {
+function createVoucherHandler(bot, comando) {
   const { service, destinoDefault, errorMsg } = CONFIG[comando];
 
   return async (msg, match) => {
@@ -126,9 +126,9 @@ function createVoucherHandler(comando) {
 // ─── Registro de comandos ─────────────────────────────────────────────────────
 
 function registerVoucherCommands(bot) {
-  bot.onText(/\/yape(.*)/, createVoucherHandler('yape'));
-  bot.onText(/\/plin(.*)/, createVoucherHandler('plin'));
-  bot.onText(/\/agora(.*)/, createVoucherHandler('agora'));
+  bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
+  bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
+  bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
 }
 
 module.exports = registerVoucherCommands;
