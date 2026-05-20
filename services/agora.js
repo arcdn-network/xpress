@@ -5,7 +5,9 @@ const { createBrowserPool } = require('../utils/browser');
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
 const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/agora.html'), 'utf-8');
 const checkBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/check_agora.png'));
+const ticketBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/ticket_agora.png'));
 const CHECK_IMG = `data:image/png;base64,${checkBuffer.toString('base64')}`;
+const TICKET_IMG = `data:image/png;base64,${ticketBuffer.toString('base64')}`;
 
 const pool = createBrowserPool();
 
@@ -25,11 +27,29 @@ function formatFecha() {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'PLIN' }) {
+function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!' }) {
   const { fecha, hora } = formatFecha();
 
-  const celularHtml = digitos
-    ? `<div class="row flex justify-content-between">
+  const esCompraIzi = !digitos && nombre.toLowerCase().startsWith('izi*');
+
+  const tituloHtml = esCompraIzi
+    ? `<div class="text-xs font-light mb-2">Compraste en</div>${nombre.toUpperCase()}`
+    : 'Pago realizado';
+
+  const iconHtml = esCompraIzi
+    ? `<img src="${TICKET_IMG}" class="w-6rem h-6rem">`
+    : `<img src="${CHECK_IMG}" class="w-5rem h-5rem">`;
+
+  const titularHtml = esCompraIzi
+    ? ''
+    : `<div class="row flex justify-content-between">
+        <span>Pagaste a</span>
+        <span>${nombre.toUpperCase()}</span>
+       </div>`;
+
+  const celularHtml =
+    digitos && !esCompraIzi
+      ? `<div class="row flex justify-content-between">
         <span>Celular</span>
         <span class="flex align-items-center gap-1">
           <div class="text-xs">•••</div>
@@ -37,9 +57,19 @@ function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'PLIN' }) {
           <div>${digitos}</div>
         </span>
        </div>`
-    : '';
+      : '';
 
-  const motivoHtml = mensaje
+  const destinoHtml = esCompraIzi
+    ? `<div class="row flex justify-content-between">
+        <span>Tipo de operación</span>
+        <span>Pago a comercios</span>
+       </div>`
+    : `<div class="row flex justify-content-between">
+        <span>Destino</span>
+        <span>${destino.toUpperCase()}</span>
+       </div>`;
+
+  const mensajeHtml = mensaje
     ? `<div class="row flex justify-content-between">
         <span>Motivo</span>
         <span>${mensaje}</span>
@@ -47,20 +77,21 @@ function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'PLIN' }) {
     : '';
 
   return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
-    .replace('{{NOMBRE}}', nombre)
+    .replace('{{TITULO}}', tituloHtml)
+    .replace('{{TITULAR}}', titularHtml)
     .replace('{{CELULAR}}', celularHtml)
-    .replace('{{MOTIVO}}', motivoHtml)
-    .replace('{{DESTINO}}', destino.toUpperCase())
+    .replace('{{MENSAJE}}', mensajeHtml)
+    .replace('{{DESTINO}}', destinoHtml)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)
     .replace('{{OPERACION}}', randomOperacion())
-    .replace('{{CDN_CHECK}}', CHECK_IMG);
+    .replace('{{ICON}}', iconHtml);
 }
 
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 460, height: 940, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 460, height: 1120, deviceScaleFactor: 2 });
     await page.setContent(buildAgoraHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'png', fullPage: true });
     return { buffer, base64: buffer.toString('base64') };
