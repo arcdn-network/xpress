@@ -91,7 +91,7 @@ function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!'
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 460, height: 1120, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 460, height: 1024, deviceScaleFactor: 2 });
     await page.setContent(buildAgoraHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'png', fullPage: true });
     return { buffer, base64: buffer.toString('base64') };
