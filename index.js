@@ -80,7 +80,7 @@ function startApi() {
 }
 
 async function startApp() {
- // await startBot();
+  await startBot();
   startApi();
 }
 
