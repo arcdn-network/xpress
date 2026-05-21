@@ -2,6 +2,7 @@ const express = require('express');
 const { generateVoucher: generateYape } = require('../services/yape');
 const { generateVoucher: generatePlin } = require('../services/plin');
 const { generateVoucher: generateAgora } = require('../services/agora');
+const { generateVoucher: generateBim } = require('../services/bim');
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const CONFIG = {
   yape: { service: generateYape, destinoDefault: 'Yape' },
   plin: { service: generatePlin, destinoDefault: 'Plin' },
   agora: { service: generateAgora, destinoDefault: 'AGORA/OH!' },
+  bim: { service: generateBim, destinoDefault: 'Bim' },
 };
 
 // ─── Validaciones ────────────────────────────────────────────────────
@@ -26,7 +28,7 @@ function validarParametros(monto, nombre, digitos) {
   return null;
 }
 
-// ─── Registro de parámetros ────────────────────────────────────────────────────────
+// ─── Handler genérico ────────────────────────────────────────────────────────────
 function createVoucherRoute(servicio) {
   const { service, destinoDefault } = CONFIG[servicio];
 
@@ -60,5 +62,6 @@ function createVoucherRoute(servicio) {
 router.post('/yape', createVoucherRoute('yape'));
 router.post('/plin', createVoucherRoute('plin'));
 router.post('/agora', createVoucherRoute('agora'));
+router.post('/bim', createVoucherRoute('bim'));
 
 module.exports = router;

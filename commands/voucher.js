@@ -1,6 +1,7 @@
 const { generateVoucher: generateYape } = require('../services/yape');
 const { generateVoucher: generatePlin } = require('../services/plin');
 const { generateVoucher: generateAgora } = require('../services/agora');
+const { generateVoucher: generateBim } = require('../services/bim');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
@@ -29,7 +30,12 @@ const CONFIG = {
   agora: {
     service: generateAgora,
     destinoDefault: 'AGORA/OH!',
-    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987', '150|IZI* COMERCIO|987|Texto de la operación']),
+    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987', '150|IZI* COMERCIO']),
+  },
+  bim: {
+    service: generateBim,
+    destinoDefault: 'YAPE',
+    errorMsg: buildErrorMsg('bim', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto del comentario|Yape']),
   },
 };
 
@@ -129,6 +135,7 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
   bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
   bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
+  bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
 }
 
 module.exports = registerVoucherCommands;
