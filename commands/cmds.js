@@ -36,13 +36,16 @@ Revisa todas tus activaciones realizadas.
 •···························•····························•
 🧾 <b>VOUCHERS (GRATIS)</b>
 <code>/yape 150|Pedro Cas*|987</code>
+<code>/yape 150|Pedro Cas*|987|Texto de la operación|Plin</code>
 Genera un voucher de Yape.
 
 <code>/plin 150|Pedro Cas*|987</code>
+<code>/plin 150|Pedro Cas*|987|Yape</code>
 Genera un voucher de Plin.
 
-<code>/agora 150|Pedro Castillo|987</code>
-<code>/agora 150|*IZI COMERCIO</code>
+<code>/agora 150|PEDRO CASTILLO|987</code>
+<code>/agora 150|PEDRO CASTILLO|987|Texto de la operación|Plin</code>
+<code>/agora 150|IZI* COMERCIO</code>
 Genera un voucher de Agora.
 - ···························•····························•
 `.trim();

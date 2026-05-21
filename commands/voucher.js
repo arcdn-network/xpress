@@ -29,7 +29,7 @@ const CONFIG = {
   agora: {
     service: generateAgora,
     destinoDefault: 'AGORA/OH!',
-    errorMsg: buildErrorMsg('agora', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto de la operación|Yape']),
+    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987', '150|IZI* COMERCIO|987|Texto de la operación']),
   },
 };
 

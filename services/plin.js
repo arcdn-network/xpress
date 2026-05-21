@@ -26,7 +26,7 @@ function formatFecha() {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildPlinHtml({ monto, nombre, digitos, destino = 'Yape' }) {
+function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
   const mostrarDigitos = /^\d{3}$/.test(digitosLimpios);
