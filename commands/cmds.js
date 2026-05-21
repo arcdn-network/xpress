@@ -34,14 +34,15 @@ Obtén información detallada del cliente.
 Revisa todas tus activaciones realizadas.
 
 •···························•····························•
-🧾 <b>VOUCHERS</b>
+🧾 <b>VOUCHERS (GRATIS)</b>
 <code>/yape 150|Pedro Cas*|987</code>
 Genera un voucher de Yape.
 
 <code>/plin 150|Pedro Cas*|987</code>
 Genera un voucher de Plin.
 
-<code>/agora 150|Pedro Cas*|987</code>
+<code>/agora 150|Pedro Castillo|987</code>
+<code>/agora 150|*IZI COMERCIO</code>
 Genera un voucher de Agora.
 - ···························•····························•
 `.trim();

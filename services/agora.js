@@ -30,7 +30,7 @@ function formatFecha() {
 function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!' }) {
   const { fecha, hora } = formatFecha();
 
-  const esCompraIzi = !digitos && nombre.toLowerCase().startsWith('izi*');
+  const esCompraIzi = nombre.toLowerCase().startsWith('izi*');
 
   const tituloHtml = esCompraIzi
     ? `<div class="text-xs font-light mb-2">Compraste en</div>${nombre.toUpperCase()}`
