@@ -43,11 +43,15 @@ Genera un voucher de Yape.
 <code>/plin 150|Pedro Cas*|987|Yape</code>
 Genera un voucher de Plin.
 
+<code>/bim 150|PEDRO CASTILLO|987</code>
+<code>/bim 150|PEDRO CASTILLO|987|Texto de la operación|Yape</code>
+Genera un voucher de Bim.
+
 <code>/agora 150|PEDRO CASTILLO|987</code>
-<code>/agora 150|PEDRO CASTILLO|987|Texto de la operación|Plin</code>
 <code>/agora 150|IZI* COMERCIO</code>
 Genera un voucher de Agora.
-- ···························•····························•
+
+•···························•····························•
 `.trim();
 }
 

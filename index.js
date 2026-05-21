@@ -37,6 +37,7 @@ async function startBot() {
     { command: 'token', description: 'Generar token autocompletado' },
     { command: 'yape', description: 'Generar Voucher Yape' },
     { command: 'plin', description: 'Generar Voucher Plin' },
+    { command: 'bim', description: 'Generar Voucher Bim' },
     { command: 'agora', description: 'Generar Voucher Agora' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
@@ -80,7 +81,7 @@ function startApi() {
 }
 
 async function startApp() {
-  await startBot();
+ await startBot();
   startApi();
 }
 

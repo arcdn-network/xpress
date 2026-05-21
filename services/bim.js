@@ -4,6 +4,8 @@ const { createBrowserPool } = require('../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
 const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/bim.html'), 'utf-8');
+const bimLogoBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/logo-bim.png'));
+const BIM_LOGO = `data:image/png;base64,${bimLogoBuffer.toString('base64')}`;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const pool = createBrowserPool();
@@ -43,7 +45,8 @@ function buildBimHtml({ monto, nombre, digitos, mensaje = '', destino = 'YAPE' }
     .replace('{{CELULAR}}', celularHtml)
     .replace('{{COMENTARIO}}', comentarioHtml)
     .replace('{{FECHA}}', fecha)
-    .replace('{{OPERACION}}', operacion);
+    .replace('{{OPERACION}}', operacion)
+    .replace(/\{\{CDN_LOGO\}\}/g, BIM_LOGO);
 }
 
 // ─── Generador ────────────────────────────────────────────────────────────────
