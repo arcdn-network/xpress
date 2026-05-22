@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Voucher API</title>
+   <style>
+      *,
+      *::before,
+      *::after {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
+
+      body {
+         background: #090909;
+         color: #e8e8e8;
+         font-family: monospace;
+         min-height: 100vh;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         padding: 2rem;
+      }
+
+      .card {
+         background: #111;
+         border: 1px solid #1f1f1f;
+         border-radius: 0.5rem;
+      }
+
+      input,
+      textarea {
+         background: #0a0a0a;
+         border: 1px solid #1f1f1f;
+         border-radius: 0.375rem;
+         color: #e8e8e8;
+         font-family: monospace;
+         font-size: 0.8rem;
+         padding: 0.5rem 0.625rem;
+         outline: none;
+         width: 100%;
+      }
+
+      input:focus,
+      textarea:focus {
+         border-color: #3b82f6;
+      }
+
+      textarea {
+         resize: none;
+         height: 8.75rem;
+         color: #c8c8c8;
+      }
+
+      textarea::-webkit-scrollbar {
+         width: 0.375rem;
+      }
+
+      textarea::-webkit-scrollbar-track {
+         background: #0a0a0a;
+      }
+
+      textarea::-webkit-scrollbar-thumb {
+         background: #2a2a2a;
+         border-radius: 0.1875rem;
+      }
+
+      textarea::-webkit-scrollbar-thumb:hover {
+         background: #3b82f6;
+      }
+
+      .pill {
+         background: #111;
+         border: 1px solid #1f1f1f;
+         border-radius: 0.375rem;
+         padding: 0.5rem 1rem;
+         cursor: pointer;
+         font-size: 0.8rem;
+         color: #777;
+         transition: all 0.15s;
+      }
+
+      .pill:hover {
+         border-color: #3b82f6;
+         color: #e8e8e8;
+      }
+
+      .pill.active {
+         background: #3b82f6;
+         border-color: #3b82f6;
+         color: #fff;
+      }
+
+      #btn-send {
+         background: #3b82f6;
+         color: #fff;
+         border: none;
+         border-radius: 0.375rem;
+         padding: 0.625rem 1.5rem;
+         font-family: monospace;
+         font-size: 0.8rem;
+         cursor: pointer;
+         width: 100%;
+      }
+
+      #btn-send:disabled {
+         background: #1f1f1f;
+         color: #444;
+         cursor: not-allowed;
+      }
+
+      #btn-send:hover:not(:disabled) {
+         background: #2563eb;
+      }
+
+      pre {
+         background: #0a0a0a;
+         border: 1px solid #1f1f1f;
+         border-radius: 0.375rem;
+         padding: 0.75rem;
+         font-size: 0.75rem;
+         color: #aaa;
+         overflow-x: auto;
+         white-space: pre-wrap;
+         word-break: break-all;
+         height: 5.625rem;
+         align-content: center;
+      }
+
+      .section-label {
+         font-size: 0.7rem;
+         color: #666;
+      }
+
+      .tag-req {
+         color: #f87171;
+      }
+
+      .url-input {
+         color: #888;
+         cursor: default;
+      }
+
+      .copy-btn {
+         position: absolute;
+         top: 0.5rem;
+         right: 0.5rem;
+         background: #1a1a1a;
+         border: 1px solid #2a2a2a;
+         border-radius: 0.3125rem;
+         color: #888;
+         font-family: monospace;
+         font-size: 0.68rem;
+         padding: 0.25rem 0.625rem;
+         cursor: pointer;
+         transition: all 0.15s;
+         z-index: 2;
+      }
+
+      .copy-btn:hover {
+         border-color: #3b82f6;
+         color: #fff;
+      }
+
+      .copy-btn.copied {
+         border-color: #22c55e;
+         color: #22c55e;
+      }
+
+      hr {
+         border: none;
+         border-top: 1px solid #1f1f1f;
+      }
+
+      /* utilities */
+      .flex {
+         display: flex;
+      }
+
+      .flex-column {
+         flex-direction: column;
+      }
+
+      .flex-wrap {
+         flex-wrap: wrap;
+      }
+
+      .justify-content-between {
+         justify-content: space-between;
+      }
+
+      .w-full {
+         width: 100%;
+      }
+
+      .h-full {
+         height: 100%;
+      }
+
+      .relative {
+         position: relative;
+      }
+
+      .text-xs {
+         font-size: 0.7rem;
+      }
+
+      .gap-1 {
+         gap: 0.25rem;
+      }
+
+      .gap-2 {
+         gap: 0.5rem;
+      }
+
+      .gap-3 {
+         gap: 0.75rem;
+      }
+
+      .gap-4 {
+         gap: 1rem;
+      }
+
+      .mb-2 {
+         margin-bottom: 0.5rem;
+      }
+
+      .mb-4 {
+         margin-bottom: 1rem;
+      }
+
+      .mb-5 {
+         margin-bottom: 1.25rem;
+      }
+
+      .my-4 {
+         margin-top: 1rem;
+         margin-bottom: 1rem;
+      }
+
+      .p-4 {
+         padding: 1rem;
+      }
+
+      /* grid */
+      .grid {
+         display: grid;
+         grid-template-columns: 1fr 1fr;
+         gap: 1rem;
+      }
+
+      @media (max-width: 767px) {
+         .grid {
+            grid-template-columns: 1fr;
+         }
+      }
+   </style>
+</head>
+
+<body>
+   <div class="w-full" style="max-width:56.25rem">
+
+      <div class="mb-5">
+         <p class="text-xs mb-2" style="color:#666">VOUCHER API — v1</p>
+         <h1 style="font-size:1.5rem;font-weight:300;color:#fff;margin-bottom:0.5rem">Genera vouchers de pago listos
+            para integrar.</h1>
+         <div class="flex gap-4">
+            <p class="text-xs" style="color:#666">BASE URL — <span style="color:#555" id="base-url-display"></span></p>
+            <p class="text-xs" style="color:#666">METHOD — <span style="color:#3b82f6">POST</span></p>
+         </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4" id="pills"></div>
+
+      <div class="grid">
+
+         <div class="card p-4 h-full flex flex-column gap-3" id="form-card">
+            <div id="fields" class="flex flex-column gap-3"></div>
+            <button id="btn-send" disabled onclick="send()">Selecciona un endpoint</button>
+         </div>
+
+         <div class="card p-4 h-full flex flex-column gap-3" id="resp-card">
+
+            <div class="flex flex-column gap-1">
+               <p class="section-label">URL DE LA SOLICITUD</p>
+               <input class="url-input" id="url-display" readonly value="—" />
+            </div>
+
+            <div class="flex flex-column gap-1">
+               <p class="section-label">RESPUESTA</p>
+               <pre id="pre">—</pre>
+            </div>
+
+            <div class="flex flex-column gap-1">
+               <p class="section-label">BASE64</p>
+               <div class="relative">
+                  <textarea id="b64-area" readonly placeholder="El base64 aparecerá aquí..."></textarea>
+                  <button class="copy-btn" id="copy-btn" onclick="copyB64()">⎘ copiar</button>
+               </div>
+            </div>
+
+         </div>
+
+      </div>
+
+      <hr class="my-4">
+      <div class="flex justify-content-between text-xs" style="color:#666">
+         <span>Voucher API</span>
+         <a href="https://t.me/dev_lguss" target="_blank" style="color:#666;text-decoration:none;">@dev_lguss</a>
+      </div>
+   </div>
+
+   <script>
+      const BASE_URL = window.location.origin + '/api';
+
+      const ENDPOINTS = [
+         { path: '/yape', default: 'Yape' },
+         { path: '/plin', default: 'Plin' },
+         { path: '/agora', default: 'AGORA/OH!' },
+         { path: '/bim', default: 'Bim' },
+      ];
+
+      const PARAMS = [
+         { name: 'monto', required: true, desc: 'Monto' },
+         { name: 'nombre', required: true, desc: 'Nombre del destinatario' },
+         { name: 'digitos', required: false, desc: 'Últimos 3 dígitos' },
+         { name: 'mensaje', required: false, desc: 'Comentario' },
+         { name: 'destino', required: false, desc: 'Destino (usa el default si se omite)' },
+      ];
+
+      const MAX_REQUESTS = 5;
+      const COOLDOWN_MS = 4000;
+      let isSending = false;
+      let requestCount = 0;
+      let cooldownTimer = null;
+
+      document.getElementById('base-url-display').textContent = BASE_URL;
+
+      document.getElementById('pills').innerHTML = ENDPOINTS.map((ep, i) =>
+         `<div class="pill" id="pill-${i}" onclick="selectEp(${i})">${ep.path}</div>`
+      ).join('');
+
+      document.getElementById('fields').innerHTML = PARAMS.map(p => `
+         <div class="flex flex-column gap-1">
+            <p class="section-label">${p.name.toUpperCase()} ${p.required ? '<span class="tag-req">*</span>' : ''}</p>
+            <input id="f-${p.name}" placeholder="${p.desc}" />
+         </div>
+      `).join('');
+
+      let selected = null;
+
+      function selectEp(i) {
+         selected = i;
+         document.querySelectorAll('.pill').forEach((el, j) => el.classList.toggle('active', i === j));
+         const btn = document.getElementById('btn-send');
+         btn.disabled = false;
+         btn.textContent = `POST ${ENDPOINTS[i].path} →`;
+         document.getElementById('url-display').value = BASE_URL + ENDPOINTS[i].path;
+      }
+
+      async function send() {
+         if (selected === null) return;
+         if (isSending || cooldownTimer) return;
+         if (requestCount >= MAX_REQUESTS) {
+            document.getElementById('pre').textContent = '⛔ Límite de solicitudes alcanzado en esta sesión.';
+            return;
+         }
+
+         isSending = true;
+         requestCount++;
+
+         const btn = document.getElementById('btn-send');
+         btn.disabled = true;
+         btn.textContent = '⏳ Generando...';
+
+         const ep = ENDPOINTS[selected];
+         const body = {};
+         PARAMS.forEach(p => {
+            const v = document.getElementById(`f-${p.name}`).value.trim();
+            if (v) body[p.name] = v;
+         });
+         if (!body.destino) body.destino = ep.default;
+
+         document.getElementById('url-display').value = BASE_URL + ep.path;
+         document.getElementById('pre').textContent = 'Enviando...';
+         document.getElementById('b64-area').value = '';
+
+         try {
+            const res = await fetch(BASE_URL + ep.path, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.base64) {
+               document.getElementById('pre').textContent = JSON.stringify(
+                  { status: data.status, author: data.author, base64: data.base64.slice(0, 30) + '...' }, null, 2
+               );
+               document.getElementById('b64-area').value = data.base64;
+            } else {
+               document.getElementById('pre').textContent = JSON.stringify(data, null, 2);
+               document.getElementById('b64-area').value = '';
+            }
+         } catch (e) {
+            document.getElementById('pre').textContent = 'Error: ' + e.message;
+         } finally {
+            isSending = false;
+            startCooldown();
+         }
+      }
+
+      function startCooldown() {
+         const btn = document.getElementById('btn-send');
+         const ep = ENDPOINTS[selected];
+         let remaining = COOLDOWN_MS / 1000;
+
+         btn.disabled = true;
+         btn.textContent = `Espera ${remaining}s...`;
+
+         cooldownTimer = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+               clearInterval(cooldownTimer);
+               cooldownTimer = null;
+               if (requestCount < MAX_REQUESTS) {
+                  btn.disabled = false;
+                  btn.textContent = `POST ${ep.path} →`;
+               } else {
+                  btn.textContent = '⛔ Límite alcanzado';
+               }
+            } else {
+               btn.textContent = `Espera ${remaining}s...`;
+            }
+         }, 1000);
+      }
+
+      function copyB64() {
+         const val = document.getElementById('b64-area').value;
+         if (!val) return;
+         navigator.clipboard.writeText(val).then(() => {
+            const btn = document.getElementById('copy-btn');
+            btn.classList.add('copied');
+            btn.textContent = '✓ copiado';
+            setTimeout(() => {
+               btn.classList.remove('copied');
+               btn.textContent = '⎘ copiar';
+            }, 2000);
+         });
+      }
+   </script>
+</body>
+
+</html>

@@ -28,7 +28,7 @@ function formatFecha() {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildBimHtml({ monto, nombre, digitos, mensaje = '', destino = 'YAPE' }) {
+function buildBimHtml({ monto, nombre, digitos, mensaje = '', destino = 'Bim' }) {
   const fecha = formatFecha();
   const operacion = randomOperacion();
 
@@ -54,8 +54,8 @@ async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 460, height: 1024, deviceScaleFactor: 3 });
     await page.setContent(buildBimHtml(data), { waitUntil: 'networkidle2' });
-    const buffer = await page.screenshot({ type: 'png', fullPage: true });
-    return { buffer, base64: buffer.toString('base64') };
+    const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
+    return buffer.toString('base64');
   });
 }
 

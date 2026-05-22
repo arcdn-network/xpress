@@ -46,11 +46,11 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 3 });
     await page.setContent(buildPlinHtml(data), { waitUntil: 'networkidle2' });
     const element = await page.$('.ticket-card');
-    const buffer = await element.screenshot({ type: 'png' });
-    return { buffer, base64: buffer.toString('base64') };
+    const buffer = await element.screenshot({ type: 'jpeg', quality: 85 });
+    return buffer.toString('base64');
   });
 }
 

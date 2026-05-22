@@ -42,7 +42,7 @@ function createVoucherRoute(servicio) {
         return res.status(400).json({ status: false, message: error });
       }
 
-      const { base64 } = await service({
+      const base64 = await service({
         monto: String(monto).trim(),
         nombre: String(nombre).trim(),
         digitos: digitos ? String(digitos).trim() : '',
@@ -50,7 +50,7 @@ function createVoucherRoute(servicio) {
         destino: String(destino).trim(),
       });
 
-      return res.json({ status: true, author: '@dev_lguss', base64 });
+      return res.json({ status: true, base64 });
     } catch (error) {
       console.error(`Error en API /${servicio}:`, error.message);
       return res.status(500).json({ status: false, message: 'Error al generar voucher.' });

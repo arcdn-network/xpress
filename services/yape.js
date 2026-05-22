@@ -101,10 +101,10 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 3 });
     await page.setContent(buildYapeHtml(data), { waitUntil: 'networkidle2' });
-    const buffer = await page.screenshot({ type: 'png', fullPage: true });
-    return { buffer, base64: buffer.toString('base64') };
+    const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
+    return buffer.toString('base64');
   });
 }
 
