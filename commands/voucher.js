@@ -2,6 +2,8 @@ const { generateVoucher: generateYape } = require('../services/yape');
 const { generateVoucher: generatePlin } = require('../services/plin');
 const { generateVoucher: generateAgora } = require('../services/agora');
 const { generateVoucher: generateBim } = require('../services/bim');
+const { generateVoucher: generateBcp } = require('../services/bcp');
+const { generateVoucher: generateIbk } = require('../services/ibk');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
@@ -20,22 +22,38 @@ const CONFIG = {
   yape: {
     service: generateYape,
     destinoDefault: 'Yape',
+    digitosRegex: /^\d{3}$/,
     errorMsg: buildErrorMsg('yape', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto de la operación|Plin']),
   },
   plin: {
     service: generatePlin,
     destinoDefault: 'Plin',
+    digitosRegex: /^\d{3}$/,
     errorMsg: buildErrorMsg('plin', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Yape']),
   },
   agora: {
     service: generateAgora,
     destinoDefault: 'AGORA/OH!',
-    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987', '150|IZI* COMERCIO']),
+    digitosRegex: /^\d{9}$/,
+    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987654321', '150|IZI* COMERCIO']),
   },
   bim: {
     service: generateBim,
     destinoDefault: 'YAPE',
+    digitosRegex: /^\d{3}$/,
     errorMsg: buildErrorMsg('bim', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto del comentario|Yape']),
+  },
+  bcp: {
+    service: generateBcp,
+    destinoDefault: 'BCP',
+    digitosRegex: /^\d{3}$/,
+    errorMsg: buildErrorMsg('bcp', ['150|Carlos Diaz*|653', '150|Carlos Diaz*|653|Yape']),
+  },
+  ibk: {
+    service: generateIbk,
+    destinoDefault: 'Plin',
+    digitosRegex: /^\d{9}$/,
+    errorMsg: buildErrorMsg('ibk', ['150|Pedro Castillo|987654321', '150|Pedro Castillo|987654321|Yape']),
   },
 };
 
@@ -66,7 +84,7 @@ function formatFechaFilename() {
 
 // ─── Handler genérico ─────────────────────────────────────────────────────────
 function createVoucherHandler(bot, comando) {
-  const { service, destinoDefault, errorMsg } = CONFIG[comando];
+  const { service, destinoDefault, errorMsg, digitosRegex } = CONFIG[comando];
 
   return async (msg, match) => {
     const chatId = msg.chat.id;
@@ -99,7 +117,7 @@ function createVoucherHandler(bot, comando) {
 
     if (!monto || !/^\d+(\.\d{1,2})?$/.test(monto)) return sendError();
     if (!nombre) return sendError();
-    if (digitos && !/^\d{3}$/.test(digitos)) return sendError();
+    if (digitos && !digitosRegex.test(digitos)) return sendError();
 
     if (!isDentroDeHorario()) {
       return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
@@ -136,6 +154,8 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
   bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
   bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
+  bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
+  bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
 }
 
 module.exports = registerVoucherCommands;

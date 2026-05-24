@@ -2,15 +2,17 @@ const path = require('path');
 const fs = require('fs');
 const { createBrowserPool } = require('../utils/browser');
 
-// ─── Constantes estáticas ─────────────────────────────────────────────────────
 const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/plin.html'), 'utf-8');
-const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
-const CDN_LOGO_BANK = `${CDN_BASE}/logos/interbank.png`;
-const CDN_LOGO_PLIN = `${CDN_BASE}/logos/plin.webp`;
 const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const pool = createBrowserPool();
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const BACKGROUND_BASE64 = (() => {
+  const buffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/template_plin.png'));
+  return `data:image/png;base64,${buffer.toString('base64')}`;
+})();
+
+const FONT_BASE64 = fs.readFileSync(path.resolve(__dirname, '../resources/fonts/Geometria.ttf')).toString('base64');
+
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
@@ -25,31 +27,28 @@ function formatFecha() {
   };
 }
 
-// ─── Builder HTML ─────────────────────────────────────────────────────────────
 function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
   const mostrarDigitos = /^\d{3}$/.test(digitosLimpios);
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+  const celularHtml = mostrarDigitos ? `${digitosLimpios} - ` : '';
+
+  return TEMPLATE_HTML.replace('{{FONT}}', `data:font/ttf;base64,${FONT_BASE64}`)
+    .replace('{{BACKGROUND}}', BACKGROUND_BASE64)
+    .replace('{{MONTO}}', parseFloat(monto).toFixed(2))
     .replace('{{NOMBRE}}', nombre)
-    .replace('{{CELULAR}}', mostrarDigitos ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : '')
-    .replace('{{SEPARADOR}}', mostrarDigitos ? ' - ' : '')
+    .replace('{{CELULAR}}', celularHtml)
     .replace('{{DESTINO}}', destino)
-    .replace('{{FECHA}}', fecha)
-    .replace('{{HORA}}', hora)
-    .replace('{{OPERACION}}', randomOperacion())
-    .replace('{{CDN_LOGO_BANK}}', CDN_LOGO_BANK)
-    .replace('{{CDN_LOGO_PLIN}}', CDN_LOGO_PLIN);
+    .replace('{{FECHA}}', `${fecha} ${hora}`)
+    .replace('{{OPERACION}}', randomOperacion());
 }
 
-// ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 3 });
+    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
     await page.setContent(buildPlinHtml(data), { waitUntil: 'networkidle2' });
-    const element = await page.$('.ticket-card');
-    const buffer = await element.screenshot({ type: 'jpeg', quality: 85 });
+    const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });
 }

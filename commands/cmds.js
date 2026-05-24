@@ -51,6 +51,13 @@ Genera un voucher de Bim.
 <code>/agora 150|IZI* COMERCIO</code>
 Genera un voucher de Agora.
 
+<code>/bcp 150|Pedro Cas*|653</code>
+<code>/bcp 150|Pedro Cas*|653|Yape</code>
+Genera un voucher de BCP.
+
+<code>/ibk 150|Pedro Cas*|987</code>
+<code>/ibk 150|Pedro Cas*|987|Yape</code>
+Genera un voucher de Interbank.
 •···························•····························•
 `.trim();
 }

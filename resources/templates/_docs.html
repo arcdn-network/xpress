@@ -317,24 +317,24 @@
       const BASE_URL = window.location.origin + '/api';
 
       const ENDPOINTS = [
-         { path: '/yape', default: 'Yape' },
-         { path: '/plin', default: 'Plin' },
-         { path: '/agora', default: 'AGORA/OH!' },
-         { path: '/bim', default: 'Bim' },
+         { path: '/yape', default: 'Yape', cantidad: 3 },
+         { path: '/plin', default: 'Plin', cantidad: 3 },
+         { path: '/agora', default: 'AGORA/OH!', cantidad: 9 },
+         { path: '/bim', default: 'Bim', cantidad: 3 },
+         { path: '/bcp', default: 'Yape', cantidad: 3 },
+         { path: '/ibk', default: 'Plin', cantidad: 9 },
       ];
 
       const PARAMS = [
          { name: 'monto', required: true, desc: 'Monto' },
          { name: 'nombre', required: true, desc: 'Nombre del destinatario' },
-         { name: 'digitos', required: false, desc: 'Últimos 3 dígitos' },
+         { name: 'digitos', required: false, desc: null },
          { name: 'mensaje', required: false, desc: 'Comentario' },
          { name: 'destino', required: false, desc: 'Destino (usa el default si se omite)' },
       ];
 
-      const MAX_REQUESTS = 5;
       const COOLDOWN_MS = 4000;
       let isSending = false;
-      let requestCount = 0;
       let cooldownTimer = null;
 
       document.getElementById('base-url-display').textContent = BASE_URL;
@@ -343,12 +343,19 @@
          `<div class="pill" id="pill-${i}" onclick="selectEp(${i})">${ep.path}</div>`
       ).join('');
 
-      document.getElementById('fields').innerHTML = PARAMS.map(p => `
+      function renderFields(cantidad) {
+         document.getElementById('fields').innerHTML = PARAMS.map(p => {
+            const desc = p.name === 'digitos' ? `Últimos ${cantidad} dígitos` : p.desc;
+            return `
          <div class="flex flex-column gap-1">
             <p class="section-label">${p.name.toUpperCase()} ${p.required ? '<span class="tag-req">*</span>' : ''}</p>
-            <input id="f-${p.name}" placeholder="${p.desc}" />
+            <input id="f-${p.name}" placeholder="${desc}" />
          </div>
-      `).join('');
+      `;
+         }).join('');
+      }
+
+      renderFields(3);
 
       let selected = null;
 
@@ -359,18 +366,14 @@
          btn.disabled = false;
          btn.textContent = `POST ${ENDPOINTS[i].path} →`;
          document.getElementById('url-display').value = BASE_URL + ENDPOINTS[i].path;
+         renderFields(ENDPOINTS[i].cantidad);
       }
 
       async function send() {
          if (selected === null) return;
          if (isSending || cooldownTimer) return;
-         if (requestCount >= MAX_REQUESTS) {
-            document.getElementById('pre').textContent = '⛔ Límite de solicitudes alcanzado en esta sesión.';
-            return;
-         }
 
          isSending = true;
-         requestCount++;
 
          const btn = document.getElementById('btn-send');
          btn.disabled = true;
@@ -425,12 +428,8 @@
             if (remaining <= 0) {
                clearInterval(cooldownTimer);
                cooldownTimer = null;
-               if (requestCount < MAX_REQUESTS) {
-                  btn.disabled = false;
-                  btn.textContent = `POST ${ep.path} →`;
-               } else {
-                  btn.textContent = '⛔ Límite alcanzado';
-               }
+               btn.disabled = false;
+               btn.textContent = `POST ${ep.path} →`;
             } else {
                btn.textContent = `Espera ${remaining}s...`;
             }

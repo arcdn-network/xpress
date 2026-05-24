@@ -39,6 +39,8 @@ async function startBot() {
     { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'bim', description: 'Generar Voucher Bim' },
     { command: 'agora', description: 'Generar Voucher Agora' },
+    { command: 'bcp', description: 'Generar Voucher BCP' },
+    { command: 'ibk', description: 'Generar Voucher Interbank' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
   ]);
@@ -83,7 +85,7 @@ function startApi() {
 }
 
 async function startApp() {
-  await startBot();
+  //await startBot();
   startApi();
 }
 

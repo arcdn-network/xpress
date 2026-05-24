@@ -3,40 +3,44 @@ const { generateVoucher: generateYape } = require('../services/yape');
 const { generateVoucher: generatePlin } = require('../services/plin');
 const { generateVoucher: generateAgora } = require('../services/agora');
 const { generateVoucher: generateBim } = require('../services/bim');
+const { generateVoucher: generateBcp } = require('../services/bcp');
+const { generateVoucher: generateIbk } = require('../services/ibk');
 
 const router = express.Router();
 
 // ─── Configuración ───────────────────────────────────────────────
 const CONFIG = {
-  yape: { service: generateYape, destinoDefault: 'Yape' },
-  plin: { service: generatePlin, destinoDefault: 'Plin' },
-  agora: { service: generateAgora, destinoDefault: 'AGORA/OH!' },
-  bim: { service: generateBim, destinoDefault: 'Bim' },
+  yape: { service: generateYape, destinoDefault: 'Yape', cantidad: 3 },
+  plin: { service: generatePlin, destinoDefault: 'Plin', cantidad: 9 },
+  agora: { service: generateAgora, destinoDefault: 'AGORA/OH!', cantidad: 9 },
+  bim: { service: generateBim, destinoDefault: 'Bim', cantidad: 3 },
+  bcp: { service: generateBcp, destinoDefault: 'BCP', cantidad: 3 },
+  ibk: { service: generateIbk, destinoDefault: 'Plin', cantidad: 9 },
 };
 
 // ─── Validaciones ────────────────────────────────────────────────────
-function validarParametros(monto, nombre, digitos) {
+function validarParametros(monto, nombre, digitos, cantidad) {
   if (!monto || !/^\d+(\.\d{1,2})?$/.test(String(monto))) {
     return 'El monto es obligatorio y debe ser válido.';
   }
   if (!nombre) {
     return 'El nombre es obligatorio.';
   }
-  if (digitos && !/^\d{3}$/.test(String(digitos))) {
-    return 'Los dígitos deben tener exactamente 3 números.';
+  if (digitos && !new RegExp(`^\\d{${cantidad}}$`).test(String(digitos))) {
+    return `Los dígitos deben tener exactamente ${cantidad} números.`;
   }
   return null;
 }
 
 // ─── Handler genérico ────────────────────────────────────────────────────────────
 function createVoucherRoute(servicio) {
-  const { service, destinoDefault } = CONFIG[servicio];
+  const { service, destinoDefault, cantidad } = CONFIG[servicio];
 
   return async (req, res) => {
     try {
       const { monto, nombre, digitos, mensaje = '', destino = destinoDefault } = req.body;
 
-      const error = validarParametros(monto, nombre, digitos);
+      const error = validarParametros(monto, nombre, digitos, cantidad);
 
       if (error) {
         return res.status(400).json({ status: false, message: error });
@@ -63,5 +67,7 @@ router.post('/yape', createVoucherRoute('yape'));
 router.post('/plin', createVoucherRoute('plin'));
 router.post('/agora', createVoucherRoute('agora'));
 router.post('/bim', createVoucherRoute('bim'));
+router.post('/bcp', createVoucherRoute('bcp'));
+router.post('/ibk', createVoucherRoute('ibk'));
 
 module.exports = router;
