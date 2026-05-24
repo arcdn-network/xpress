@@ -120,7 +120,7 @@ function createVoucherHandler(bot, comando) {
     if (digitos && !digitosRegex.test(digitos)) return sendError();
 
     if (!isDentroDeHorario()) {
-      return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
+      // return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
     }
 
     enProceso.add(userId);
