@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>Operación Exitosa</title>
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css" rel="stylesheet" />
+   <link href="https://fonts.cdnfonts.com/css/bentonsans-regular" rel="stylesheet" />
+
+   <style>
+      * {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
+
+      body {
+         font-family: 'BentonSans Regular', sans-serif;
+         background: #f0f2f5;
+         display: flex;
+         justify-content: center;
+         min-height: 100vh;
+      }
+
+      .app-wrapper {
+         width: 100%;
+         max-width: 480px;
+         min-height: 100vh;
+         background: white;
+      }
+
+      .header-fixed {
+         position: fixed;
+         top: 0;
+         left: 50%;
+         transform: translateX(-50%);
+         width: 100%;
+         max-width: 480px;
+         height: 4rem;
+         background: white;
+         z-index: 100;
+      }
+
+      .btn-close {
+         background: #F9F9F9;
+         border: none;
+         border-radius: 50%;
+         cursor: pointer;
+         color: #0a1148;
+         font-size: 1.4rem;
+         font-weight: 600;
+         width: 45px;
+         height: 45px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+      }
+
+      .section-success {
+         background: #EBFFF0;
+         border-radius: 0.75rem;
+      }
+
+      .section-detail {
+         background: #F7F8F8;
+         border-radius: 0.75rem;
+      }
+
+      .section-alert {
+         background: #D6E9F8;
+         border-radius: 0.75rem;
+      }
+
+      .title-op {
+         font-family: Georgia, serif;
+         font-size: 2.2rem;
+         font-weight: 700;
+         color: #0d1f15;
+      }
+
+      .amount-text {
+         font-size: 3rem;
+         line-height: 1.1;
+      }
+
+      .footer-fixed {
+         position: fixed;
+         bottom: 0;
+         left: 50%;
+         transform: translateX(-50%);
+         width: 100%;
+         max-width: 480px;
+         background: white;
+         padding: 0.75rem 1rem 2rem;
+         box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .bbva-button {
+         display: block;
+         width: 100%;
+         padding: 0.875rem;
+         background: #001391;
+         color: white;
+         font-family: 'BentonSans Regular', sans-serif;
+         font-size: 1rem;
+         font-weight: 600;
+         border: none;
+         border-radius: 8px;
+         cursor: pointer;
+      }
+
+      .text-black {
+         color: #000;
+      }
+   </style>
+</head>
+
+<body>
+
+   <div class="app-wrapper flex flex-column">
+
+      <!-- HEADER -->
+      <div class="header-fixed flex justify-content-between align-items-center px-2 pt-8">
+         <div></div>
+         <span class="font-bold" style="color: #0a1148;">Envío a contactos</span>
+         <button class="btn-close mb-3">✕</button>
+      </div>
+
+      <!-- Spacer header -->
+      <div style="height: 7.5rem;"></div>
+
+      <div class="px-4 pt-2 pb-4 flex flex-column gap-4">
+
+         <!-- SECCIÓN ÉXITO -->
+         <section class="section-success text-center p-4 flex flex-column align-items-center gap-2">
+            <svg width="6rem" height="6rem" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+               <circle cx="12" cy="12" r="9" fill="#024700"></circle>
+               <path d="M7.8 12.3L10.6 15.1L16.2 9.5" stroke="white" stroke-width="1.5" stroke-linecap="butt"
+                  stroke-linejoin="miter" fill="none"></path>
+            </svg>
+            <div class="title-op">Operación exitosa</div>
+            <div class="font-bold text-sm">{{FECHA}}, {{HORA}}</div>
+            <div class="text-sm">Importe enviado</div>
+            <div class="amount-text">S/ {{MONTO}}</div>
+         </section>
+
+         <!-- SECCIÓN DETALLE -->
+         <section class="section-detail text-sm flex flex-column gap-4 p-4" style="color: #0a1148;">
+            <div class="flex justify-content-between">
+               <span>Entidad destino</span>
+               <b>{{DESTINO}}</b>
+            </div>
+            <div class="flex justify-content-between">
+               <span>Número de operación</span>
+               <b>{{OPERACION}}</b>
+            </div>
+            <div class="flex justify-content-between">
+               <span>Tipo operación</span>
+               <b>Envío a contactos</b>
+            </div>
+            <div class="flex justify-content-between">
+               <span>Contacto</span>
+               <div>
+                  <b>{{NOMBRE}}</b><br>
+                  {{DIGITOS}}
+               </div>
+            </div>
+
+            <div class="flex justify-content-between">
+               <span>Cuenta de origen</span>
+               <div>
+                  <b>Cuenta sueldo</b>
+                  <div class="text-right font-bold text-black font-italic">•{{CUENTA_ORIGEN}}</div>
+               </div>
+            </div>
+         </section>
+
+         <!-- AVISO CONSTANCIA -->
+         <section class="section-alert p-3 flex gap-2 align-items-start text-base line-height-3">
+            <div>
+               <svg width="25" height="25" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" enable-background="new 0 0 32 32"
+                  xml:space="preserve">
+                  <rect x="15" y="14" width="3" height="8" />
+                  <rect x="15" y="10" width="3" height="2" />
+                  <circle fill="none" stroke="#000000" stroke-width="2" stroke-miterlimit="10" cx="16" cy="16" r="12" />
+               </svg>
+            </div>
+            <div class="flex flex-column gap-1">
+               <span>La constancia fue enviada a este correo electrónico:</span>
+               <b>•n479@gmail.com</b>
+            </div>
+         </section>
+
+      </div>
+
+      <div class="footer-fixed">
+         <button type="button" class="bbva-button">Salir</button>
+      </div>
+
+   </div>
+
+</body>
+
+</html>

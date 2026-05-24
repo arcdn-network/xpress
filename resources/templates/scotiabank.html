@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>Constancia</title>
+
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeflex@3.3.1/primeflex.min.css" />
+
+   <style>
+      *,
+      *::before,
+      *::after {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
+
+      @font-face {
+         font-family: 'Scotia-Regular';
+         src: url('{{FONT}}') format('woff');
+         font-weight: normal;
+         font-style: normal;
+      }
+
+      html,
+      body {
+         height: 100%;
+      }
+
+      body {
+         font-family: 'Scotia-Regular', sans-serif;
+         background: #fff;
+         max-width: 480px;
+         margin: 0 auto;
+         display: flex;
+         flex-direction: column;
+      }
+
+      .hero-section {
+         background: #F6F7FC;
+      }
+
+      .divider-v {
+         width: 1px;
+         height: 25px;
+         background: #ccc;
+      }
+
+      .detail-card {
+         border: 1px solid #E0E0E0;
+         border-radius: 0.5rem;
+         overflow: hidden;
+      }
+
+      .row-item span:first-child {
+         min-width: 110px;
+      }
+
+      .email-footer {
+         background: #F6F7FC;
+         color: #333333;
+      }
+
+      .action-circle {
+         width: 48px;
+         height: 48px;
+         border-radius: 50%;
+         border: 1px solid #E0E0E0;
+      }
+
+      .color-base {
+         color: #333333;
+      }
+   </style>
+</head>
+
+<body>
+
+   <div class="flex justify-content-between align-items-center px-3 pb-3 pt-5">
+      <div style="width:24px"></div>
+      <span class="font-bold text-base color-base">Constancia</span>
+      <span class="text-xl" style="color:#999; cursor:pointer">✕</span>
+   </div>
+
+   <div class="hero-section flex flex-column align-items-center p-4 gap-2">
+      <div class="flex align-items-center gap-3 mb-1">
+         <img src="{{LOGO_PLIN}}" style="width:50px" />
+         <div class="divider-v"></div>
+         <img src="{{LOGO_SCOTIA}}" style="width:40px; padding:0.35rem" />
+      </div>
+      <p class="text-sm mb-2">Pagaste con Plin</p>
+      <div class="text-center mb-2">
+         <p class="font-bold text-xl mb-2">{{NOMBRE}}</p>
+         <p class="font-bold text-4xl">S/ {{MONTO}}</p>
+      </div>
+   </div>
+
+   <div class="detail-card mx-3 mt-3">
+
+      <div class="py-3 px-1">
+
+         <div class="row-item flex px-3 py-2 gap-3 text-sm">
+            <span>Fecha y hora</span>
+            <span>{{FECHA}}</span>
+         </div>
+
+         <div class="row-item flex px-3 py-2 gap-3 text-sm">
+            <span>Origen</span>
+            <span>Cuenta Digital SBP<br />*** *** 9390</span>
+         </div>
+
+         <div class="row-item flex px-3 py-2 gap-3 text-sm">
+            <span>Destino</span>
+            <span>{{DIGITOS}}</span>
+         </div>
+
+         <div class="row-item flex px-3 py-2 gap-3 text-sm">
+            <span>Comisión</span>
+            <span>Gratis</span>
+         </div>
+
+         {{MENSAJE}}
+
+         <div class="row-item flex px-3 py-2 gap-3 text-sm">
+            <span>N° de operación</span>
+            <span>{{OPERACION}}</span>
+         </div>
+
+      </div>
+
+      <div class="email-footer flex flex-column align-items-center px-3 py-3 gap-1 text-center">
+         <p class="text-xs">Enviamos el detalle de la operación a:</p>
+         <p class="text-sm font-bold">a******@gmail.com</p>
+      </div>
+
+   </div>
+
+   <div class="flex justify-content-around align-items-center px-4 py-5 mb-5 mt-auto">
+
+      <div class="flex flex-column align-items-center gap-2" style="cursor:pointer">
+         <div class="action-circle flex align-items-center justify-content-center">
+            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+               <path d="M12 4L6 10l6 6" stroke="#007EAB" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+            </svg>
+         </div>
+         <span class="text-xs font-bold color-base">Volver a Plin</span>
+      </div>
+
+      <div class="flex flex-column align-items-center gap-2" style="cursor:pointer">
+         <div class="action-circle flex align-items-center justify-content-center">
+            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+               <path d="M10 3v9M7 6l3-3 3 3" stroke="#007EAB" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+               <path d="M4 13v3a1 1 0 001 1h10a1 1 0 001-1v-3" stroke="#007EAB" stroke-width="2"
+                  stroke-linecap="round" />
+            </svg>
+         </div>
+         <span class="text-xs font-bold color-base">Compartir</span>
+      </div>
+
+   </div>
+
+</body>
+
+</html>

@@ -4,6 +4,8 @@ const { generateVoucher: generateAgora } = require('../services/agora');
 const { generateVoucher: generateBim } = require('../services/bim');
 const { generateVoucher: generateBcp } = require('../services/bcp');
 const { generateVoucher: generateIbk } = require('../services/ibk');
+const { generateVoucher: generateBbva } = require('../services/bbva');
+const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
@@ -63,11 +65,26 @@ const CONFIG = {
       '150|Pedro Castillo|987654321|Yape',
     ]),
   },
+  bbva: {
+    service: generateBbva,
+    destinoDefault: 'Yape',
+    digitosRegex: /^\d{3}$/,
+    errorMsg: buildErrorMsg('bbva', ['150|Liz Flores*|987', '150|Liz Flores*|987|Plin']),
+  },
+  scotiabank: {
+    service: generateScotiabank,
+    destinoDefault: 'Yape',
+    digitosRegex: /^(\d{3}|\d{9})$/,
+    errorMsg: buildErrorMsg('scotiabank', [
+      '150|Gerson Ara***',
+      '150|Gerson Ara***|003',
+      '150|Gerson Ara***|003|Mensaje del pago|Yape',
+    ]),
+  },
 };
 
 const MSG_HORARIO = '🕙 *El servicio de vouchers está disponible de 8:00 a.m. a 10:00 p.m.*';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDentroDeHorario() {
   const hora = new Date().getHours();
   return hora >= 8 && hora < 22;
@@ -90,7 +107,6 @@ function formatFechaFilename() {
   return `${dia}${mes}${anio}`;
 }
 
-// ─── Handler genérico ─────────────────────────────────────────────────────────
 function createVoucherHandler(bot, comando) {
   const { service, destinoDefault, errorMsg, digitosRegex } = CONFIG[comando];
 
@@ -156,8 +172,6 @@ function createVoucherHandler(bot, comando) {
   };
 }
 
-// ─── Registro de comandos ─────────────────────────────────────────────────────
-
 function registerVoucherCommands(bot) {
   bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
   bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
@@ -165,6 +179,8 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
   bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
   bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
+  bot.onText(/\/bbva(.*)/, createVoucherHandler(bot, 'bbva'));
+  bot.onText(/\/scotiabank(.*)/, createVoucherHandler(bot, 'scotiabank'));
 }
 
 module.exports = registerVoucherCommands;

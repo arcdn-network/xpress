@@ -5,10 +5,11 @@ const { generateVoucher: generateAgora } = require('../services/agora');
 const { generateVoucher: generateBim } = require('../services/bim');
 const { generateVoucher: generateBcp } = require('../services/bcp');
 const { generateVoucher: generateIbk } = require('../services/ibk');
+const { generateVoucher: generateBbva } = require('../services/bbva');
+const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
 
 const router = express.Router();
 
-// ─── Configuración ───────────────────────────────────────────────
 const CONFIG = {
   yape: { service: generateYape, destinoDefault: 'Yape', cantidad: [3] },
   plin: { service: generatePlin, destinoDefault: 'Plin', cantidad: [3, 9] },
@@ -16,9 +17,10 @@ const CONFIG = {
   bim: { service: generateBim, destinoDefault: 'Bim', cantidad: [3] },
   bcp: { service: generateBcp, destinoDefault: 'BCP', cantidad: [3] },
   ibk: { service: generateIbk, destinoDefault: 'Plin', cantidad: [3, 9] },
+  bbva: { service: generateBbva, destinoDefault: 'BBVA Perú', cantidad: [3] },
+  scotiabank: { service: generateScotiabank, destinoDefault: 'Plin', cantidad: [3, 9] },
 };
 
-// ─── Validaciones ────────────────────────────────────────────────────
 function validarParametros(monto, nombre, digitos, cantidad) {
   if (!monto || !/^\d+(\.\d{1,2})?$/.test(String(monto))) {
     return 'El monto es obligatorio y debe ser válido.';
@@ -35,7 +37,6 @@ function validarParametros(monto, nombre, digitos, cantidad) {
   return null;
 }
 
-// ─── Handler genérico ────────────────────────────────────────────────────────────
 function createVoucherRoute(servicio) {
   const { service, destinoDefault, cantidad } = CONFIG[servicio];
 
@@ -65,12 +66,13 @@ function createVoucherRoute(servicio) {
   };
 }
 
-// ─── Registro de rutas ────────────────────────────────────────────────────────
 router.post('/yape', createVoucherRoute('yape'));
 router.post('/plin', createVoucherRoute('plin'));
 router.post('/agora', createVoucherRoute('agora'));
 router.post('/bim', createVoucherRoute('bim'));
 router.post('/bcp', createVoucherRoute('bcp'));
 router.post('/ibk', createVoucherRoute('ibk'));
+router.post('/bbva', createVoucherRoute('bbva'));
+router.post('/scotiabank', createVoucherRoute('scotiabank'));
 
 module.exports = router;
