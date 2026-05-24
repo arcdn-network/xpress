@@ -48,7 +48,7 @@ function formatFecha() {
   };
 }
 
-function buildBcpHtml({ monto, nombre, digitos, destino = 'Yape' }) {
+function buildBcpHtml({ monto, nombre, digitos, destino = 'BCP' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
 

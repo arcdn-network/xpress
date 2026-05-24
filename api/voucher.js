@@ -10,12 +10,12 @@ const router = express.Router();
 
 // ─── Configuración ───────────────────────────────────────────────
 const CONFIG = {
-  yape: { service: generateYape, destinoDefault: 'Yape', cantidad: 3 },
-  plin: { service: generatePlin, destinoDefault: 'Plin', cantidad: 9 },
-  agora: { service: generateAgora, destinoDefault: 'AGORA/OH!', cantidad: 9 },
-  bim: { service: generateBim, destinoDefault: 'Bim', cantidad: 3 },
-  bcp: { service: generateBcp, destinoDefault: 'BCP', cantidad: 3 },
-  ibk: { service: generateIbk, destinoDefault: 'Plin', cantidad: 9 },
+  yape: { service: generateYape, destinoDefault: 'Yape', cantidad: [3] },
+  plin: { service: generatePlin, destinoDefault: 'Plin', cantidad: [3, 9] },
+  agora: { service: generateAgora, destinoDefault: 'AGORA/OH!', cantidad: [3, 9] },
+  bim: { service: generateBim, destinoDefault: 'Bim', cantidad: [3] },
+  bcp: { service: generateBcp, destinoDefault: 'BCP', cantidad: [3] },
+  ibk: { service: generateIbk, destinoDefault: 'Plin', cantidad: [3, 9] },
 };
 
 // ─── Validaciones ────────────────────────────────────────────────────
@@ -26,8 +26,11 @@ function validarParametros(monto, nombre, digitos, cantidad) {
   if (!nombre) {
     return 'El nombre es obligatorio.';
   }
-  if (digitos && !new RegExp(`^\\d{${cantidad}}$`).test(String(digitos))) {
-    return `Los dígitos deben tener exactamente ${cantidad} números.`;
+  if (digitos) {
+    const regex = new RegExp(`^(${cantidad.map((n) => `\\d{${n}}`).join('|')})$`);
+    if (!regex.test(String(digitos))) {
+      return `Los dígitos deben tener ${cantidad.join(' o ')} números.`;
+    }
   }
   return null;
 }

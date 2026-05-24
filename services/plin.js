@@ -30,9 +30,13 @@ function formatFecha() {
 function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
-  const mostrarDigitos = /^\d{3}$/.test(digitosLimpios);
 
-  const celularHtml = mostrarDigitos ? `${digitosLimpios} - ` : '';
+  let celularHtml = '';
+  if (/^\d{3}$/.test(digitosLimpios)) {
+    celularHtml = `*** *** ${digitosLimpios} - `;
+  } else if (/^\d{9}$/.test(digitosLimpios)) {
+    celularHtml = `${digitosLimpios} - `;
+  }
 
   return TEMPLATE_HTML.replace('{{FONT}}', `data:font/ttf;base64,${FONT_BASE64}`)
     .replace('{{BACKGROUND}}', BACKGROUND_BASE64)

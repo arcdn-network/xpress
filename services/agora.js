@@ -47,14 +47,16 @@ function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!'
         <span>${nombre.toUpperCase()}</span>
        </div>`;
 
+  const digitosLimpios = String(digitos || '').trim();
+  const celularDisplay = /^\d{3}$/.test(digitosLimpios) || /^\d{9}$/.test(digitosLimpios) ? digitosLimpios : '';
+
   const celularHtml =
-    digitos && !esCompraIzi
+    celularDisplay && !esCompraIzi
       ? `<div class="row flex justify-content-between">
         <span>Celular</span>
         <span class="flex align-items-center gap-1">
-          <div class="text-xs">•••</div>
-          <div class="text-xs">•••</div>
-          <div>${digitos}</div>
+          ${/^\d{3}$/.test(digitosLimpios) ? '<div class="text-xs">•••</div><div class="text-xs">•••</div>' : ''}
+          <div>${celularDisplay}</div>
         </span>
        </div>`
       : '';

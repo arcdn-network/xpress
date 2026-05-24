@@ -29,12 +29,16 @@ function formatFecha() {
 function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
-  const mostrarDigitos = /^\d{3}$/.test(digitosLimpios);
+  const es3 = /^\d{3}$/.test(digitosLimpios);
+  const es9 = /^\d{9}$/.test(digitosLimpios);
 
   return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
     .replace('{{NOMBRE}}', nombre)
-    .replace('{{CELULAR}}', mostrarDigitos ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : '')
-    .replace('{{SEPARADOR}}', mostrarDigitos ? ' - ' : '')
+    .replace(
+      '{{CELULAR}}',
+      es3 ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : es9 ? digitosLimpios : '',
+    )
+    .replace('{{SEPARADOR}}', es3 || es9 ? ' - ' : '')
     .replace('{{DESTINO}}', destino)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)

@@ -317,12 +317,12 @@
       const BASE_URL = window.location.origin + '/api';
 
       const ENDPOINTS = [
-         { path: '/yape', default: 'Yape', cantidad: 3 },
-         { path: '/plin', default: 'Plin', cantidad: 3 },
-         { path: '/agora', default: 'AGORA/OH!', cantidad: 9 },
-         { path: '/bim', default: 'Bim', cantidad: 3 },
-         { path: '/bcp', default: 'Yape', cantidad: 3 },
-         { path: '/ibk', default: 'Plin', cantidad: 9 },
+         { path: '/yape', default: 'Yape', cantidad: [3] },
+         { path: '/plin', default: 'Plin', cantidad: [3, 9] },
+         { path: '/agora', default: 'AGORA/OH!', cantidad: [3, 9] },
+         { path: '/bim', default: 'Bim', cantidad: [3] },
+         { path: '/bcp', default: 'Yape', cantidad: [3] },
+         { path: '/ibk', default: 'Plin', cantidad: [3, 9] },
       ];
 
       const PARAMS = [
@@ -344,18 +344,22 @@
       ).join('');
 
       function renderFields(cantidad) {
+         const desc = cantidad.length > 1
+            ? `Últimos ${cantidad.join(' o ')} dígitos`
+            : `Últimos ${cantidad[0]} dígitos`;
+
          document.getElementById('fields').innerHTML = PARAMS.map(p => {
-            const desc = p.name === 'digitos' ? `Últimos ${cantidad} dígitos` : p.desc;
+            const placeholder = p.name === 'digitos' ? desc : p.desc;
             return `
-         <div class="flex flex-column gap-1">
-            <p class="section-label">${p.name.toUpperCase()} ${p.required ? '<span class="tag-req">*</span>' : ''}</p>
-            <input id="f-${p.name}" placeholder="${desc}" />
-         </div>
-      `;
+      <div class="flex flex-column gap-1">
+        <p class="section-label">${p.name.toUpperCase()} ${p.required ? '<span class="tag-req">*</span>' : ''}</p>
+        <input id="f-${p.name}" placeholder="${placeholder}" />
+      </div>
+    `;
          }).join('');
       }
 
-      renderFields(3);
+      renderFields([3]);
 
       let selected = null;
 

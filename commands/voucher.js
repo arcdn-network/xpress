@@ -28,14 +28,18 @@ const CONFIG = {
   plin: {
     service: generatePlin,
     destinoDefault: 'Plin',
-    digitosRegex: /^\d{9}$/,
-    errorMsg: buildErrorMsg('plin', ['150|Pedro Castillo', '150|Pedro Castillo|987654321|Yape']),
+    digitosRegex: /^(\d{3}|\d{9})$/,
+    errorMsg: buildErrorMsg('plin', [
+      '150|Pedro Castillo',
+      '150|Pedro Castillo|987',
+      '150|Pedro Castillo|987654321|Yape',
+    ]),
   },
   agora: {
     service: generateAgora,
     destinoDefault: 'AGORA/OH!',
-    digitosRegex: /^\d{9}$/,
-    errorMsg: buildErrorMsg('agora', ['150|PEDRO CASTILLO|987654321', '150|IZI* COMERCIO']),
+    digitosRegex: /^(\d{3}|\d{9})$/,
+    errorMsg: buildErrorMsg('agora', ['150|IZI* COMERCIO', '150|PEDRO CASTILLO|987', '150|PEDRO CASTILLO|987654321']),
   },
   bim: {
     service: generateBim,
@@ -47,13 +51,17 @@ const CONFIG = {
     service: generateBcp,
     destinoDefault: 'BCP',
     digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('bcp', ['150|Carlos Diaz*|653', '150|Carlos Diaz*|653|Yape']),
+    errorMsg: buildErrorMsg('bcp', ['150|Carlos Diaz*|987', '150|Carlos Diaz*|987|Yape']),
   },
   ibk: {
     service: generateIbk,
     destinoDefault: 'Plin',
-    digitosRegex: /^\d{9}$/,
-    errorMsg: buildErrorMsg('ibk', ['150|Pedro Castillo|987654321', '150|Pedro Castillo|987654321|Yape']),
+    digitosRegex: /^(\d{3}|\d{9})$/,
+    errorMsg: buildErrorMsg('plin', [
+      '150|Pedro Castillo',
+      '150|Pedro Castillo|987',
+      '150|Pedro Castillo|987654321|Yape',
+    ]),
   },
 };
 
