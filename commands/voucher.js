@@ -127,7 +127,8 @@ function createVoucherHandler(bot, comando) {
     const loading = await bot.sendMessage(chatId, '⏳ Generando voucher...');
 
     try {
-      const { buffer } = await service({ monto, nombre, digitos, mensaje, destino });
+      const base64 = await service({ monto, nombre, digitos, mensaje, destino });
+      const buffer = Buffer.from(base64, 'base64');
 
       setCooldown(userId);
       await bot.deleteMessage(chatId, loading.message_id);
