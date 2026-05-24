@@ -28,8 +28,8 @@ const CONFIG = {
   plin: {
     service: generatePlin,
     destinoDefault: 'Plin',
-    digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('plin', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Yape']),
+    digitosRegex: /^\d{9}$/,
+    errorMsg: buildErrorMsg('plin', ['150|Pedro Castillo', '150|Pedro Castillo|987654321|Yape']),
   },
   agora: {
     service: generateAgora,
