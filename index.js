@@ -16,7 +16,7 @@ const registerBuyCommand = require('./commands/buy');
 const registerCmdsCommand = require('./commands/cmds');
 const registerAppCommands = require('./commands/apk');
 const registerInfoCommand = require('./commands/info');
-const registerVoucherCommands = require('./commands/voucher');
+const registerVoucherCommands = require('./api/bot');
 
 async function startBot() {
   const token = process.env.BOT_TOKEN;
@@ -39,6 +39,7 @@ async function startBot() {
     { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'bim', description: 'Generar Voucher Bim' },
     { command: 'agora', description: 'Generar Voucher Agora' },
+    { command: 'lemon', description: 'Generar Voucher Lemon' },
     { command: 'bcp', description: 'Generar Voucher BCP' },
     { command: 'ibk', description: 'Generar Voucher Interbank' },
     { command: 'bbva', description: 'Generar Voucher BBVA' },
@@ -70,8 +71,8 @@ async function startBot() {
 
 const express = require('express');
 const cors = require('cors');
-const voucherRoutes = require('./api/voucher');
-const docsRoutes = require('./api/docs');
+const voucherRoutes = require('./api/api');
+const docsRoutes = require('./utils/docs');
 
 function startApi() {
   const app = express();
@@ -87,7 +88,7 @@ function startApi() {
 }
 
 async function startApp() {
- // await startBot();
+  // await startBot();
   startApi();
 }
 

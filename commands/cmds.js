@@ -35,29 +35,10 @@ Revisa todas tus activaciones realizadas.
 
 •···························•····························•
 🧾 <b>VOUCHERS (GRATIS)</b>
-<code>/yape 150|Pedro Cas*|987</code>
-<code>/yape 150|Pedro Cas*|987|Texto de la operación|Plin</code>
-Genera un voucher de Yape.
+Comandos: <i>yape · plin · bim · agora · lemon · bcp · ibk · bbva · scotiabank</i>
+<code>/cmd monto|titular|digitos|mensaje|destino</code>
+Genera un voucher de pago.
 
-<code>/plin 150|Pedro Cas*|987</code>
-<code>/plin 150|Pedro Cas*|987|Yape</code>
-Genera un voucher de Plin.
-
-<code>/bim 150|PEDRO CASTILLO|987</code>
-<code>/bim 150|PEDRO CASTILLO|987|Texto de la operación|Yape</code>
-Genera un voucher de Bim.
-
-<code>/agora 150|PEDRO CASTILLO|987</code>
-<code>/agora 150|IZI* COMERCIO</code>
-Genera un voucher de Agora.
-
-<code>/bcp 150|Pedro Cas*|653</code>
-<code>/bcp 150|Pedro Cas*|653|Yape</code>
-Genera un voucher de BCP.
-
-<code>/ibk 150|Pedro Cas*|987</code>
-<code>/ibk 150|Pedro Cas*|987|Yape</code>
-Genera un voucher de Interbank.
 •···························•····························•
 `.trim();
 }

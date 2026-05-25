@@ -2,18 +2,16 @@ const path = require('path');
 const fs = require('fs');
 const { createBrowserPool } = require('../utils/browser');
 
+const readFileBase64 = (relativePath, mimeType) => {
+  const filePath = path.resolve(__dirname, relativePath);
+  const base64 = fs.readFileSync(filePath).toString('base64');
+  return `data:${mimeType};base64,${base64}`;
+};
+
 const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/scotiabank.html'), 'utf-8');
-const LOGO_PLIN = `data:image/webp;base64,${fs
-  .readFileSync(path.resolve(__dirname, '../resources/images/plin.webp'))
-  .toString('base64')}`;
-
-const LOGO_SCOTIA = `data:image/png;base64,${fs
-  .readFileSync(path.resolve(__dirname, '../resources/images/scotiabank.png'))
-  .toString('base64')}`;
-
-const FONT_SCOTIA = `data:font/woff;base64,${fs
-  .readFileSync(path.resolve(__dirname, '../resources/fonts/Scotia-Regular.woff'))
-  .toString('base64')}`;
+const LOGO_PLIN = readFileBase64('../resources/images/plin.webp', 'image/webp');
+const LOGO_SCOTIA = readFileBase64('../resources/images/scotiabank.png', 'image/png');
+const FONT_SCOTIA = readFileBase64('../resources/fonts/Scotia-Regular.woff', 'font/woff');
 
 const MESES = ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'];
 

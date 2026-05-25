@@ -1,87 +1,9 @@
-const { generateVoucher: generateYape } = require('../services/yape');
-const { generateVoucher: generatePlin } = require('../services/plin');
-const { generateVoucher: generateAgora } = require('../services/agora');
-const { generateVoucher: generateBim } = require('../services/bim');
-const { generateVoucher: generateBcp } = require('../services/bcp');
-const { generateVoucher: generateIbk } = require('../services/ibk');
-const { generateVoucher: generateBbva } = require('../services/bbva');
-const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
+
+const { CONFIG } = require('./config');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
 const enProceso = new Set();
-
-function buildErrorMsg(comando, ejemplos) {
-  const ejs = ejemplos.map((e) => `\`\`\`\n/${comando} ${e}\n\`\`\``).join('\n');
-  return `⚠️ *Formato incorrecto.*
-Debes proporcionar: El monto, titular y los últimos 3 dígitos.
-Puedes ingresar texto (opcional) y destino (opcional).
-✅ *Ejemplo de uso:*
-${ejs}`;
-}
-
-const CONFIG = {
-  yape: {
-    service: generateYape,
-    destinoDefault: 'Yape',
-    digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('yape', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto de la operación|Plin']),
-  },
-  plin: {
-    service: generatePlin,
-    destinoDefault: 'Plin',
-    digitosRegex: /^(\d{3}|\d{9})$/,
-    errorMsg: buildErrorMsg('plin', [
-      '150|Pedro Castillo',
-      '150|Pedro Castillo|987',
-      '150|Pedro Castillo|987654321|Yape',
-    ]),
-  },
-  agora: {
-    service: generateAgora,
-    destinoDefault: 'AGORA/OH!',
-    digitosRegex: /^(\d{3}|\d{9})$/,
-    errorMsg: buildErrorMsg('agora', ['150|IZI* COMERCIO', '150|PEDRO CASTILLO|987', '150|PEDRO CASTILLO|987654321']),
-  },
-  bim: {
-    service: generateBim,
-    destinoDefault: 'YAPE',
-    digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('bim', ['150|Pedro Cas*|987', '150|Pedro Cas*|987|Texto del comentario|Yape']),
-  },
-  bcp: {
-    service: generateBcp,
-    destinoDefault: 'BCP',
-    digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('bcp', ['150|Carlos Diaz*|987', '150|Carlos Diaz*|987|Yape']),
-  },
-  ibk: {
-    service: generateIbk,
-    destinoDefault: 'Plin',
-    digitosRegex: /^(\d{3}|\d{9})$/,
-    errorMsg: buildErrorMsg('plin', [
-      '150|Pedro Castillo',
-      '150|Pedro Castillo|987',
-      '150|Pedro Castillo|987654321|Yape',
-    ]),
-  },
-  bbva: {
-    service: generateBbva,
-    destinoDefault: 'Yape',
-    digitosRegex: /^\d{3}$/,
-    errorMsg: buildErrorMsg('bbva', ['150|Liz Flores*|987', '150|Liz Flores*|987|Plin']),
-  },
-  scotiabank: {
-    service: generateScotiabank,
-    destinoDefault: 'Yape',
-    digitosRegex: /^(\d{3}|\d{9})$/,
-    errorMsg: buildErrorMsg('scotiabank', [
-      '150|Gerson Ara***',
-      '150|Gerson Ara***|003',
-      '150|Gerson Ara***|003|Mensaje del pago|Yape',
-    ]),
-  },
-};
 
 const MSG_HORARIO = '🕙 *El servicio de vouchers está disponible de 8:00 a.m. a 10:00 p.m.*';
 
@@ -107,8 +29,14 @@ function formatFechaFilename() {
   return `${dia}${mes}${anio}`;
 }
 
+function validarDigitos(digitos, cantidad) {
+  if (!digitos) return true;
+  const regex = new RegExp(`^(${cantidad.map((n) => `\\d{${n}}`).join('|')})$`);
+  return regex.test(String(digitos));
+}
+
 function createVoucherHandler(bot, comando) {
-  const { service, destinoDefault, errorMsg, digitosRegex } = CONFIG[comando];
+  const { service, destinoDefault, errorMsg, cantidad } = CONFIG[comando];
 
   return async (msg, match) => {
     const chatId = msg.chat.id;
@@ -141,7 +69,7 @@ function createVoucherHandler(bot, comando) {
 
     if (!monto || !/^\d+(\.\d{1,2})?$/.test(monto)) return sendError();
     if (!nombre) return sendError();
-    if (digitos && !digitosRegex.test(digitos)) return sendError();
+    if (!validarDigitos(digitos, cantidad)) return sendError();
 
     if (!isDentroDeHorario()) {
       // return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
@@ -175,8 +103,9 @@ function createVoucherHandler(bot, comando) {
 function registerVoucherCommands(bot) {
   bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
   bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
-  bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
   bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
+  bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
+  bot.onText(/\/lemon(.*)/, createVoucherHandler(bot, 'lemon'));
   bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
   bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
   bot.onText(/\/bbva(.*)/, createVoucherHandler(bot, 'bbva'));

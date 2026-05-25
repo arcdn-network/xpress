@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>¡Lemoneaste!</title>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css">
+   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         background: #050505;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         min-height: 100vh;
+         font-family: 'Manrope', sans-serif;
+         font-weight: 550;
+         -webkit-font-smoothing: antialiased;
+         text-rendering: optimizeLegibility;
+      }
+
+      .card-container {
+         width: 100%;
+         max-width: 480px;
+         height: 100vh;
+         background: #050505;
+         color: #fff;
+      }
+
+      .title {
+         font-size: 1.75rem;
+         font-weight: 700;
+         color: #fff;
+      }
+
+      .amount {
+         font-size: 2.5rem;
+         font-weight: 800;
+         color: #fff;
+      }
+
+      .currency {
+         font-size: 1.25rem;
+         font-weight: 500;
+         vertical-align: super;
+         margin-right: 2px;
+         color: #A0A0A0;
+      }
+
+      .recipient-name {
+         font-size: 1.1rem;
+         font-weight: 700;
+         color: #fff;
+      }
+
+      .date-text {
+         font-size: 0.9rem;
+         color: #A0A0A0;
+      }
+
+      .operation-box {
+         background: #141414;
+         border-radius: 14px;
+         overflow: hidden;
+      }
+
+      .operation-row {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         padding: 1rem;
+         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .operation-row.no-border {
+         border-bottom: none;
+      }
+
+      .operation-label {
+         color: #A0A0A0;
+         font-size: 0.95rem;
+      }
+
+      .operation-value {
+         color: #fff;
+         font-size: 0.95rem;
+         font-weight: 700;
+      }
+
+      .btn-primary {
+         width: 100%;
+         padding: 1rem;
+         background: #F4F4F4;
+         color: #000;
+         border: none;
+         border-radius: 50px;
+         font-size: 1rem;
+         font-weight: 600;
+         cursor: pointer;
+      }
+
+      .btn-secondary {
+         width: 100%;
+         padding: 1rem;
+         background: #1F1F1F;
+         color: #fff;
+         border: none;
+         border-radius: 50px;
+         font-size: 1rem;
+         font-weight: 600;
+         cursor: pointer;
+      }
+
+      .close-btn {
+         position: absolute;
+         top: 20px;
+         right: 20px;
+         width: 48px;
+         height: 48px;
+         border-radius: 50%;
+         background: rgba(255, 255, 255, 0.08);
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         backdrop-filter: blur(4px);
+         cursor: pointer;
+      }
+
+      .close-btn:hover {
+         background: rgba(255, 255, 255, 0.12);
+      }
+   </style>
+</head>
+
+<body>
+
+   <div class="card-container flex flex-column px-4">
+      <!-- Botón cerrar -->
+      <div class="close-btn mt-3">
+         <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="white" stroke-width="2.2" stroke-linecap="round" />
+            <path d="M18 6L6 18" stroke="white" stroke-width="2.2" stroke-linecap="round" />
+         </svg>
+      </div>
+
+
+      <div class="w-full flex flex-column align-items-center justify-content-center gap-3 flex-1">
+         <!-- Check icon -->
+         <div class="text-center">
+            <img src="{{CHECK_IMG}}" alt="logo" width="100">
+         </div>
+
+         <!-- Title -->
+         <span class="title">¡Lemoneaste!</span>
+
+         <!-- Amount -->
+         <span class="amount">
+            <span class="currency">S/</span>{{MONTO}}
+         </span>
+
+         <!-- Recipient & Date -->
+         <div class="flex flex-column align-items-center gap-1 mb-3">
+            <span class="recipient-name">{{NOMBRE}}</span>
+            <span class="date-text">{{FECHA}} - {{HORA}}.</span>
+         </div>
+
+         <!-- Operation number -->
+         <div class="operation-box w-full">
+            {{CELULAR}}
+
+            <div class="operation-row">
+               <span class="operation-label">Destino</span>
+               <span class="operation-value">{{DESTINO}}</span>
+            </div>
+
+            <div class="operation-row no-border">
+               <span class="operation-label">N° de operación</span>
+               <span class="operation-value">{{OPERACION}}</span>
+            </div>
+         </div>
+      </div>
+
+
+      <!-- Buttons -->
+      <div class="flex flex-column w-full gap-3 mb-8">
+         <button class="btn-primary">Compartir constancia</button>
+         <button class="btn-secondary">Volver al principio</button>
+      </div>
+
+   </div>
+
+</body>
+
+</html>

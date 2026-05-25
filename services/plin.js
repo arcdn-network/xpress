@@ -2,16 +2,19 @@ const path = require('path');
 const fs = require('fs');
 const { createBrowserPool } = require('../utils/browser');
 
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/plin.html'), 'utf-8');
+const readFile = (relativePath, encoding = null) => fs.readFileSync(path.resolve(__dirname, relativePath), encoding);
+
+const toBase64 = (relativePath, mimeType) => {
+  const buffer = readFile(relativePath);
+  return `data:${mimeType};base64,${buffer.toString('base64')}`;
+};
+
+const TEMPLATE_HTML = readFile('../resources/templates/plin.html', 'utf-8');
+const BACKGROUND_BASE64 = toBase64('../resources/images/template_plin.png', 'image/png');
+const FONT_BASE64 = toBase64('../resources/fonts/Geometria.ttf', 'font/ttf');
+
 const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const pool = createBrowserPool();
-
-const BACKGROUND_BASE64 = (() => {
-  const buffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/template_plin.png'));
-  return `data:image/png;base64,${buffer.toString('base64')}`;
-})();
-
-const FONT_BASE64 = fs.readFileSync(path.resolve(__dirname, '../resources/fonts/Geometria.ttf')).toString('base64');
 
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();

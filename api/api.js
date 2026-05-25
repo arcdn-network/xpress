@@ -1,25 +1,7 @@
 const express = require('express');
-const { generateVoucher: generateYape } = require('../services/yape');
-const { generateVoucher: generatePlin } = require('../services/plin');
-const { generateVoucher: generateAgora } = require('../services/agora');
-const { generateVoucher: generateBim } = require('../services/bim');
-const { generateVoucher: generateBcp } = require('../services/bcp');
-const { generateVoucher: generateIbk } = require('../services/ibk');
-const { generateVoucher: generateBbva } = require('../services/bbva');
-const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
+const { CONFIG } = require('./config');
 
 const router = express.Router();
-
-const CONFIG = {
-  yape: { service: generateYape, destinoDefault: 'Yape', cantidad: [3] },
-  plin: { service: generatePlin, destinoDefault: 'Plin', cantidad: [3, 9] },
-  agora: { service: generateAgora, destinoDefault: 'AGORA/OH!', cantidad: [3, 9] },
-  bim: { service: generateBim, destinoDefault: 'Bim', cantidad: [3] },
-  bcp: { service: generateBcp, destinoDefault: 'BCP', cantidad: [3] },
-  ibk: { service: generateIbk, destinoDefault: 'Plin', cantidad: [3, 9] },
-  bbva: { service: generateBbva, destinoDefault: 'BBVA Perú', cantidad: [3] },
-  scotiabank: { service: generateScotiabank, destinoDefault: 'Plin', cantidad: [3, 9] },
-};
 
 function validarParametros(monto, nombre, digitos, cantidad) {
   if (!monto || !/^\d+(\.\d{1,2})?$/.test(String(monto))) {
@@ -69,6 +51,7 @@ function createVoucherRoute(servicio) {
 router.post('/yape', createVoucherRoute('yape'));
 router.post('/plin', createVoucherRoute('plin'));
 router.post('/agora', createVoucherRoute('agora'));
+router.post('/lemon', createVoucherRoute('lemon'));
 router.post('/bim', createVoucherRoute('bim'));
 router.post('/bcp', createVoucherRoute('bcp'));
 router.post('/ibk', createVoucherRoute('ibk'));
