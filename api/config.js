@@ -77,4 +77,8 @@ const CONFIG = {
   },
 };
 
+Object.keys(CONFIG).forEach((comando) => {
+  CONFIG[comando].errorMsg = buildErrorMsg(comando, CONFIG[comando].cantidad);
+});
+
 module.exports = { CONFIG, buildErrorMsg };

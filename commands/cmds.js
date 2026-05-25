@@ -35,7 +35,8 @@ Revisa todas tus activaciones realizadas.
 
 •···························•····························•
 🧾 <b>VOUCHERS (GRATIS)</b>
-Comandos: <i>yape · plin · bim · agora · lemon · bcp · ibk · bbva · scotiabank</i>
+Comandos:
+<i>yape · plin · bim · agora · lemon · bcp · ibk · bbva · scotiabank</i>
 <code>/cmd monto|titular|digitos|mensaje|destino</code>
 Genera un voucher de pago.
 
