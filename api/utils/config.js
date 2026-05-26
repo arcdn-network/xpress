@@ -1,12 +1,12 @@
-const { generateVoucher: generateYape } = require('../services/yape');
-const { generateVoucher: generatePlin } = require('../services/plin');
-const { generateVoucher: generateAgora } = require('../services/agora');
-const { generateVoucher: generateLemon } = require('../services/lemon');
-const { generateVoucher: generateBim } = require('../services/bim');
-const { generateVoucher: generateBcp } = require('../services/bcp');
-const { generateVoucher: generateIbk } = require('../services/ibk');
-const { generateVoucher: generateBbva } = require('../services/bbva');
-const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
+const { generateVoucher: generateYape } = require('../../services/yape');
+const { generateVoucher: generatePlin } = require('../../services/plin');
+const { generateVoucher: generateAgora } = require('../../services/agora');
+const { generateVoucher: generateLemon } = require('../../services/lemon');
+const { generateVoucher: generateBim } = require('../../services/bim');
+const { generateVoucher: generateBcp } = require('../../services/bcp');
+const { generateVoucher: generateIbk } = require('../../services/ibk');
+const { generateVoucher: generateBbva } = require('../../services/bbva');
+const { generateVoucher: generateScotiabank } = require('../../services/scotiabank');
 
 function buildErrorMsg(comando, cantidad) {
   const digitosLabel = cantidad.map((n) => `${n} dígitos`).join(' o ');

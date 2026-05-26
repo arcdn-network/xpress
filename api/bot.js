@@ -1,5 +1,4 @@
-
-const { CONFIG } = require('./config');
+const { CONFIG } = require('./utils/config');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
