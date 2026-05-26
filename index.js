@@ -71,7 +71,7 @@ async function startBot() {
 
 const { startApi } = require('./api/api');
 async function startApp() {
-  // await startBot();
+  await startBot();
   startApi();
 }
 
