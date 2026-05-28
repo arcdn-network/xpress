@@ -6,12 +6,8 @@ const pendingTokens = new Map();
 const pendingTokenConfirms = new Map();
 
 const TOKEN_PRICES = {
-  5: 5,
-  7: 7,
-  10: 9,
-  15: 12,
-  30: 20,
-  60: 35,
+  15: 5,
+  30: 10,
 };
 
 function getTokenCost(days) {
