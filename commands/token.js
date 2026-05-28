@@ -6,7 +6,9 @@ const pendingTokens = new Map();
 const pendingTokenConfirms = new Map();
 
 const TOKEN_PRICES = {
-  15: 5,
+  7: 3,
+  10: 5,
+  15: 7,
   30: 10,
 };
 
