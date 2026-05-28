@@ -47,6 +47,10 @@ function createVoucherHandler(bot, comando) {
       reply_to_message_id: msg.message_id,
     };
 
+    if (msg.chat.type !== 'private') {
+      return bot.sendMessage(chatId, '❌ Este comando solo está disponible en chat privado.', replyOpts);
+    }
+
     const sendError = () => bot.sendMessage(chatId, errorMsg, replyOpts);
 
     if (!input) return sendError();
@@ -71,7 +75,7 @@ function createVoucherHandler(bot, comando) {
     if (!validarDigitos(digitos, cantidad)) return sendError();
 
     if (!isDentroDeHorario()) {
-      // return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
+      return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
     }
 
     enProceso.add(userId);
@@ -86,7 +90,17 @@ function createVoucherHandler(bot, comando) {
       await bot.sendDocument(
         chatId,
         buffer,
-        { reply_to_message_id: msg.message_id },
+        {
+          reply_to_message_id: msg.message_id,
+          caption: [
+            `✅ *Voucher ${comando.charAt(0).toUpperCase() + comando.slice(1)} generado*`,
+            `💰 *Monto:* S/ ${monto}`,
+            `👤 *Titular:* ${nombre}`,
+            ...(digitos ? [`🔢 *Dígitos:* ${digitos}`] : []),
+            ...(mensaje ? [`💬 *Mensaje:* ${mensaje}`] : []),
+          ].join('\n'),
+          parse_mode: 'Markdown',
+        },
         { filename: `Screenshot_${formatFechaFilename()}.png`, contentType: 'image/png' },
       );
     } catch (error) {

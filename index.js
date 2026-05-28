@@ -17,6 +17,7 @@ const registerCmdsCommand = require('./commands/cmds');
 const registerAppCommands = require('./commands/apk');
 const registerInfoCommand = require('./commands/info');
 const registerVoucherCommands = require('./api/bot');
+const registerVoucherTokenCommand = require('./api/token');
 
 async function startBot() {
   const token = process.env.BOT_TOKEN;
@@ -61,6 +62,7 @@ async function startBot() {
   registerAppCommands(bot);
   registerInfoCommand(bot);
   registerVoucherCommands(bot);
+  registerVoucherTokenCommand(bot);
 
   bot.on('polling_error', (error) => {
     console.error('Polling error:', error.message);

@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const DATA_FILE = path.resolve(__dirname, '../data.json');
+const ADMIN_ID = String(process.env.ADMIN_ID || '');
 
 // ─── DATABASE ─────────────────────────────
 
@@ -27,6 +28,11 @@ const db = loadData();
 
 // ─── HELPERS ─────────────────────────────
 
+function soloOwner(msg) {
+  const telegramId = String(msg.from.id);
+  return telegramId === ADMIN_ID;
+}
+
 function generarToken() {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -37,10 +43,12 @@ function formatDate(timestamp) {
 
 // ─── MAIN ─────────────────────────────
 
-function registerTokenCommand(bot) {
+function registerVoucherTokenCommand(bot) {
   // CREATE TOKEN
   bot.onText(/^\/create_token (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
+
+    if (!soloOwner(msg)) return;
 
     const partes = match[1].split('|').map((x) => x.trim());
 
@@ -88,6 +96,8 @@ function registerTokenCommand(bot) {
 
   // EXTENDER TOKEN
   bot.onText(/^\/extender_token (.+)/, async (msg, match) => {
+    if (!soloOwner(msg)) return;
+
     const chatId = msg.chat.id;
 
     const partes = match[1].split('|').map((x) => x.trim());
@@ -130,4 +140,4 @@ function registerTokenCommand(bot) {
   });
 }
 
-module.exports = registerTokenCommand;
+module.exports = registerVoucherTokenCommand;
