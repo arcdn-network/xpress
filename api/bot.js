@@ -20,6 +20,10 @@ function setCooldown(userId) {
   cooldowns.set(userId, Date.now());
 }
 
+function escapeMd(text) {
+  return String(text).replace(/[_*`\[]/g, '\\$&');
+}
+
 function formatFechaFilename() {
   const now = new Date();
   const dia = now.getDate().toString().padStart(2, '0');
@@ -94,10 +98,11 @@ function createVoucherHandler(bot, comando) {
           reply_to_message_id: msg.message_id,
           caption: [
             `✅ *Voucher ${comando.charAt(0).toUpperCase() + comando.slice(1)} generado*`,
-            `💰 *Monto:* S/ ${monto}`,
-            `👤 *Titular:* ${nombre}`,
-            ...(digitos ? [`🔢 *Dígitos:* ${digitos}`] : []),
-            ...(mensaje ? [`💬 *Mensaje:* ${mensaje}`] : []),
+            ``,
+            `💰 *Monto:* S/ ${escapeMd(monto)}`,
+            `👤 *Titular:* ${escapeMd(nombre)}`,
+            ...(digitos ? [`🔢 *Dígitos:* ${escapeMd(digitos)}`] : []),
+            ...(mensaje ? [`💬 *Mensaje:* ${escapeMd(mensaje)}`] : []),
           ].join('\n'),
           parse_mode: 'Markdown',
         },

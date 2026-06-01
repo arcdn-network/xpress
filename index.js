@@ -65,7 +65,7 @@ async function startBot() {
   registerVoucherTokenCommand(bot);
 
   bot.on('polling_error', (error) => {
-    console.error('Polling error:', error.message);
+    console.error('Polling error:', error.code, error.message);
   });
 
   console.log(`Bot ${APP_NAME} iniciado`);
