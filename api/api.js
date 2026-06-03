@@ -6,6 +6,7 @@ const docsRoutes = require('../utils/docs');
 const { hourLimiter, dayLimiter } = require('./middleware/rateLimit');
 const { validateToken } = require('./middleware/validateToken');
 const { createVoucherRoute } = require('./services/services');
+const { minsaRoute } = require('../api/minsa');
 
 function startApi() {
   const app = express();
@@ -37,6 +38,7 @@ function startApi() {
   app.post('/api/ibk', createVoucherRoute('ibk'));
   app.post('/api/bbva', createVoucherRoute('bbva'));
   app.post('/api/scotiabank', createVoucherRoute('scotiabank'));
+  app.post('/api/minsa', minsaRoute);
 
   app.use('/', docsRoutes);
   const PORT = process.env.PORT || 4000;
