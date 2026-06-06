@@ -4,7 +4,7 @@ const path = require('path');
 const DATA_FILE = path.resolve(__dirname, '../../data.json');
 
 let db = [];
-let globalTokenDisabled = true;
+let globalTokenDisabled = false;
 
 // ─── LOAD DB ─────────────────────────────
 
