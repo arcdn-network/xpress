@@ -16,7 +16,7 @@ function getTokenCost(days) {
   return TOKEN_PRICES[days] ?? null;
 }
 
-function buildTokenMessage(user, selectedDays = 5) {
+function buildTokenMessage(user, selectedDays = 7) {
   const cost = getTokenCost(selectedDays);
   const unlimitedStatus = getUnlimitedStatus(user);
 
@@ -93,7 +93,7 @@ function buildCanceledMessage() {
 - El proceso fue cancelado correctamente.`;
 }
 
-function buildTokenKeyboard(telegramId, selectedDays = 5) {
+function buildTokenKeyboard(telegramId, selectedDays = 7) {
   const entries = Object.entries(TOKEN_PRICES);
   const keyboard = [];
 
@@ -461,7 +461,7 @@ function registerTokenCommand(bot) {
         }
       }
 
-      const selectedDays = 5;
+      const selectedDays = 7;
 
       const sentMessage = await bot.sendMessage(chatId, buildTokenMessage(user, selectedDays), {
         parse_mode: 'HTML',

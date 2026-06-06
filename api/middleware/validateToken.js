@@ -4,6 +4,7 @@ const path = require('path');
 const DATA_FILE = path.resolve(__dirname, '../../data.json');
 
 let db = [];
+let globalTokenDisabled = false;
 
 // ─── LOAD DB ─────────────────────────────
 
@@ -37,6 +38,13 @@ const validateToken = (req, res, next) => {
     }
 
     const token = req.headers['x-token'];
+
+    if (globalTokenDisabled) {
+      return res.status(503).json({
+        status: false,
+        message: 'SERVICE_UNAVAILABLE',
+      });
+    }
 
     if (!token) {
       return res.status(401).json({
