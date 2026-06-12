@@ -45,7 +45,7 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
     celularHtml = `${digitosLimpios} - `;
   }
 
-  return TEMPLATE_HTML.replace('{{FONT}}', `data:font/ttf;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace('{{FONT}}', FONT_BASE64)
     .replace('{{BACKGROUND}}', BACKGROUND_BASE64)
     .replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
