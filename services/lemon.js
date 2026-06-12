@@ -40,6 +40,10 @@ function formatFecha() {
   return { fecha: `${dia} ${mes} ${anio}`, hora: `${hh}:${mm} PM` };
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function buildLemonHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
   const { fecha, hora } = formatFecha();
 
@@ -54,7 +58,7 @@ function buildLemonHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
     : '';
 
   return TEMPLATE_HTML.replace('{{CHECK_IMG}}', CHECK_IMG)
-    .replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+    .replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)

@@ -48,13 +48,17 @@ function formatFecha() {
   };
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function buildBcpHtml({ monto, nombre, digitos, destino = 'BCP' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
 
   const celularHtml = digitos ? `<div class="bcp-gray text-sm">*** *** ${digitos}</div>` : '';
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', monto)
+  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{DIGITOS}}', celularHtml)
     .replace('{{DESTINO}}', destino)

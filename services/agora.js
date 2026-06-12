@@ -26,6 +26,10 @@ function formatFecha() {
   };
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
 function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!' }) {
   const { fecha, hora } = formatFecha();
@@ -78,7 +82,7 @@ function buildAgoraHtml({ monto, nombre, digitos, mensaje, destino = 'AGORA/OH!'
        </div>`
     : '';
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{TITULO}}', tituloHtml)
     .replace('{{TITULAR}}', titularHtml)
     .replace('{{CELULAR}}', celularHtml)

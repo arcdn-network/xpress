@@ -43,6 +43,17 @@ function formatFecha() {
   };
 }
 
+function formatMonto(monto) {
+  const numero = Number(String(monto).replace(/,/g, ''));
+
+  return Number.isInteger(numero)
+    ? numero.toLocaleString('en-US')
+    : numero.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+}
+
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
 function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
   const { fecha, hora } = formatFecha();
@@ -85,7 +96,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
       <div class="border-botton mt-2"></div>`
     : '';
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', monto)
+  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{FECHA}}', fecha)
     .replace('{{HORA}}', hora)

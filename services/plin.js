@@ -30,6 +30,10 @@ function formatFecha() {
   };
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
@@ -43,7 +47,7 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
 
   return TEMPLATE_HTML.replace('{{FONT}}', `data:font/ttf;base64,${FONT_BASE64}`)
     .replace('{{BACKGROUND}}', BACKGROUND_BASE64)
-    .replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+    .replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{CELULAR}}', celularHtml)
     .replace('{{DESTINO}}', destino)

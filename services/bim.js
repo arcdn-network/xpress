@@ -27,6 +27,10 @@ function formatFecha() {
   return `${now.getDate()} ${MESES[now.getMonth()]}. ${now.getFullYear()} ${(horas % 12 || 12).toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
 function buildBimHtml({ monto, nombre, digitos, mensaje = '', destino = 'Bim' }) {
   const fecha = formatFecha();
@@ -39,7 +43,7 @@ function buildBimHtml({ monto, nombre, digitos, mensaje = '', destino = 'Bim' })
 
   const comentarioHtml = mensaje ? `<div class="mb-2"><span>Comentario:</span><span>${mensaje}</span></div>` : '';
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{DESTINO}}', destino.toUpperCase())
     .replace('{{CELULAR}}', celularHtml)

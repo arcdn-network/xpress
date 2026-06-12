@@ -44,6 +44,10 @@ function formatFecha() {
   };
 }
 
+function formatMonto(monto) {
+  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function buildBbvaHtml({ monto, nombre, digitos, destino = 'BBVA Perú' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
@@ -51,7 +55,7 @@ function buildBbvaHtml({ monto, nombre, digitos, destino = 'BBVA Perú' }) {
 
   const digitosHtml = digitos ? `<div class="text-right font-bold text-black font-italic">•${digitos}</div>` : '';
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', parseFloat(monto).toFixed(2))
+  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', nombre)
     .replace('{{DIGITOS}}', digitosHtml)
     .replace('{{DESTINO}}', destino)
