@@ -48,7 +48,7 @@ const CONFIG = {
   lemon: {
     service: generateLemon,
     destinoDefault: 'YAPE',
-    cantidad: [4],
+    cantidad: [3],
   },
   bim: {
     service: generateBim,
@@ -68,7 +68,7 @@ const CONFIG = {
   bbva: {
     service: generateBbva,
     destinoDefault: 'Plin',
-    cantidad: [4],
+    cantidad: [3],
   },
   scotiabank: {
     service: generateScotiabank,

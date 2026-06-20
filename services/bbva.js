@@ -40,7 +40,7 @@ function formatFecha() {
   const minutos = now.getMinutes().toString().padStart(2, '0');
   return {
     fecha: `${dia} ${mes} ${anio}`,
-    hora: `${horas}:${minutos} h`,
+    hora: `${horas}:${minutos}`,
   };
 }
 

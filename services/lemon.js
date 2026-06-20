@@ -17,7 +17,7 @@ function randomOperacion() {
 
 function formatFecha() {
   const now = new Date();
-  const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
   const meses = [
     'enero',
     'febrero',
@@ -32,12 +32,23 @@ function formatFecha() {
     'noviembre',
     'diciembre',
   ];
+
   const dia = now.getDate();
   const mes = meses[now.getMonth()];
   const anio = now.getFullYear();
-  const hh = now.getHours().toString().padStart(2, '0');
-  const mm = now.getMinutes().toString().padStart(2, '0');
-  return { fecha: `${dia} ${mes} ${anio}`, hora: `${hh}:${mm} PM` };
+
+  let horas = now.getHours();
+  const minutos = now.getMinutes().toString().padStart(2, '0');
+
+  const periodo = horas >= 12 ? 'PM' : 'AM';
+
+  horas = horas % 12;
+  horas = horas === 0 ? 12 : horas;
+
+  return {
+    fecha: `${dia} ${mes} ${anio}`,
+    hora: `${horas}:${minutos} ${periodo}`,
+  };
 }
 
 function formatMonto(monto) {
@@ -48,7 +59,7 @@ function buildLemonHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
   const { fecha, hora } = formatFecha();
 
   const digitosLimpios = String(digitos || '').trim();
-  const celularDisplay = /^\d{4}$/.test(digitosLimpios) ? `*${digitosLimpios}` : '';
+  const celularDisplay = /^\d{3}$/.test(digitosLimpios) ? `*${digitosLimpios}` : '';
 
   const celularHtml = celularDisplay
     ? `<div class="operation-row">
