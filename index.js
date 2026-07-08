@@ -21,7 +21,8 @@ const registerVoucherCommands = require('./api/bot');
 const registerVoucherTokenCommand = require('./api/token');
 
 async function startBot() {
-  const token = process.env.BOT_TOKEN;
+  const isDevelop = process.env.DEVELOP === 'TRUE';
+  const token = isDevelop ? process.env.BOT_TOKEN_2 : process.env.BOT_TOKEN;
 
   if (!token) {
     throw new Error('Falta BOT_TOKEN en el archivo .env');
@@ -70,7 +71,7 @@ async function startBot() {
     console.error('Polling error:', error.code, error.message);
   });
 
-  console.log(`Bot ${APP_NAME} iniciado`);
+  console.log(`🚀 Iniciando ${APP_NAME} en modo ${isDevelop ? 'DESARROLLO' : 'PRODUCCIÓN'}`);
 }
 
 const { startApi } = require('./api/api');

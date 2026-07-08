@@ -86,6 +86,11 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
         <div class="flex align-items-center gap-2 text-uxs font-semibold"
           style="color: var(--yape-text-label); letter-spacing: 0.5px;">
           <span>CÓDIGO DE SEGURIDAD</span>
+          <svg style="width: 1.20rem; height: 1.20rem; color: #06C7B1;" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor"
+              d="M4.929 19.07A10 10 0 0 0 12 22c5.522 0 10-4.477 10-10S17.522 2 12 2 2 6.478 2 12a10 10 0 0 0 2.929 7.07M13 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-2 3a1 1 0 1 1 2 0v5a1 1 0 0 1-2 0z" />
+          </svg>
         </div>
         <div class="my-1 flex" style="gap: 5px;">
           <div class="box-code"><span class="font-bold">${d1}</span></div>

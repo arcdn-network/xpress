@@ -6,6 +6,8 @@ const timestamps = {
 };
 
 const myResellerId = '67fe4a30309c353c24682129';
+const myTelResellerId = '67fe4a30309c353c24682129';
+const mySupplierId = '6a42a51301fa4bcbaf759e24';
 const myClientId = '686204952f3e159952e7d52d';
 const emailTester = 'pycharm113@gmail.com';
 
@@ -74,6 +76,8 @@ const isPhoneNumberHidden = (email) => {
 module.exports = Object.freeze({
   timestamps,
   myResellerId,
+  myTelResellerId,
+  mySupplierId,
   myClientId,
   emailTester,
   sendError,

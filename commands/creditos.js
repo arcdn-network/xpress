@@ -3,6 +3,7 @@ const { TARIFARIO } = require('../utils/constants');
 const isAdmin = require('../middleware/isAdmin');
 const { formatDateTime } = require('../utils/functions');
 const { getUnlimitedStatus } = require('../utils/unlimited');
+const { mySupplierId } = require('../utils/data');
 
 const creditosProcessingUsers = new Set();
 const pendingCustomAmount = new Map();
@@ -488,9 +489,11 @@ function registerCreditosCommand(bot) {
             return;
           }
 
+          const supplierId = reseller.supplier || mySupplierId;
+
           const sentMessage = await bot.sendMessage(
             chatId,
-            buildUnlimitedConfirmMessage(targetUser, reseller, days, true),
+            buildUnlimitedConfirmMessage(targetUser, reseller, days, true, supplierId),
             {
               parse_mode: 'HTML',
               reply_markup: buildUnlimitedConfirmKeyboard(targetId),
@@ -505,6 +508,7 @@ function registerCreditosCommand(bot) {
             chatId,
             messageId: sentMessage.message_id,
             resellerId: String(reseller._id),
+            supplierId,
           });
 
           creditosProcessingUsers.delete(senderId);
@@ -577,7 +581,7 @@ function registerCreditosCommand(bot) {
         }
 
         await updateUser(targetId, {
-          unlimited: { active: false, expiresAt: null, resellerId: null },
+          unlimited: { active: false, expiresAt: null, resellerId: null, supplierId: null },
         });
 
         await bot.answerCallbackQuery(query.id, { text: 'Suscripción anulada' });
@@ -640,18 +644,23 @@ function registerCreditosCommand(bot) {
           }
         }
 
+        const supplierId = flow.supplierId || reseller.supplier || mySupplierId;
+
         await updateUser(flow.targetId, {
-          unlimited: { active: true, expiresAt, resellerId: String(reseller._id) },
+          unlimited: { active: true, expiresAt, resellerId: String(reseller._id), supplierId },
         });
 
         pendingUnlimitedFlow.delete(senderId);
 
-        await bot.editMessageText(buildUnlimitedSuccessMessage(targetUser, reseller, flow.days, flow.isExtension), {
-          chat_id: chatId,
-          message_id: messageId,
-          parse_mode: 'HTML',
-          reply_markup: { inline_keyboard: [] },
-        });
+        await bot.editMessageText(
+          buildUnlimitedSuccessMessage(targetUser, reseller, flow.days, flow.isExtension, supplierId),
+          {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: [] },
+          },
+        );
 
         try {
           const vencimientoText = isInfinite ? 'Sin fecha de vencimiento ♾️' : `📆 Vence: ${formatDateTime(expiresAt)}`;
@@ -854,19 +863,25 @@ function registerCreditosCommand(bot) {
           return;
         }
 
+        const supplierId = reseller.supplier || mySupplierId;
+
         pendingUnlimitedFlow.set(senderId, {
           ...flow,
           step: 'awaiting_confirm',
           resellerId: String(reseller._id),
+          supplierId,
           messageId: loadingMsg.message_id,
         });
 
-        await bot.editMessageText(buildUnlimitedConfirmMessage(targetUser, reseller, flow.days, flow.isExtension), {
-          chat_id: chatId,
-          message_id: loadingMsg.message_id,
-          parse_mode: 'HTML',
-          reply_markup: JSON.stringify(buildUnlimitedConfirmKeyboard(flow.targetId)),
-        });
+        await bot.editMessageText(
+          buildUnlimitedConfirmMessage(targetUser, reseller, flow.days, flow.isExtension, supplierId),
+          {
+            chat_id: chatId,
+            message_id: loadingMsg.message_id,
+            parse_mode: 'HTML',
+            reply_markup: JSON.stringify(buildUnlimitedConfirmKeyboard(flow.targetId)),
+          },
+        );
       } catch (error) {
         console.log(error);
 

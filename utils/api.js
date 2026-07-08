@@ -25,8 +25,8 @@ const getUser = (id) =>
       throw e;
     });
 
-const getYapeClient = (email) =>
-  API.get(`/get_yape_client/${email}`)
+const getYapeClient = (email, supplierId) =>
+  API.get(`/get_yape_client/${email}`, { params: supplierId ? { supplier: supplierId } : {} })
     .then((r) => r.data)
     .catch((e) => {
       if (e.response?.status === 404) return null;

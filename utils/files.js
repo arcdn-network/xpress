@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const filesJsonPath = path.join(process.cwd(), 'files.json');
+const isDevelop = process.env.DEVELOP === 'TRUE';
+const filesJsonPath = path.join(process.cwd(), isDevelop ? 'files.develop.json' : 'files.json');
 
 function getFiles() {
   if (!fs.existsSync(filesJsonPath)) {

@@ -9,6 +9,7 @@ function getUnlimitedStatus(user) {
   return {
     isUnlimited: true,
     resellerId: user.unlimited.resellerId,
+    supplierId: user.unlimited.supplierId ?? null,
     expiresAt: user.unlimited.expiresAt ?? null,
   };
 }

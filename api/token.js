@@ -3,9 +3,16 @@ const path = require('path');
 const fs = require('fs');
 
 const DATA_FILE = path.resolve(__dirname, '../data.json');
-const ADMIN_ID = String(process.env.ADMIN_ID || '');
+const ADMIN_IDS = parseIdList(process.env.ADMIN_ID);
 
 // ─── DATABASE ─────────────────────────────
+
+function parseIdList(value) {
+  return (value || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
 
 function loadData() {
   if (!fs.existsSync(DATA_FILE)) {

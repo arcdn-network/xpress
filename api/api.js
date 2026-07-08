@@ -44,7 +44,7 @@ function startApi() {
   const PORT = process.env.PORT || 4000;
 
   app.listen(PORT, () => {
-    console.log(`API iniciada en puerto ${PORT}`);
+    console.log(`API iniciada en http://localhost:${PORT}`);
   });
 }
 

@@ -1,9 +1,10 @@
 const { APP_NAME, LOCAL } = require('../utils/constants');
-const { findClientByEmail } = require('../services/clients');
+const { getYapeClient, getUser } = require('../utils/api');
 const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
-const { getUser } = require('../utils/api');
+const { getUnlimitedStatus } = require('../utils/unlimited');
+const { mySupplierId } = require('../utils/data');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -53,6 +54,13 @@ function buildBannedClientMessage(client) {
 `.trim();
 }
 
+function resolveSupplierId(unlimitedStatus) {
+  if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {
+    return unlimitedStatus.supplierId;
+  }
+  return mySupplierId;
+}
+
 function buildAvailableClientMessage(client) {
   return `
 <b>[#${APP_NAME}]</b> <b>INFO DE USUARIO</b>
@@ -97,7 +105,10 @@ function registerInfoCommand(bot) {
         return bot.sendMessage(chatId, 'Debes ingresar un correo válido');
       }
 
-      const client = await findClientByEmail(email);
+      const unlimitedStatus = getUnlimitedStatus(user);
+      const supplierId = resolveSupplierId(unlimitedStatus);
+
+      const client = await getYapeClient(email, supplierId);
       const response = buildClientInfoMessage(client, email);
       const files = getFiles();
 

@@ -3,6 +3,7 @@ const { sendMessage } = require('../utils/sender');
 const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
+const { mySupplierId } = require('../utils/data');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
@@ -69,6 +70,13 @@ function getUserDisplayName(user) {
   return user?.username ? `@${user.username}` : `ID ${user?.telegramId || ''}`.trim();
 }
 
+function resolveSupplierId(unlimitedStatus) {
+  if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {
+    return unlimitedStatus.supplierId;
+  }
+  return mySupplierId;
+}
+
 function getPendingLicenses(client, requestedLicenses) {
   const pendingLicenses = [];
 
@@ -108,7 +116,7 @@ function getActivationCost(licenses) {
   return cost;
 }
 
-function buildClientUpdateData(pendingLicenses, currentClient, resellerId) {
+function buildClientUpdateData(pendingLicenses, currentClient, resellerId, supplierId) {
   const updateData = {};
 
   if (pendingLicenses.includes('YAPE')) {
@@ -129,6 +137,10 @@ function buildClientUpdateData(pendingLicenses, currentClient, resellerId) {
 
   if (!currentClient?.reseller) {
     updateData.reseller = resellerId ?? DEFAULT_RESELLER_ID;
+  }
+
+  if (!currentClient?.supplier) {
+    updateData.supplier = supplierId ?? mySupplierId;
   }
 
   updateData.currentToken = null;
@@ -517,6 +529,7 @@ async function openActivationConfirmation(
   requestedLicenses,
   rawValue,
   previousSelectedBanks = [],
+  supplierId,
 ) {
   const user = await getUser(telegramId);
 
@@ -525,7 +538,8 @@ async function openActivationConfirmation(
     return;
   }
 
-  const freshClient = await getYapeClient(client.email);
+  const resolvedSupplierId = supplierId || resolveSupplierId(getUnlimitedStatus(user));
+  const freshClient = await getYapeClient(client.email, resolvedSupplierId);
 
   if (!freshClient) {
     await bot.sendMessage(chatId, 'El correo ingresado no existe');
@@ -575,6 +589,7 @@ async function openActivationConfirmation(
     rawValue,
     timeoutId,
     previousSelectedBanks,
+    supplierId: resolvedSupplierId,
   });
 
   pendingActivationByUser.set(telegramId, confirmId);
@@ -657,7 +672,7 @@ function registerActivateCallback(bot) {
         }
 
         const user = await getUser(payload.telegramId);
-        const client = await getYapeClient(payload.clientEmail);
+        const client = await getYapeClient(payload.clientEmail, payload.supplierId);
 
         clearActivationState(confirmId);
 
@@ -687,6 +702,7 @@ function registerActivateCallback(bot) {
           messageId,
           client,
           user,
+          supplierId: payload.supplierId,
           step: 'select',
           selectedBanks,
         });
@@ -722,7 +738,7 @@ function registerActivateCallback(bot) {
 
         processingActivations.add(confirmId);
 
-        const { telegramId, clientId, clientEmail, requestedLicenses, rawValue } = payload;
+        const { telegramId, clientId, clientEmail, requestedLicenses, rawValue, supplierId } = payload;
 
         const user = await getUser(telegramId);
 
@@ -734,7 +750,7 @@ function registerActivateCallback(bot) {
           return;
         }
 
-        const client = await getYapeClient(clientEmail);
+        const client = await getYapeClient(clientEmail, supplierId);
 
         if (!client || String(client._id) !== String(clientId)) {
           clearActivationState(confirmId);
@@ -789,7 +805,7 @@ function registerActivateCallback(bot) {
 
         await delay(2000);
 
-        const updateData = buildClientUpdateData(pendingLicenses, client, resellerId);
+        const updateData = buildClientUpdateData(pendingLicenses, client, resellerId, supplierId);
         const newActivationStats = updateUserActivationStats(user, pendingLicenses);
 
         await updateUser(telegramId, {
@@ -951,6 +967,7 @@ function registerActivateCallback(bot) {
             requestedLicenses,
             rawValue,
             flow.selectedBanks,
+            flow.supplierId,
           );
 
           processingActivationFlows.delete(telegramId);
@@ -1003,7 +1020,10 @@ function registerActivateCommand(bot) {
         return bot.sendMessage(chatId, 'Debes ingresar un correo válido');
       }
 
-      const client = await getYapeClient(email);
+      const unlimitedStatus = getUnlimitedStatus(user);
+      const supplierId = resolveSupplierId(unlimitedStatus);
+
+      const client = await getYapeClient(email, supplierId);
 
       if (!client) {
         return bot.sendMessage(chatId, 'El correo ingresado no existe');
@@ -1021,7 +1041,6 @@ function registerActivateCommand(bot) {
         });
       }
 
-      const unlimitedStatus = getUnlimitedStatus(user);
       const minimumCost = getMinimumActivationCost(client);
 
       if (!unlimitedStatus.isUnlimited && minimumCost > 0 && user.credits < minimumCost) {
@@ -1045,6 +1064,7 @@ function registerActivateCommand(bot) {
         messageId: sentMessage.message_id,
         client,
         user,
+        supplierId,
         step: 'select',
         selectedBanks: initialSelectedBanks,
       });
