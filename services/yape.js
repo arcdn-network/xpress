@@ -4,10 +4,19 @@ const { createBrowserPool } = require('../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
 const BANNERS_DIR = path.resolve(__dirname, '../resources/banners');
+const AQUA_DIR = path.resolve(__dirname, '../resources/aqua');
 const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/yape.html'), 'utf-8');
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
 const CDN_CHAT = `${CDN_BASE}/chat.png`;
+
+const personajesRanges = [
+  { max: 19.99, file: '10.jpg' },
+  { max: 49.99, file: '20.jpg' },
+  { max: 99.99, file: '50.jpg' },
+  { max: 199.99, file: '100.jpg' },
+  { max: 1000, file: '200.jpg' },
+];
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const pool = createBrowserPool();
@@ -52,6 +61,19 @@ function formatMonto(monto) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
+}
+
+const aquaImages = personajesRanges.reduce((acc, { file }) => {
+  const buffer = fs.readFileSync(path.join(AQUA_DIR, file));
+  acc[file] = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  return acc;
+}, {});
+
+function getPersonajeImg(monto) {
+  const numero = Number(monto) || 0;
+  const rango = personajesRanges.find((r) => numero <= r.max);
+  const file = rango?.file ?? '200.jpg';
+  return aquaImages[file];
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
@@ -111,6 +133,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
     .replace('{{DESTINO}}', destino)
     .replace('{{CODIGO_SEGURIDAD}}', codigoHtml)
     .replace('{{CDN_LOGO}}', CDN_LOGO)
+    .replace('{{PERSONAJE}}', getPersonajeImg(monto))
     .replace('{{CDN_BANNER}}', getRandomBanner());
 }
 
