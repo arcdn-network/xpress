@@ -37,7 +37,7 @@ const db = loadData();
 
 function soloOwner(msg) {
   const telegramId = String(msg.from.id);
-  return telegramId === ADMIN_ID;
+  return ADMIN_IDS.includes(telegramId);
 }
 
 function generarToken() {

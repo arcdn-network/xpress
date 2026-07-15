@@ -17,6 +17,8 @@ const updateYapeClient = (id, body) => API.put(`/update_yape_client/${id}`, body
 const searchReseller = (id) => API.get(`/searchReseller/${id}`).then((r) => r.data);
 const createToken = (body) => API.post(`/create_token`, body).then((r) => r.data);
 
+const getBroadcastUsers = () => API.get(`/get_broadcast_users`).then((r) => r.data);
+
 const getUser = (id) =>
   API.get(`/read_telegram_user/${id}`)
     .then((r) => r.data)
@@ -44,4 +46,5 @@ module.exports = {
   updateYapeClient,
   searchReseller,
   createToken,
+  getBroadcastUsers,
 };
