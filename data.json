@@ -1,16 +1,9 @@
 [
   {
-    "token": "ca1b06e2fe1591e4563d001f571de15aa4a953d101f9f9928cd922caec6fd885",
-    "name": "DEVELOPER",
+    "token": "4d5a7b9c1e2f3a4b5c6d7e8f9a0b1c2d",
+    "name": "Developer",
     "expireIn": 0,
     "status": true,
     "unlimited": true
-  },
-  {
-    "token": "4d5a7b9c1e2f3a4b5c6d7e8f9a0b1c2d",
-    "name": "SECTA",
-    "expireIn": 1786675085404,
-    "status": true,
-    "unlimited": false
   }
 ]
