@@ -3,7 +3,7 @@ const { sendMessage } = require('../utils/sender');
 const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId } = require('../utils/data');
+const { mySupplierId, SPECIAL_SUPPLIER_BY_TELEGRAM_ID } = require('../utils/data');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
@@ -70,10 +70,15 @@ function getUserDisplayName(user) {
   return user?.username ? `@${user.username}` : `ID ${user?.telegramId || ''}`.trim();
 }
 
-function resolveSupplierId(unlimitedStatus) {
+function resolveSupplierId(unlimitedStatus, telegramId) {
+  if (SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId]) {
+    return SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId];
+  }
+
   if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {
     return unlimitedStatus.supplierId;
   }
+
   return mySupplierId;
 }
 
@@ -538,7 +543,7 @@ async function openActivationConfirmation(
     return;
   }
 
-  const resolvedSupplierId = supplierId || resolveSupplierId(getUnlimitedStatus(user));
+  const resolvedSupplierId = supplierId || resolveSupplierId(getUnlimitedStatus(user), telegramId);
   const freshClient = await getYapeClient(client.email, resolvedSupplierId);
 
   if (!freshClient) {
@@ -1021,7 +1026,7 @@ function registerActivateCommand(bot) {
       }
 
       const unlimitedStatus = getUnlimitedStatus(user);
-      const supplierId = resolveSupplierId(unlimitedStatus);
+      const supplierId = resolveSupplierId(unlimitedStatus, telegramId);
 
       const client = await getYapeClient(email, supplierId);
 

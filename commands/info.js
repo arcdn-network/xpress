@@ -4,7 +4,7 @@ const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId } = require('../utils/data');
+const { mySupplierId, SPECIAL_SUPPLIER_BY_TELEGRAM_ID } = require('../utils/data');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -54,10 +54,15 @@ function buildBannedClientMessage(client) {
 `.trim();
 }
 
-function resolveSupplierId(unlimitedStatus) {
+function resolveSupplierId(unlimitedStatus, telegramId) {
+  if (SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId]) {
+    return SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId];
+  }
+
   if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {
     return unlimitedStatus.supplierId;
   }
+
   return mySupplierId;
 }
 
@@ -106,7 +111,7 @@ function registerInfoCommand(bot) {
       }
 
       const unlimitedStatus = getUnlimitedStatus(user);
-      const supplierId = resolveSupplierId(unlimitedStatus);
+      const supplierId = resolveSupplierId(unlimitedStatus, telegramId);
 
       const client = await getYapeClient(email, supplierId);
       const response = buildClientInfoMessage(client, email);
