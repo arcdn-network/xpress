@@ -455,7 +455,6 @@ function registerCreditosCommand(bot) {
       }
 
       // ── Seleccionó días → pide reseller ID via reply ──────
-      // ── Seleccionó días → pide reseller ID via reply ──────
       if (action === 'unlimited_days') {
         const days = Number(extra);
 

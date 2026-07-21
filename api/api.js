@@ -38,6 +38,7 @@ function startApi() {
   app.post('/api/ibk', createVoucherRoute('ibk'));
   app.post('/api/bbva', createVoucherRoute('bbva'));
   app.post('/api/scotiabank', createVoucherRoute('scotiabank'));
+  app.post('/api/caja', createVoucherRoute('caja'));
   app.post('/api/minsa', minsaRoute);
 
   app.use('/', docsRoutes);

@@ -7,6 +7,7 @@ const { generateVoucher: generateBcp } = require('../../services/bcp');
 const { generateVoucher: generateIbk } = require('../../services/ibk');
 const { generateVoucher: generateBbva } = require('../../services/bbva');
 const { generateVoucher: generateScotiabank } = require('../../services/scotiabank');
+const { generateVoucher: generateCaja } = require('../../services/caja');
 
 function buildErrorMsg(comando, cantidad) {
   const digitosLabel = cantidad.map((n) => `${n} dígitos`).join(' o ');
@@ -74,6 +75,12 @@ const CONFIG = {
     service: generateScotiabank,
     destinoDefault: 'Yape',
     cantidad: [3, 9],
+  },
+  caja: {
+    service: generateCaja,
+    destinoDefault: 'PLIN',
+    errorMsg: '❌ Formato incorrecto. Uso: /caja monto|nombre|celular(9 o 3 dígitos)|mensaje|red',
+    cantidad: [9, 3],
   },
 };
 
