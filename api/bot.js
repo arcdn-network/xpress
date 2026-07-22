@@ -6,6 +6,7 @@ const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 
 const COOLDOWN_MS = 10000;
+const COOLDOWN_MS_PLAN = COOLDOWN_MS / 2;
 const FREE_DAILY_LIMIT = 3;
 const cooldowns = new Map();
 const enProceso = new Set();
@@ -40,9 +41,9 @@ async function registrarUsoGratis(userId, user) {
   });
 }
 
-function isCooldown(userId) {
+function isCooldown(userId, cooldownMs) {
   if (!cooldowns.has(userId)) return false;
-  return Date.now() - cooldowns.get(userId) < COOLDOWN_MS;
+  return Date.now() - cooldowns.get(userId) < cooldownMs;
 }
 
 function setCooldown(userId) {
@@ -88,6 +89,7 @@ function createVoucherHandler(bot, comando) {
 
     const user = await getUser(userId);
     const esIlimitado = tienePlanActivo(user);
+    const cooldownActual = esIlimitado ? COOLDOWN_MS_PLAN : COOLDOWN_MS;
 
     if (!esIlimitado && !puedeUsarGratis(user)) {
       const textoLimite = `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.`;
@@ -117,8 +119,8 @@ function createVoucherHandler(bot, comando) {
       return bot.sendMessage(chatId, '⏳ Ya tienes un voucher generándose, espere un momento.', replyOpts);
     }
 
-    if (isCooldown(userId)) {
-      const restante = Math.ceil((COOLDOWN_MS - (Date.now() - cooldowns.get(userId))) / 1000);
+    if (isCooldown(userId, cooldownActual)) {
+      const restante = Math.ceil((cooldownActual - (Date.now() - cooldowns.get(userId))) / 1000);
       return bot.sendMessage(chatId, `⏳ Espera *${restante} segundos* antes de generar otro voucher.`, replyOpts);
     }
 
@@ -192,8 +194,8 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
   bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
   bot.onText(/\/bbva(.*)/, createVoucherHandler(bot, 'bbva'));
-  bot.onText(/\/scotiabank(.*)/, createVoucherHandler(bot, 'scotiabank'));
   bot.onText(/\/caja(.*)/, createVoucherHandler(bot, 'caja'));
+  bot.onText(/\/scotiabank(.*)/, createVoucherHandler(bot, 'scotiabank'));
 }
 
 module.exports = registerVoucherCommands;

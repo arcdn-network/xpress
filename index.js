@@ -47,6 +47,7 @@ async function startBot() {
     { command: 'bcp', description: 'Generar Voucher BCP' },
     { command: 'ibk', description: 'Generar Voucher Interbank' },
     { command: 'bbva', description: 'Generar Voucher BBVA' },
+    { command: 'caja', description: 'Generar Voucher Caja Arequipa' },
     { command: 'scotiabank', description: 'Generar Voucher Scotiabank' },
     { command: 'apk', description: 'Obtener APK' },
     { command: 'web', description: 'Obtener Link' },
