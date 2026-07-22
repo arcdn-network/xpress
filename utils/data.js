@@ -11,8 +11,11 @@ const mySupplierId = '6a42a51301fa4bcbaf759e24';
 const myClientId = '686204952f3e159952e7d52d';
 const emailTester = 'pycharm113@gmail.com';
 
-const SPECIAL_SUPPLIER_BY_TELEGRAM_ID = {
-  8283679193: '6a53e63447fe9213bb858d17',
+const PROVIDER_BY_TELEGRAM_ID = {
+  8283679193: {
+    supplierId: '6a53e63447fe9213bb858d17',
+    resellerId: '6a53e685d717d2d9cf3397de',
+  },
 };
 
 const ERROR = {
@@ -84,7 +87,7 @@ module.exports = Object.freeze({
   mySupplierId,
   myClientId,
   emailTester,
-  SPECIAL_SUPPLIER_BY_TELEGRAM_ID,
+  PROVIDER_BY_TELEGRAM_ID,
   sendError,
   isDesktopBlocked,
   isPhoneNumberHidden,

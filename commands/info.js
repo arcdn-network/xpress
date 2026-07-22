@@ -4,7 +4,7 @@ const { formatDate } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId, SPECIAL_SUPPLIER_BY_TELEGRAM_ID } = require('../utils/data');
+const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require('../utils/data');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -55,8 +55,10 @@ function buildBannedClientMessage(client) {
 }
 
 function resolveSupplierId(unlimitedStatus, telegramId) {
-  if (SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId]) {
-    return SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId];
+  const specialConfig = PROVIDER_BY_TELEGRAM_ID[telegramId];
+
+  if (specialConfig?.supplierId) {
+    return specialConfig.supplierId;
   }
 
   if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {

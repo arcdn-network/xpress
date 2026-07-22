@@ -3,7 +3,7 @@ const { sendMessage } = require('../utils/sender');
 const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId, SPECIAL_SUPPLIER_BY_TELEGRAM_ID } = require('../utils/data');
+const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require('../utils/data');
 
 const BASE_ACTIVATION_COST = 20;
 const EXTRA_BANK_COST = 5;
@@ -71,8 +71,10 @@ function getUserDisplayName(user) {
 }
 
 function resolveSupplierId(unlimitedStatus, telegramId) {
-  if (SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId]) {
-    return SPECIAL_SUPPLIER_BY_TELEGRAM_ID[telegramId];
+  const specialConfig = PROVIDER_BY_TELEGRAM_ID[telegramId];
+
+  if (specialConfig?.supplierId) {
+    return specialConfig.supplierId;
   }
 
   if (unlimitedStatus?.isUnlimited && unlimitedStatus.supplierId) {
@@ -798,7 +800,9 @@ function registerActivateCallback(bot) {
           return;
         }
 
-        const resellerId = unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID;
+        const resellerId =
+          PROVIDER_BY_TELEGRAM_ID[telegramId]?.resellerId ??
+          (unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID);
 
         const newCredits = unlimitedStatus.isUnlimited ? user.credits : user.credits - cost;
 
