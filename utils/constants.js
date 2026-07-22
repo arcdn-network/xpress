@@ -3,16 +3,30 @@ const LOCAL = {
   WELCOME_IMAGE: 'welcome.png',
   CREDITS_IMAGE: 'credits.png',
   RECHARGE_IMAGE: 'recharge.png',
+  VOUCHERT_IMAGE: 'voucher.png',
   BROADCAST_IMAGE: 'flayer.png',
   APK_FILE: 'resources/files/Yape_Fake.apk',
 };
 
 const APP_NAME = 'YapeXpress';
+const APP_USERNAME = 'dev_lguss';
+
+function buildTelegramLink(username, mensaje) {
+  return `https://t.me/${username}?text=${encodeURIComponent(mensaje)}`;
+}
 
 const RESELLERS = [
   {
     text: '💰 Comprar créditos',
-    url: 'https://t.me/dev_lguss',
+    url: buildTelegramLink(APP_USERNAME, `Hola, quiero comprar créditos de ${APP_NAME}`),
+    visible: true,
+  },
+];
+
+const VOUCHER_PLAN_CONTACT = [
+  {
+    text: '⭐ Adquirir plan de vouchers',
+    url: buildTelegramLink(APP_USERNAME, `Hola, quiero adquirir el plan de vouchers de ${APP_NAME}`),
     visible: true,
   },
 ];
@@ -34,6 +48,18 @@ function buildButtonsCredits() {
     ]),
   };
 }
+
+function buildButtonsVoucherPlan() {
+  return {
+    inline_keyboard: VOUCHER_PLAN_CONTACT.filter((item) => item.visible).map((item) => [
+      {
+        text: item.text,
+        url: item.url,
+      },
+    ]),
+  };
+}
+
 function buildButtonsCreditsWithApk() {
   const resellers = RESELLERS.filter((item) => item.visible).map((item) => [
     {
@@ -77,5 +103,6 @@ module.exports = {
   TARIFARIO,
   buildButtonsCredits,
   buildButtonsCreditsWithApk,
+  buildButtonsVoucherPlan,
   buildPaquetesMessage,
 };

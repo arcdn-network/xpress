@@ -1,14 +1,43 @@
 const { CONFIG } = require('./utils/config');
+const { getUser, updateUser } = require('../utils/api');
+const { buildButtonsVoucherPlan, LOCAL } = require('../utils/constants');
+const { formatDateTime } = require('../utils/functions');
+const { sendMessage } = require('../utils/sender');
+const { getFiles, saveFileTelegram } = require('../utils/files');
 
 const COOLDOWN_MS = 10000;
+const FREE_DAILY_LIMIT = 3;
 const cooldowns = new Map();
 const enProceso = new Set();
 
-const MSG_HORARIO = '🕙 *El servicio de vouchers está disponible de 8:00 a.m. a 10:00 p.m.*';
+function getTodayStr() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+}
 
-function isDentroDeHorario() {
-  const hora = new Date().getHours();
-  return hora >= 8 && hora < 22;
+function usosGratisHoy(user) {
+  const hoy = getTodayStr();
+  if (!user?.voucher || user.voucher.dailyDate !== hoy) return 0;
+  return user.voucher.dailyUsed || 0;
+}
+
+function puedeUsarGratis(user) {
+  return usosGratisHoy(user) < FREE_DAILY_LIMIT;
+}
+
+function tienePlanActivo(user) {
+  return !!(user?.voucher?.active && user.voucher.expiresAt && new Date(user.voucher.expiresAt) > new Date());
+}
+
+async function registrarUsoGratis(userId, user) {
+  const hoy = getTodayStr();
+  const actual = user.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
+  await updateUser(userId, {
+    voucher: {
+      ...(user.voucher || {}),
+      dailyDate: hoy,
+      dailyUsed: actual + 1,
+    },
+  });
 }
 
 function isCooldown(userId) {
@@ -57,6 +86,31 @@ function createVoucherHandler(bot, comando) {
 
     const sendError = () => bot.sendMessage(chatId, errorMsg, replyOpts);
 
+    const user = await getUser(userId);
+    const esIlimitado = tienePlanActivo(user);
+
+    if (!esIlimitado && !puedeUsarGratis(user)) {
+      const textoLimite = `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.`;
+      const files = getFiles();
+
+      if (files.VOUCHERT_IMAGE) {
+        return sendMessage(bot, chatId, {
+          text: textoLimite,
+          fileId: files.VOUCHERT_IMAGE,
+          replyMarkup: buildButtonsVoucherPlan(),
+        });
+      }
+
+      const telegramResponse = await sendMessage(bot, chatId, {
+        text: textoLimite,
+        filePath: LOCAL.VOUCHERT_IMAGE,
+        replyMarkup: buildButtonsVoucherPlan(),
+      });
+
+      saveFileTelegram(telegramResponse, 'VOUCHERT_IMAGE');
+      return;
+    }
+
     if (!input) return sendError();
 
     if (enProceso.has(userId)) {
@@ -78,18 +132,27 @@ function createVoucherHandler(bot, comando) {
     if (!nombre) return sendError();
     if (!validarDigitos(digitos, cantidad)) return sendError();
 
-    if (!isDentroDeHorario()) {
-      return bot.sendMessage(chatId, MSG_HORARIO, replyOpts);
-    }
-
     enProceso.add(userId);
-    const loading = await bot.sendMessage(chatId, '⏳ Generando voucher...');
+    const loading = await bot.sendMessage(chatId, '⏳ Generando voucher...', {
+      reply_to_message_id: msg.message_id,
+    });
 
     try {
       const base64 = await service({ monto, nombre, digitos, mensaje, destino });
       const buffer = Buffer.from(base64, 'base64');
 
       setCooldown(userId);
+
+      if (!esIlimitado) {
+        await registrarUsoGratis(userId, user).catch((e) => console.error('Error registrando uso gratis:', e.message));
+      }
+
+      const restantes = FREE_DAILY_LIMIT - (usosGratisHoy(user) + 1);
+
+      const lineaEstado = esIlimitado
+        ? `♾️ *Plan:* Ilimitado hasta ${formatDateTime(new Date(user.voucher.expiresAt))}`
+        : `🎟️ *Usos gratis restantes hoy:* ${Math.max(restantes, 0)}/${FREE_DAILY_LIMIT}`;
+
       await bot.deleteMessage(chatId, loading.message_id);
       await bot.sendDocument(
         chatId,
@@ -103,6 +166,8 @@ function createVoucherHandler(bot, comando) {
             `👤 *Titular:* ${escapeMd(nombre)}`,
             ...(digitos ? [`🔢 *Dígitos:* ${escapeMd(digitos)}`] : []),
             ...(mensaje ? [`💬 *Mensaje:* ${escapeMd(mensaje)}`] : []),
+            ``,
+            lineaEstado,
           ].join('\n'),
           parse_mode: 'Markdown',
         },

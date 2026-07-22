@@ -19,6 +19,7 @@ const registerInfoCommand = require('./commands/info');
 const registerMinsaCommand = require('./commands/minsa');
 const registerVoucherCommands = require('./api/bot');
 const registerVoucherTokenCommand = require('./api/token');
+const registerDiasCommand = require('./commands/days');
 
 async function startBot() {
   const isDevelop = process.env.DEVELOP === 'TRUE';
@@ -65,6 +66,7 @@ async function startBot() {
   registerInfoCommand(bot);
   registerVoucherCommands(bot);
   registerVoucherTokenCommand(bot);
+  registerDiasCommand(bot);
   registerMinsaCommand(bot);
 
   bot.on('polling_error', (error) => {
