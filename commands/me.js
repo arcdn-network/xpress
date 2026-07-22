@@ -49,11 +49,15 @@ function getTodayStrLima() {
 }
 
 function getVoucherLine(user) {
-  const tienePlanActivo =
-    user?.voucher?.active && user.voucher.expiresAt && new Date(user.voucher.expiresAt) > new Date();
+  const activo = user?.voucher?.active;
+  const expiresAt = user?.voucher?.expiresAt;
 
-  if (tienePlanActivo) {
-    return `[🎫] VOUCHERS ➤ Vence ${formatDateTime(user.voucher.expiresAt)}`;
+  if (activo && !expiresAt) {
+    return `[🎫] VOUCHERS ➤ Sin vencimiento`;
+  }
+
+  if (activo && expiresAt && new Date(expiresAt) > new Date()) {
+    return `[🎫] VOUCHERS ➤ Vence ${formatDateTime(expiresAt)}`;
   }
 
   const hoy = getTodayStrLima();

@@ -26,7 +26,9 @@ function puedeUsarGratis(user) {
 }
 
 function tienePlanActivo(user) {
-  return !!(user?.voucher?.active && user.voucher.expiresAt && new Date(user.voucher.expiresAt) > new Date());
+  if (!user?.voucher?.active) return false;
+  if (!user.voucher.expiresAt) return true;
+  return new Date(user.voucher.expiresAt) > new Date();
 }
 
 async function registrarUsoGratis(userId, user) {
@@ -152,7 +154,9 @@ function createVoucherHandler(bot, comando) {
       const restantes = FREE_DAILY_LIMIT - (usosGratisHoy(user) + 1);
 
       const lineaEstado = esIlimitado
-        ? `♾️ *Plan:* Ilimitado hasta ${formatDateTime(new Date(user.voucher.expiresAt))}`
+        ? user.voucher.expiresAt
+          ? `♾️ *Plan:* Ilimitado hasta ${formatDateTime(new Date(user.voucher.expiresAt))}`
+          : `♾️ *Plan:* Ilimitado sin vencimiento`
         : `🎟️ *Usos gratis restantes hoy:* ${Math.max(restantes, 0)}/${FREE_DAILY_LIMIT}`;
 
       await bot.deleteMessage(chatId, loading.message_id);
