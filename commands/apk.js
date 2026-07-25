@@ -15,7 +15,7 @@ function buildWebTemplate() {
   return `
 🌐 <b>ACCESO WEB OFICIAL</b>
 
-🔗 <code>https://ypfk-oficial.vercel.app/</code>
+🔗 <code>https://ypfk-xpress.vercel.app/</code>
 
 •···························•····························•
 📱 <b>INSTALAR COMO APP</b>
