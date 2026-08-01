@@ -1,4 +1,4 @@
-const { APP_NAME, LOCAL } = require('../utils/constants');
+const { APP_NAME, LOCAL, FREE_BONUS_VOUCHER } = require('../utils/constants');
 const { formatDate, formatDateTime } = require('../utils/functions');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
@@ -42,12 +42,6 @@ function registerMeCommand(bot) {
   });
 }
 
-const FREE_DAILY_LIMIT = 3;
-
-function getTodayStrLima() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
-}
-
 function getVoucherLine(user) {
   const activo = user?.voucher?.active;
   const expiresAt = user?.voucher?.expiresAt;
@@ -60,11 +54,8 @@ function getVoucherLine(user) {
     return `[🎫] VOUCHERS ➤ Vence ${formatDateTime(expiresAt)}`;
   }
 
-  const hoy = getTodayStrLima();
-  const usadosHoy = user?.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
-  const restantes = Math.max(FREE_DAILY_LIMIT - usadosHoy, 0);
-
-  return `[🎫] VOUCHERS ➤ Gratis ${restantes}/${FREE_DAILY_LIMIT}`;
+  const restantes = user?.voucher?.freeQty ?? FREE_BONUS_VOUCHER;
+  return `[🎫] VOUCHERS ➤ Bono ${restantes}/${FREE_BONUS_VOUCHER}`;
 }
 
 function buildProfileTemplate(user, msg) {

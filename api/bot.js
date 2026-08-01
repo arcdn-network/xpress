@@ -1,28 +1,21 @@
 const { CONFIG } = require('./utils/config');
 const { getUser, updateUser } = require('../utils/api');
-const { buildButtonsVoucherPlan, LOCAL } = require('../utils/constants');
+const { buildButtonsVoucherPlan, LOCAL, FREE_BONUS_VOUCHER } = require('../utils/constants');
 const { formatDateTime } = require('../utils/functions');
 const { sendMessage } = require('../utils/sender');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 
 const COOLDOWN_MS = 10000;
 const COOLDOWN_MS_PLAN = COOLDOWN_MS / 2;
-const FREE_DAILY_LIMIT = 3;
 const cooldowns = new Map();
 const enProceso = new Set();
 
-function getTodayStr() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
-}
-
-function usosGratisHoy(user) {
-  const hoy = getTodayStr();
-  if (!user?.voucher || user.voucher.dailyDate !== hoy) return 0;
-  return user.voucher.dailyUsed || 0;
+function restantesGratis(user) {
+  return user?.voucher?.freeQty ?? FREE_BONUS_VOUCHER;
 }
 
 function puedeUsarGratis(user) {
-  return usosGratisHoy(user) < FREE_DAILY_LIMIT;
+  return restantesGratis(user) > 0;
 }
 
 function tienePlanActivo(user) {
@@ -31,16 +24,16 @@ function tienePlanActivo(user) {
   return new Date(user.voucher.expiresAt) > new Date();
 }
 
-async function registrarUsoGratis(userId, user) {
-  const hoy = getTodayStr();
-  const actual = user.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
+async function descontarUsoGratis(userId, user) {
+  const actual = restantesGratis(user);
+  const nuevo = Math.max(actual - 1, 0);
   await updateUser(userId, {
     voucher: {
       ...(user.voucher || {}),
-      dailyDate: hoy,
-      dailyUsed: actual + 1,
+      freeQty: nuevo,
     },
   });
+  return nuevo;
 }
 
 function isCooldown(userId, cooldownMs) {
@@ -94,7 +87,7 @@ function createVoucherHandler(bot, comando) {
     const cooldownActual = esIlimitado ? COOLDOWN_MS_PLAN : COOLDOWN_MS;
 
     if (!esIlimitado && !puedeUsarGratis(user)) {
-      const textoLimite = `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.`;
+      const textoLimite = `⏰ Ya agotaste tu bono de registro.\n🚀 Adquiere el plan para uso ilimitado.`;
       const files = getFiles();
 
       if (files.VOUCHERT_IMAGE) {
@@ -147,17 +140,19 @@ function createVoucherHandler(bot, comando) {
 
       setCooldown(userId);
 
+      let restantes = restantesGratis(user);
       if (!esIlimitado) {
-        await registrarUsoGratis(userId, user).catch((e) => console.error('Error registrando uso gratis:', e.message));
+        restantes = await descontarUsoGratis(userId, user).catch((e) => {
+          console.error('Error descontando bono gratis:', e.message);
+          return restantes;
+        });
       }
-
-      const restantes = FREE_DAILY_LIMIT - (usosGratisHoy(user) + 1);
 
       const lineaEstado = esIlimitado
         ? user.voucher.expiresAt
           ? `♾️ *Plan:* Ilimitado hasta ${formatDateTime(new Date(user.voucher.expiresAt))}`
           : `♾️ *Plan:* Ilimitado sin vencimiento`
-        : `🎟️ *Usos gratis restantes hoy:* ${Math.max(restantes, 0)}/${FREE_DAILY_LIMIT}`;
+        : `🎟️ *Bono de registro restante:* ${restantes}/${FREE_BONUS_VOUCHER}`;
 
       await bot.deleteMessage(chatId, loading.message_id);
       await bot.sendDocument(

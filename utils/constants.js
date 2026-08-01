@@ -10,6 +10,7 @@ const LOCAL = {
 
 const APP_NAME = 'YapeXpress';
 const APP_USERNAME = 'dev_lguss';
+const FREE_BONUS_VOUCHER = 5;
 
 function buildTelegramLink(username, mensaje) {
   return `https://t.me/${username}?text=${encodeURIComponent(mensaje)}`;
@@ -101,6 +102,7 @@ module.exports = {
   LOCAL,
   APP_NAME,
   TARIFARIO,
+  FREE_BONUS_VOUCHER,
   buildButtonsCredits,
   buildButtonsCreditsWithApk,
   buildButtonsVoucherPlan,
