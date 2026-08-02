@@ -1,5 +1,5 @@
-const { APP_NAME, LOCAL, FREE_BONUS_VOUCHER } = require('../utils/constants');
-const { formatDate, formatDateTime } = require('../utils/functions');
+const { APP_NAME, LOCAL, FREE_BONUS_VOUCHER, FREE_DAILY_LIMIT, USE_DAILY_LIMIT } = require('../utils/constants');
+const { formatDate, formatDateTime, formatDateLima } = require('../utils/functions');
 const { getFiles, saveFileTelegram } = require('../utils/files');
 const { getUnlimitedStatus } = require('../utils/unlimited');
 const { sendMessage } = require('../utils/sender');
@@ -54,8 +54,15 @@ function getVoucherLine(user) {
     return `[🎫] VOUCHERS ➤ Vence ${formatDateTime(expiresAt)}`;
   }
 
+  if (USE_DAILY_LIMIT) {
+    const hoy = formatDateLima();
+    const usadosHoy = user?.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
+    const restantes = Math.max(FREE_DAILY_LIMIT - usadosHoy, 0);
+    return `[🎫] VOUCHERS ➤ Gratis ${restantes}/${FREE_DAILY_LIMIT}`;
+  }
+
   const restantes = user?.voucher?.freeQty ?? FREE_BONUS_VOUCHER;
-  return `[🎫] VOUCHERS ➤ Bono ${restantes}/${FREE_BONUS_VOUCHER}`;
+  return `[🎫] VOUCHERS ➤ Gratis ${restantes}`;
 }
 
 function buildProfileTemplate(user, msg) {

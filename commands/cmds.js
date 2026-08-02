@@ -1,52 +1,83 @@
+const { isOwner } = require('../middleware/isAdmin');
 const { buildButtonsCredits } = require('../utils/constants');
 
-function buildCommandsMessage() {
-  return `
+function buildCommandsMessage(admin = false) {
+  let msg = `
 📋 <b>COMANDOS DISPONIBLES</b>
 
 •···························•····························•
 
-🪪 <b>CUENTA</b>
+🪪 <b>GENERAL</b>
 <code>/me</code>
-Consulta tu perfil y créditos disponibles.
+Ver mi información.
 
 <code>/buy</code>
-Recarga créditos para tus activaciones.
+Tarifario de créditos.
 
 •···························•····························•
 
-🚀 <b>ACTIVACIONES</b>
+🚀 <b>ACTIVACIONES YAPE</b>
 <code>/activate correo@gmail.com</code>
-Selecciona los productos que quieres activar.
-Puedes confirmar o cancelar esta operación.
+Activa una cuenta de un cliente registrado.
 
 <code>/token</code>
-Selecciona las suscripciones del autocompletado.
-Puedes confirmar o cancelar esta operación
+Genera token de autocompletado.
 
-•···························•····························•
-
-👤 <b>CONSULTAS</b>
 <code>/info correo@gmail.com</code>
-Obtén información detallada del cliente.
+Ver información del cliente.
 
 <code>/historial</code>
-Revisa todas tus activaciones realizadas.
+Ver el historial de tus activaciones.
 
 •···························•····························•
-🧾 <b>VOUCHERS (GRATIS)</b>
-Comandos:
-<i>yape · plin · bim · agora · lemon · bcp · ibk · bbva · scotiabank</i>
-<code>/cmd monto|titular|digitos|mensaje|destino</code>
-Genera un voucher de pago.
 
+🧾 <b>PLAN VOUCHERS</b>
+<code>/yape monto|nombre|3digitos</code>
+<code>/plin monto|nombre|3digitos</code>
+<code>/agora monto|nombre|3digitos</code>
+<code>/bim monto|nombre|3digitos</code>
+<code>/bbva monto|nombre|3digitos</code>
+<code>/ibk monto|nombre|3digitos</code>
+<code>/bcp monto|nombre|3digitos</code>
+<code>/lemon monto|nombre|3digitos</code>
+<code>/caja monto|nombre|3digitos</code>
+<code>/scotiabank monto|nombre|3digitos</code>
+Genera vouchers de pago.
+`;
+
+  if (admin) {
+    msg += `
 •···························•····························•
-`.trim();
+
+🛠️ <b>ADMIN</b>
+
+<code>/creditos telegramId</code>
+Gestiona créditos de activaciones.
+
+<code>/dias telegramId</code>
+Gestiona el plan de <vouchers></vouchers>.
+
+<code>/create_token nombre|dias|unlimited</code>
+Crea un TOKEN API. Usa "true" en unlimited para plan ilimitado.
+
+<code>/extender_token TOKEN|DIAS</code>
+Extiende la duración de un TOKEN API existente.
+
+`;
+  }
+
+  msg += `
+•···························•····························•
+`;
+
+  return msg.trim();
 }
 
 function registerCmdsCommand(bot) {
   bot.onText(/\/cmds$/, async (msg) => {
-    await bot.sendMessage(msg.chat.id, buildCommandsMessage(), {
+    const admin = isOwner(msg.from.id);
+
+    await bot.sendMessage(msg.chat.id, buildCommandsMessage(admin), {
       parse_mode: 'HTML',
       reply_markup: buildButtonsCredits(),
     });

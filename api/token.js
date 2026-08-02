@@ -1,18 +1,10 @@
+const { isOwner } = require('../middleware/isAdmin');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
-const DATA_FILE = path.resolve(__dirname, '../data.json');
-const ADMIN_IDS = parseIdList(process.env.ADMIN_ID);
-
 // ─── DATABASE ─────────────────────────────
-
-function parseIdList(value) {
-  return (value || '')
-    .split(',')
-    .map((id) => id.trim())
-    .filter(Boolean);
-}
+const DATA_FILE = path.resolve(__dirname, '../data.json');
 
 function loadData() {
   if (!fs.existsSync(DATA_FILE)) {
@@ -35,11 +27,6 @@ const db = loadData();
 
 // ─── HELPERS ─────────────────────────────
 
-function soloOwner(msg) {
-  const telegramId = String(msg.from.id);
-  return ADMIN_IDS.includes(telegramId);
-}
-
 function generarToken() {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -55,7 +42,7 @@ function registerVoucherTokenCommand(bot) {
   bot.onText(/^\/create_token (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
 
-    if (!soloOwner(msg)) return;
+    if (!isOwner(msg.from.id)) return;
 
     const partes = match[1].split('|').map((x) => x.trim());
 
@@ -64,9 +51,7 @@ function registerVoucherTokenCommand(bot) {
     }
 
     const [name, daysStr, unlimitedStr = 'false'] = partes;
-
     const unlimited = unlimitedStr.toLowerCase() === 'true';
-
     const days = Number(daysStr);
 
     if (!unlimited && (isNaN(days) || days <= 0)) {
@@ -74,17 +59,9 @@ function registerVoucherTokenCommand(bot) {
     }
 
     const token = generarToken();
-
     const expireIn = unlimited ? 0 : Date.now() + days * 24 * 60 * 60 * 1000;
 
-    db.push({
-      token,
-      name,
-      expireIn,
-      status: true,
-      unlimited,
-    });
-
+    db.push({ token, name, expireIn, status: true, unlimited });
     saveData();
 
     return bot.sendMessage(
@@ -95,15 +72,13 @@ function registerVoucherTokenCommand(bot) {
         `⏰ ${unlimited ? 'Expira: Nunca' : `Expira: ${formatDate(expireIn)}`}\n\n` +
         `🔑 TOKEN:\n\n` +
         `\`${token}\``,
-      {
-        parse_mode: 'Markdown',
-      },
+      { parse_mode: 'Markdown' },
     );
   });
 
   // EXTENDER TOKEN
   bot.onText(/^\/extender_token (.+)/, async (msg, match) => {
-    if (!soloOwner(msg)) return;
+    if (!isOwner(msg.from.id)) return;
 
     const chatId = msg.chat.id;
 
@@ -114,7 +89,6 @@ function registerVoucherTokenCommand(bot) {
     }
 
     const [token, daysStr] = partes;
-
     const days = Number(daysStr);
 
     if (isNaN(days) || days <= 0) {
@@ -132,9 +106,7 @@ function registerVoucherTokenCommand(bot) {
     }
 
     const baseExpire = Math.max(Date.now(), user.expireIn);
-
     user.expireIn = baseExpire + days * 24 * 60 * 60 * 1000;
-
     saveData();
 
     return bot.sendMessage(

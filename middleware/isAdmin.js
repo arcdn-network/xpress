@@ -8,4 +8,16 @@ async function isAdmin(telegramId) {
   return user.role === 'admin' || user.role === 'reseller';
 }
 
-module.exports = isAdmin;
+function isOwner(telegramId) {
+  const ownerIds = (process.env.ADMIN_ID || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  return ownerIds.includes(String(telegramId));
+}
+
+module.exports = {
+  isAdmin,
+  isOwner,
+};

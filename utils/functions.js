@@ -28,4 +28,8 @@ function formatDateTime(date) {
   return `${fecha} ${hora}`;
 }
 
-module.exports = { formatDate, formatDateTime };
+function formatDateLima() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+}
+
+module.exports = { formatDate, formatDateTime, formatDateLima };

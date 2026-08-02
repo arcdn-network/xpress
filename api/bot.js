@@ -1,9 +1,10 @@
+const { LOCAL, FREE_BONUS_VOUCHER, FREE_DAILY_LIMIT, USE_DAILY_LIMIT } = require('../utils/constants');
 const { CONFIG } = require('./utils/config');
 const { getUser, updateUser } = require('../utils/api');
-const { buildButtonsVoucherPlan, LOCAL, FREE_BONUS_VOUCHER } = require('../utils/constants');
-const { formatDateTime } = require('../utils/functions');
-const { sendMessage } = require('../utils/sender');
+const { buildButtonsVoucherPlan } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
+const { formatDateTime, formatDateLima } = require('../utils/functions');
+const { sendMessage } = require('../utils/sender');
 
 const COOLDOWN_MS = 10000;
 const COOLDOWN_MS_PLAN = COOLDOWN_MS / 2;
@@ -11,6 +12,12 @@ const cooldowns = new Map();
 const enProceso = new Set();
 
 function restantesGratis(user) {
+  if (USE_DAILY_LIMIT) {
+    const hoy = formatDateLima();
+    const usadosHoy = user?.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
+    return Math.max(FREE_DAILY_LIMIT - usadosHoy, 0);
+  }
+
   return user?.voucher?.freeQty ?? FREE_BONUS_VOUCHER;
 }
 
@@ -25,15 +32,44 @@ function tienePlanActivo(user) {
 }
 
 async function descontarUsoGratis(userId, user) {
+  if (USE_DAILY_LIMIT) {
+    const hoy = formatDateLima();
+    const actual = user.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
+
+    await updateUser(userId, {
+      voucher: {
+        ...(user.voucher || {}),
+        dailyDate: hoy,
+        dailyUsed: actual + 1,
+      },
+    });
+
+    return Math.max(FREE_DAILY_LIMIT - (actual + 1), 0);
+  }
+
   const actual = restantesGratis(user);
   const nuevo = Math.max(actual - 1, 0);
+
   await updateUser(userId, {
     voucher: {
       ...(user.voucher || {}),
       freeQty: nuevo,
     },
   });
+
   return nuevo;
+}
+
+function textoLimiteAlcanzado() {
+  return USE_DAILY_LIMIT
+    ? `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.`
+    : `⏰ Ya agotaste tu bono gratis.\n🚀 Adquiere el plan para uso ilimitado.`;
+}
+
+function lineaEstadoGratis(restantes) {
+  return USE_DAILY_LIMIT
+    ? `🎟️ *Usos gratis restantes hoy:* ${restantes}/${FREE_DAILY_LIMIT}`
+    : `🎟️ *Bono gratis restante:* ${restantes}`;
 }
 
 function isCooldown(userId, cooldownMs) {
@@ -87,24 +123,23 @@ function createVoucherHandler(bot, comando) {
     const cooldownActual = esIlimitado ? COOLDOWN_MS_PLAN : COOLDOWN_MS;
 
     if (!esIlimitado && !puedeUsarGratis(user)) {
-      const textoLimite = `⏰ Ya agotaste tu bono de registro.\n🚀 Adquiere el plan para uso ilimitado.`;
       const files = getFiles();
 
-      if (files.VOUCHERT_IMAGE) {
+      if (files.VOUCHER_IMAGE) {
         return sendMessage(bot, chatId, {
-          text: textoLimite,
-          fileId: files.VOUCHERT_IMAGE,
+          text: textoLimiteAlcanzado(),
+          fileId: files.VOUCHER_IMAGE,
           replyMarkup: buildButtonsVoucherPlan(),
         });
       }
 
       const telegramResponse = await sendMessage(bot, chatId, {
-        text: textoLimite,
-        filePath: LOCAL.VOUCHERT_IMAGE,
+        text: textoLimiteAlcanzado(),
+        filePath: LOCAL.VOUCHER_IMAGE,
         replyMarkup: buildButtonsVoucherPlan(),
       });
 
-      saveFileTelegram(telegramResponse, 'VOUCHERT_IMAGE');
+      saveFileTelegram(telegramResponse, 'VOUCHER_IMAGE');
       return;
     }
 
@@ -143,7 +178,7 @@ function createVoucherHandler(bot, comando) {
       let restantes = restantesGratis(user);
       if (!esIlimitado) {
         restantes = await descontarUsoGratis(userId, user).catch((e) => {
-          console.error('Error descontando bono gratis:', e.message);
+          console.error('Error descontando uso gratis:', e.message);
           return restantes;
         });
       }
@@ -152,7 +187,7 @@ function createVoucherHandler(bot, comando) {
         ? user.voucher.expiresAt
           ? `♾️ *Plan:* Ilimitado hasta ${formatDateTime(new Date(user.voucher.expiresAt))}`
           : `♾️ *Plan:* Ilimitado sin vencimiento`
-        : `🎟️ *Bono de registro restante:* ${restantes}/${FREE_BONUS_VOUCHER}`;
+        : lineaEstadoGratis(restantes);
 
       await bot.deleteMessage(chatId, loading.message_id);
       await bot.sendDocument(
