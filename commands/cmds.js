@@ -55,7 +55,7 @@ Genera vouchers de pago.
 Gestiona créditos de activaciones.
 
 <code>/dias telegramId</code>
-Gestiona el plan de <vouchers></vouchers>.
+Gestiona el plan de vouchers.
 
 <code>/create_token nombre|dias|unlimited</code>
 Crea un TOKEN API. Usa "true" en unlimited para plan ilimitado.
