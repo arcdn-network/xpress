@@ -28,8 +28,29 @@ function formatDateTime(date) {
   return `${fecha} ${hora}`;
 }
 
+function formatShortDateTime(date) {
+  if (!date) return '';
+
+  const fecha = new Date(date).toLocaleDateString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const hora = new Date(date)
+    .toLocaleTimeString('es-PE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .replace(/a\.?\s?m\.?/i, 'AM')
+    .replace(/p\.?\s?m\.?/i, 'PM');
+
+  return `${fecha} ${hora}`;
+}
+
 function formatDateLima() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 }
 
-module.exports = { formatDate, formatDateTime, formatDateLima };
+module.exports = { formatDate, formatDateTime, formatShortDateTime, formatDateLima };

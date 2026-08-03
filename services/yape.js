@@ -47,7 +47,7 @@ function formatFecha() {
   const horas = now.getHours();
   const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
   return {
-    fecha: `${now.getDate()} ${MESES[now.getMonth()]}. ${now.getFullYear()}`,
+    fecha: `${now.getDate().toString().padStart(2, '0')} ${MESES[now.getMonth()]}. ${now.getFullYear()}`,
     hora: `${(horas % 12 || 12).toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`,
   };
 }

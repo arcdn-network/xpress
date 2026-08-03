@@ -14,8 +14,8 @@ const APP_USERNAME = 'dev_lguss';
 // USE_DAILY_LIMIT
 // true -> 3 gratis cada 24 horas
 // false -> 5 gratis al registrarse
-const USE_DAILY_LIMIT = false;
-const FREE_DAILY_LIMIT = 3;
+const USE_DAILY_LIMIT = true;
+const FREE_DAILY_LIMIT = 2;
 const FREE_BONUS_VOUCHER = 5;
 
 function buildTelegramLink(username, mensaje) {
@@ -107,6 +107,7 @@ function buildPaquetesMessage() {
 module.exports = {
   LOCAL,
   APP_NAME,
+  APP_USERNAME,
   TARIFARIO,
   USE_DAILY_LIMIT,
   FREE_DAILY_LIMIT,

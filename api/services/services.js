@@ -30,10 +30,7 @@ function createVoucherRoute(servicio) {
       const error = validarParametros(monto, nombre, digitos, cantidad);
 
       if (error) {
-        return res.status(400).json({
-          status: false,
-          message: error,
-        });
+        return res.status(400).json({ status: false, message: error });
       }
 
       const base64 = await service({
@@ -44,7 +41,7 @@ function createVoucherRoute(servicio) {
         destino: String(destino).trim(),
       });
 
-      return res.json({ status: true, base64 });
+      return res.json({ status: true, expires: req.expire, base64 });
     } catch (error) {
       console.error(`Error en API /${servicio}:`, error.message);
       return res.status(500).json({ status: false, message: 'Error al generar voucher.' });

@@ -5,7 +5,41 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Voucher API</title>
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeicons@8.0.0/primeicons.min.css">
    <style>
+      :root {
+         /* superficies */
+         --bg: #090909;
+         --surface: #111;
+         --surface-alt: #0a0a0a;
+         --surface-btn: #141414;
+
+         /* bordes */
+         --border: #1f1f1f;
+         --border-alt: #2a2a2a;
+
+         /* texto */
+         --text: #e8e8e8;
+         --text-soft: #ddd;
+         --text-dim: #888;
+         --text-mute: #666;
+         --text-faint: #555;
+         --text-faintest: #444;
+
+         /* acento (azul, único color de marca) */
+         --accent: #3b82f6;
+         --accent-hover: #2563eb;
+         --accent-soft: rgba(59, 130, 246, .15);
+         --accent-soft-strong: rgba(59, 130, 246, .12);
+
+         /* estados */
+         --danger: #f87171;
+         --success: #22c55e;
+
+         --radius: .375rem;
+         --radius-lg: .5rem;
+      }
+
       *,
       *::before,
       *::after {
@@ -15,8 +49,8 @@
       }
 
       body {
-         background: #090909;
-         color: #e8e8e8;
+         background: var(--bg);
+         color: var(--text);
          font-family: monospace;
          min-height: 100vh;
          display: flex;
@@ -25,28 +59,38 @@
          padding: 2rem;
       }
 
-      .card {
-         background: #111;
-         border: 1px solid #1f1f1f;
-         border-radius: .5rem;
+      .card,
+      input,
+      textarea,
+      .pill,
+      pre,
+      .modal-box,
+      .includes-box,
+      .plan-card {
+         background: var(--surface);
+         border: 1px solid var(--border);
+         border-radius: var(--radius);
+      }
+
+      .card,
+      .modal-box {
+         border-radius: var(--radius-lg);
       }
 
       input,
       textarea {
-         background: #0a0a0a;
-         border: 1px solid #1f1f1f;
-         border-radius: .375rem;
-         color: #e8e8e8;
+         color: var(--text);
          font-family: monospace;
          font-size: .8rem;
          padding: .5rem .625rem;
          outline: none;
          width: 100%;
+         background: var(--surface-alt);
       }
 
       input:focus,
       textarea:focus {
-         border-color: #3b82f6;
+         border-color: var(--accent);
       }
 
       textarea {
@@ -56,30 +100,26 @@
       }
 
       .pill {
-         background: #111;
-         border: 1px solid #1f1f1f;
-         border-radius: .375rem;
          padding: .5rem 1rem;
          cursor: pointer;
          font-size: .8rem;
-         color: #777;
-         transition: .15s;
+         color: var(--text-mute);
       }
 
       .pill:hover {
-         border-color: #3b82f6;
+         border-color: var(--accent);
          color: #fff;
       }
 
       .pill.active {
-         background: #3b82f6;
-         border-color: #3b82f6;
+         background: var(--accent);
+         border-color: var(--accent);
          color: #fff;
       }
 
       button {
          width: 100%;
-         border-radius: .375rem;
+         border-radius: var(--radius);
          padding: .625rem 1rem;
          font-family: monospace;
          font-size: .8rem;
@@ -87,85 +127,98 @@
       }
 
       #btn-send {
-         background: #3b82f6;
+         background: var(--accent);
          color: #fff;
          border: none;
       }
 
       #btn-send:hover:not(:disabled) {
-         background: #2563eb;
+         background: var(--accent-hover);
       }
 
-      #btn-download {
-         background: #141414;
-         border: 1px solid #2a2a2a;
-         color: #888;
+      .btn-outline {
+         background: var(--surface-btn);
+         border: 1px solid var(--border-alt);
+         color: var(--text-dim);
       }
 
-      #btn-download:hover:not(:disabled) {
-         border-color: #3b82f6;
+      .btn-outline:hover:not(:disabled) {
+         border-color: var(--accent);
          color: #fff;
       }
 
+      #btn-plans,
+      .modal-close,
+      .copy-btn {
+         width: auto;
+         display: inline-flex;
+         align-items: center;
+         gap: .4rem;
+      }
+
+      #btn-plans {
+         padding: .5rem 1rem;
+         font-size: .8rem;
+      }
+
+      .modal-close {
+         padding: .375rem .75rem;
+         font-size: .8rem;
+         gap: .375rem;
+      }
+
+      .modal-close:hover:not(:disabled) {
+         border-color: var(--danger);
+         color: var(--danger);
+      }
+
       button:disabled {
-         background: #1f1f1f !important;
-         color: #444 !important;
+         background: var(--border) !important;
+         color: var(--text-faintest) !important;
          cursor: not-allowed;
       }
 
       pre {
-         background: #0a0a0a;
-         border: 1px solid #1f1f1f;
-         border-radius: .375rem;
          padding: .75rem;
          font-size: .75rem;
          color: #aaa;
          overflow-x: auto;
          white-space: pre-wrap;
          word-break: break-all;
-         height: 5.625rem;
+         height: 7rem;
       }
 
       .section-label {
          font-size: .7rem;
-         color: #666;
+         color: var(--text-mute);
       }
 
       .tag-req {
-         color: #f87171;
+         color: var(--danger);
       }
 
       .url-input {
-         color: #888;
+         color: var(--text-dim);
       }
 
       .copy-btn {
          position: absolute;
          top: .5rem;
          right: .5rem;
-         background: #1a1a1a;
-         border: 1px solid #2a2a2a;
          border-radius: .3125rem;
-         color: #888;
-         font-family: monospace;
          font-size: .68rem;
          padding: .25rem .625rem;
-         cursor: pointer;
-      }
-
-      .copy-btn:hover {
-         border-color: #3b82f6;
-         color: #fff;
+         z-index: 2;
       }
 
       .copy-btn.copied {
-         border-color: #22c55e;
-         color: #22c55e;
+         border-color: var(--success);
+         color: var(--success);
       }
 
       hr {
          border: none;
-         border-top: 1px solid #1f1f1f;
+         border-top: 1px solid var(--border);
       }
 
       .flex {
@@ -182,6 +235,10 @@
 
       .justify-content-between {
          justify-content: space-between;
+      }
+
+      .align-items-center {
+         align-items: center;
       }
 
       .w-full {
@@ -257,43 +314,170 @@
       }
 
       textarea::-webkit-scrollbar-track {
-         background: #0a0a0a;
+         background: var(--surface-alt);
       }
 
       textarea::-webkit-scrollbar-thumb {
-         background: #2a2a2a;
+         background: var(--border-alt);
          border-radius: 0.1875rem;
       }
 
       textarea::-webkit-scrollbar-thumb:hover {
-         background: #3b82f6;
+         background: var(--accent);
       }
 
-      .copy-btn {
-         position: absolute;
-         top: 0.5rem;
-         right: 0.5rem;
-         background: #1a1a1a;
-         border: 1px solid #2a2a2a;
-         border-radius: 0.3125rem;
-         color: #888;
-         font-family: monospace;
-         font-size: 0.68rem;
-         padding: 0.25rem 0.625rem;
-         cursor: pointer;
-         transition: all 0.15s;
-         z-index: 2;
-         width: auto;
+      /* ---- Modal Planes ---- */
+
+      .modal-overlay {
+         display: none;
+         position: fixed;
+         inset: 0;
+         background: rgba(0, 0, 0, .75);
+         z-index: 50;
+         align-items: center;
+         justify-content: center;
+         padding: 1.5rem;
       }
 
-      .copy-btn:hover {
-         border-color: #3b82f6;
+      .modal-overlay.open {
+         display: flex;
+      }
+
+      .modal-box {
+         width: 100%;
+         max-width: 35rem;
+         max-height: 90vh;
+         overflow-y: auto;
+         padding: 1.5rem;
+      }
+
+      .modal-header {
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+         margin-bottom: 1.25rem;
+      }
+
+      .modal-header p {
+         color: var(--accent);
+         letter-spacing: .05em;
+      }
+
+      .modal-header h2 {
+         font-size: 1.5rem;
+         font-weight: 700;
          color: #fff;
       }
 
-      .copy-btn.copied {
-         border-color: #22c55e;
-         color: #22c55e;
+      .modal-content {
+         display: flex;
+         flex-direction: column;
+         gap: 1.25rem;
+      }
+
+      .includes-box {
+         padding: 1.125rem 1.25rem;
+         display: flex;
+         flex-wrap: wrap;
+         justify-content: space-between;
+         gap: 1rem;
+      }
+
+      .include-item {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         flex: 1;
+      }
+
+      /* ---- Icono circular/cuadrado reutilizable (planes + incluye) ---- */
+      .icon-box {
+         border-radius: var(--radius);
+         color: var(--accent);
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         flex-shrink: 0;
+      }
+
+      .include-icon {
+         width: 2.5rem;
+         height: 2.5rem;
+         font-size: 1.1rem;
+      }
+
+      .include-text {
+         font-size: .7rem;
+         color: var(--text-soft);
+         text-align: center;
+      }
+
+      .plans-grid {
+         display: grid;
+         gap: 1rem;
+      }
+
+      .plan-card {
+         box-sizing: border-box;
+         width: 100%;
+         border-radius: .625rem;
+         padding: 1.5rem 1.25rem;
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         text-align: center;
+         gap: .75rem;
+         cursor: pointer;
+         transition: border-color .15s, background .15s;
+      }
+
+      .plan-card:hover {
+         background: linear-gradient(135deg, #101a2e 0%, #111 70%);
+         border-color: var(--accent);
+      }
+
+      .plan-icon {
+         width: 3rem;
+         height: 3rem;
+         border-radius: .625rem;
+         background: var(--accent-soft);
+         font-size: 1.25rem;
+      }
+
+      .plan-info {
+         text-align: center;
+      }
+
+      .plan-name {
+         font-size: 1.05rem;
+         color: #fff;
+         font-weight: 700;
+      }
+
+      .plan-price-block {
+         text-align: center;
+      }
+
+      .plan-price {
+         font-size: 2rem;
+         color: #fff;
+         font-weight: 700;
+         line-height: 1.2;
+      }
+
+      .plan-permes {
+         font-size: .72rem;
+         color: var(--text-mute);
+         margin-top: .125rem;
+      }
+
+      .terms-footer {
+         font-size: .65rem;
+         color: var(--text-faint);
+         line-height: 1.6;
+         text-align: center;
+         border-top: 1px solid var(--border);
+         padding-top: .875rem;
       }
 
       @media (max-width: 767px) {
@@ -307,12 +491,18 @@
 <body>
    <div class="w-full" style="max-width:56.25rem">
       <div class="mb-5">
-         <p class="text-xs mb-2" style="color:#666">VOUCHER API — v1</p>
-         <h1 style="font-size:1.5rem;font-weight:300;color:#fff;margin-bottom:.5rem">Genera vouchers de pago listos para
-            integrar.</h1>
+         <p class="text-xs mb-2" style="color:var(--text-mute)">VOUCHER API — v1</p>
+         <div class="flex justify-content-between align-items-center flex-wrap gap-2" style="margin-bottom:.5rem">
+            <h1 style="font-size:1.5rem;font-weight:300;color:#fff">Genera vouchers de pago listos para
+               integrar.</h1>
+            <button class="btn-outline" id="btn-plans" onclick="openPlans()">
+               Ver planes
+            </button>
+         </div>
          <div class="flex gap-4">
-            <p class="text-xs" style="color:#666">BASE URL — <span style="color:#555" id="base-url-display"></span></p>
-            <p class="text-xs" style="color:#666">METHOD — <span style="color:#3b82f6">POST</span></p>
+            <p class="text-xs" style="color:var(--text-mute)">BASE URL — <span style="color:var(--text-faint)"
+                  id="base-url-display"></span></p>
+            <p class="text-xs" style="color:var(--text-mute)">METHOD — <span style="color:var(--accent)">POST</span></p>
          </div>
       </div>
 
@@ -324,7 +514,8 @@
 
             <div class="actions flex flex-column gap-2">
                <button id="btn-send" disabled onclick="send()">Selecciona un endpoint</button>
-               <button id="btn-download" disabled onclick="downloadImage()">Descargar imagen</button>
+               <button class="btn-outline" id="btn-download" disabled onclick="downloadImage()"><i
+                     class="pi pi-download" style="margin-right:.4rem"></i>Descargar imagen</button>
             </div>
          </div>
 
@@ -348,7 +539,8 @@
                <p class="section-label">BASE64</p>
                <div class="relative">
                   <textarea id="b64-area" readonly placeholder="El base64 aparecerá aquí..."></textarea>
-                  <button class="copy-btn" id="copy-btn" onclick="copyB64()">⎘ copiar</button>
+                  <button class="copy-btn btn-outline" id="copy-btn" onclick="copyB64()"><i class="pi pi-copy"></i>
+                     copiar</button>
                </div>
             </div>
          </div>
@@ -356,9 +548,33 @@
 
       <hr class="my-4">
 
-      <div class="flex justify-content-between text-xs" style="color:#666">
+      <div class="flex justify-content-between text-xs" style="color:var(--text-mute)">
          <span>Voucher API</span>
-         <a href="https://t.me/dev_lguss" target="_blank" style="color:#666;text-decoration:none;">@dev_lguss</a>
+         <a href="https://t.me/dev_lguss" target="_blank"
+            style="color:var(--text-mute);text-decoration:none;">@dev_lguss</a>
+      </div>
+   </div>
+
+   <!-- Modal Planes -->
+   <div class="modal-overlay" id="modal-overlay" onclick="closePlans(event)">
+      <div class="modal-box" onclick="event.stopPropagation()">
+         <div class="modal-header">
+            <h2>Elige tu plan</h2>
+            <button class="modal-close btn-outline" onclick="closePlans()">Cerrar</button>
+         </div>
+
+         <div class="modal-content">
+
+            <div class="includes-box" id="includes-box"></div>
+
+            <div class="plans-grid" id="plans-grid"></div>
+
+            <p class="terms-footer">
+               El servicio se entrega mediante un único token con fecha de expiración, renovable según el plan
+               contratado. Queda prohibida su comercialización, reventa, cesión o compartición. El incumplimiento de
+               estas condiciones ocasionará la suspensión del servicio.
+            </p>
+         </div>
       </div>
    </div>
 
@@ -384,6 +600,20 @@
          { name: 'digitos', required: false, desc: null },
          { name: 'mensaje', required: false, desc: 'Comentario opcional' },
          { name: 'destino', required: false, desc: 'Destino default' },
+      ];
+
+      // ---- Planes: agrega/edita/quita planes solo tocando este array ----
+      const PLANS = [
+         { name: 'Mensual', price: 40, permes: 40.00 },
+         { name: 'Anual', price: 360, permes: 30.00 },
+      ];
+
+      // ---- Beneficios incluidos en todos los planes ----
+      const INCLUDES = [
+         { icon: 'pi-bolt', text: 'Operativo <br> 24/7' },
+         { icon: 'pi-database', text: 'Consultas ilimitadas' },
+         { icon: 'pi-sync', text: 'Actualizaciones continuas' },
+         { icon: 'pi-headphones', text: 'Soporte personalizado' },
       ];
 
       const COOLDOWN_MS = 4000;
@@ -422,6 +652,34 @@
       }
 
       renderFields([3]);
+
+      function renderPlans() {
+         document.getElementById('plans-grid').style.gridTemplateColumns = `repeat(${PLANS.length}, 1fr)`;
+         document.getElementById('plans-grid').innerHTML = PLANS.map(plan => `
+      <div class="plan-card" onclick="goToTelegram()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter'||event.key===' '){goToTelegram()}">
+         <div class="icon-box plan-icon"><i class="pi pi-calendar"></i></div>
+         <div class="plan-info">
+            <p class="plan-name">${plan.name}</p>
+         </div>
+         <div class="plan-price-block">
+            <p class="plan-price">S/ ${plan.price}</p>
+         </div>
+      </div>
+   `).join('');
+      }
+
+      function renderIncludes() {
+         document.getElementById('includes-box').innerHTML = INCLUDES.map(item => `
+            <div class="include-item">
+               <div class="icon-box include-icon"><i class="pi ${item.icon}"></i></div>
+               <div class="include-text">${item.text}</div>
+            </div>
+         `).join('');
+      }
+
+      renderPlans();
+      renderIncludes();
 
       function selectEp(i) {
 
@@ -497,7 +755,8 @@
          if (!token) {
             document.getElementById('pre').textContent = JSON.stringify({
                status: false,
-               message: 'Debes ingresar tu x-token'
+               message: 'Debes ingresar tu x-token',
+               details: "Contáctame en Telegram @dev_lguss."
             }, null, 2);
 
             isSending = false;
@@ -536,13 +795,8 @@
             if (data.base64) {
                localStorage.setItem(SAVED_TOKEN_KEY, token);
                lastBase64 = data.base64;
-
-               document.getElementById('pre').textContent = JSON.stringify({
-                  status: data.status,
-                  author: data.author,
-                  base64: data.base64.slice(0, 30) + '...'
-               }, null, 2);
-
+               const preview = { ...data, base64: data.base64.slice(0, 30) + '...' };
+               document.getElementById('pre').textContent = JSON.stringify(preview, null, 2);
                document.getElementById('b64-area').value = data.base64;
                document.getElementById('btn-download').disabled = false;
             } else {
@@ -619,14 +873,30 @@
             const btn = document.getElementById('copy-btn');
 
             btn.classList.add('copied');
-            btn.textContent = '✓ copiado';
+            btn.innerHTML = '<i class="pi pi-check"></i> copiado';
 
             setTimeout(() => {
                btn.classList.remove('copied');
-               btn.textContent = '⎘ copiar';
+               btn.innerHTML = '<i class="pi pi-copy"></i> copiar';
             }, 2000);
          });
       }
+
+      function openPlans() {
+         document.getElementById('modal-overlay').classList.add('open');
+      }
+
+      function closePlans(e) {
+         document.getElementById('modal-overlay').classList.remove('open');
+      }
+
+      function goToTelegram() {
+         window.open('https://t.me/dev_lguss', '_blank');
+      }
+
+      document.addEventListener('keydown', (e) => {
+         if (e.key === 'Escape') closePlans();
+      });
    </script>
 </body>
 
