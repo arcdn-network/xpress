@@ -223,6 +223,7 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
   bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
   bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
+  bot.onText(/\/sip(.*)/, createVoucherHandler(bot, 'sip'));
   bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
   bot.onText(/\/lemon(.*)/, createVoucherHandler(bot, 'lemon'));
   bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));

@@ -1,5 +1,6 @@
 const { generateVoucher: generateYape } = require('../../services/yape');
 const { generateVoucher: generatePlin } = require('../../services/plin');
+const { generateVoucher: generateSip } = require('../../services/sip');
 const { generateVoucher: generateAgora } = require('../../services/agora');
 const { generateVoucher: generateLemon } = require('../../services/lemon');
 const { generateVoucher: generateBim } = require('../../services/bim');
@@ -40,6 +41,11 @@ const CONFIG = {
     service: generatePlin,
     destinoDefault: 'Plin',
     cantidad: [3, 9],
+  },
+  sip: {
+    service: generateSip,
+    destinoDefault: 'Sip',
+    cantidad: [3],
   },
   agora: {
     service: generateAgora,

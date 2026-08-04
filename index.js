@@ -42,6 +42,7 @@ async function startBot() {
     { command: 'yape', description: 'Generar Voucher Yape' },
     { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'bim', description: 'Generar Voucher Bim' },
+    { command: 'sip', description: 'Generar Voucher Sip' },
     { command: 'agora', description: 'Generar Voucher Agora' },
     { command: 'lemon', description: 'Generar Voucher Lemon' },
     { command: 'bcp', description: 'Generar Voucher BCP' },

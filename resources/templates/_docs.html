@@ -349,6 +349,7 @@
          max-height: 90vh;
          overflow-y: auto;
          padding: 1.5rem;
+         user-select: none;
       }
 
       .modal-header {
@@ -585,6 +586,7 @@
          { path: '/yape', default: 'Yape', cantidad: [3] },
          { path: '/plin', default: 'Plin', cantidad: [3, 9] },
          { path: '/bim', default: 'Bim', cantidad: [3] },
+         { path: '/sip', default: 'Sip', cantidad: [3] },
          { path: '/agora', default: 'AGORA/OH!', cantidad: [3, 9] },
          { path: '/lemon', default: 'YAPE', cantidad: [3] },
          { path: '/bcp', default: 'Yape', cantidad: [3] },
@@ -604,8 +606,8 @@
 
       // ---- Planes: agrega/edita/quita planes solo tocando este array ----
       const PLANS = [
-         { name: 'Mensual', price: 40, permes: 40.00 },
-         { name: 'Anual', price: 360, permes: 30.00 },
+         { name: 'Mensual', price: 50, permes: 50.00 },
+         { name: 'Anual', price: 420, permes: 35.00 },
       ];
 
       // ---- Beneficios incluidos en todos los planes ----

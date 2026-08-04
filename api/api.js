@@ -31,6 +31,7 @@ function startApi() {
 
   app.post('/api/yape', createVoucherRoute('yape'));
   app.post('/api/plin', createVoucherRoute('plin'));
+  app.post('/api/sip', createVoucherRoute('sip'));
   app.post('/api/agora', createVoucherRoute('agora'));
   app.post('/api/lemon', createVoucherRoute('lemon'));
   app.post('/api/bim', createVoucherRoute('bim'));
