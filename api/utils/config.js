@@ -1,9 +1,10 @@
 const { generateVoucher: generateYape } = require('../../services/yape');
 const { generateVoucher: generatePlin } = require('../../services/plin');
+const { generateVoucher: generateBim } = require('../../services/bim');
 const { generateVoucher: generateSip } = require('../../services/sip');
 const { generateVoucher: generateAgora } = require('../../services/agora');
 const { generateVoucher: generateLemon } = require('../../services/lemon');
-const { generateVoucher: generateBim } = require('../../services/bim');
+const { generateVoucher: generatePrexpe } = require('../../services/prexpe');
 const { generateVoucher: generateBcp } = require('../../services/bcp');
 const { generateVoucher: generateIbk } = require('../../services/ibk');
 const { generateVoucher: generateBbva } = require('../../services/bbva');
@@ -42,6 +43,11 @@ const CONFIG = {
     destinoDefault: 'Plin',
     cantidad: [3, 9],
   },
+  bim: {
+    service: generateBim,
+    destinoDefault: 'YAPE',
+    cantidad: [3],
+  },
   sip: {
     service: generateSip,
     destinoDefault: 'Sip',
@@ -57,10 +63,10 @@ const CONFIG = {
     destinoDefault: 'YAPE',
     cantidad: [3],
   },
-  bim: {
-    service: generateBim,
-    destinoDefault: 'YAPE',
-    cantidad: [3],
+  prexpe: {
+    service: generatePrexpe,
+    destinoDefault: 'Prexpe',
+    cantidad: [0],
   },
   bcp: {
     service: generateBcp,

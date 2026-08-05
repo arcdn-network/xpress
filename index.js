@@ -45,6 +45,7 @@ async function startBot() {
     { command: 'sip', description: 'Generar Voucher Sip' },
     { command: 'agora', description: 'Generar Voucher Agora' },
     { command: 'lemon', description: 'Generar Voucher Lemon' },
+    { command: 'prexpe', description: 'Generar Prexpe' },
     { command: 'bcp', description: 'Generar Voucher BCP' },
     { command: 'ibk', description: 'Generar Voucher Interbank' },
     { command: 'bbva', description: 'Generar Voucher BBVA' },

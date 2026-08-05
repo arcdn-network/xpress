@@ -34,6 +34,7 @@ function startApi() {
   app.post('/api/sip', createVoucherRoute('sip'));
   app.post('/api/agora', createVoucherRoute('agora'));
   app.post('/api/lemon', createVoucherRoute('lemon'));
+  app.post('/api/prexpe', createVoucherRoute('prexpe'));
   app.post('/api/bim', createVoucherRoute('bim'));
   app.post('/api/bcp', createVoucherRoute('bcp'));
   app.post('/api/ibk', createVoucherRoute('ibk'));

@@ -34,12 +34,14 @@ Ver el historial de tus activaciones.
 🧾 <b>PLAN VOUCHERS</b>
 <code>/yape monto|nombre|3digitos</code>
 <code>/plin monto|nombre|3digitos</code>
-<code>/agora monto|nombre|3digitos</code>
 <code>/bim monto|nombre|3digitos</code>
+<code>/sip monto|nombre|3digitos</code>
+<code>/agora monto|nombre|3digitos</code>
+<code>/lemon monto|nombre|3digitos</code>
+<code>/prexpe monto|nombre|3digitos</code>
+<code>/bcp monto|nombre|3digitos</code>
 <code>/bbva monto|nombre|3digitos</code>
 <code>/ibk monto|nombre|3digitos</code>
-<code>/bcp monto|nombre|3digitos</code>
-<code>/lemon monto|nombre|3digitos</code>
 <code>/caja monto|nombre|3digitos</code>
 <code>/scotiabank monto|nombre|3digitos</code>
 Genera vouchers de pago.

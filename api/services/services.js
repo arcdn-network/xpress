@@ -9,7 +9,7 @@ function validarParametros(monto, nombre, digitos, cantidad) {
     return 'El nombre es obligatorio.';
   }
 
-  if (digitos) {
+  if (digitos && !cantidad.includes(0)) {
     const regex = new RegExp(`^(${cantidad.map((n) => `\\d{${n}}`).join('|')})$`);
 
     if (!regex.test(String(digitos))) {

@@ -94,7 +94,7 @@ function formatFechaFilename() {
 }
 
 function validarDigitos(digitos, cantidad) {
-  if (!digitos) return true;
+  if (!digitos || cantidad.includes(0)) return true;
   const regex = new RegExp(`^(${cantidad.map((n) => `\\d{${n}}`).join('|')})$`);
   return regex.test(String(digitos));
 }
@@ -225,6 +225,7 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
   bot.onText(/\/sip(.*)/, createVoucherHandler(bot, 'sip'));
   bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
+  bot.onText(/\/prexpe(.*)/, createVoucherHandler(bot, 'prexpe'));
   bot.onText(/\/lemon(.*)/, createVoucherHandler(bot, 'lemon'));
   bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
   bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));

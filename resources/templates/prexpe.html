@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         font-family: Inter, sans-serif;
+         background: #fff;
+         min-height: 100vh;
+         position: relative;
+      }
+
+      body::after {
+         content: "";
+         position: fixed;
+         inset: 0;
+         background: url('{{BACKGROUND}}') top center / contain no-repeat;
+         /*  background: url('../images/prexpe.png') top center / contain no-repeat; */
+         z-index: -1;
+         pointer-events: none;
+      }
+
+      .container {
+         min-height: 100vh;
+         padding: 1.5rem;
+      }
+
+      .content {
+         width: 100%;
+         max-width: 430px;
+         margin-top: 11.3rem;
+      }
+
+      .title {
+         font-size: 1rem;
+         font-weight: 700;
+         color: #110027;
+         text-align: center;
+         margin-bottom: 1.5rem;
+      }
+
+      .card {
+         background: #fff;
+         border: 1px solid #CFCCD4;
+         border-radius: .5rem;
+         margin: 1.2rem .25rem;
+      }
+
+      .card-body {
+         padding: 0.5rem 0.75rem;
+      }
+
+      .label {
+         color: #70667D;
+         font-size: 0.7rem;
+      }
+
+      .value {
+         color: #110027;
+         font-size: 0.7rem;
+         font-weight: 500;
+         flex: 1;
+         text-align: right;
+         overflow-wrap: anywhere;
+      }
+
+      .divider {
+         border-top: 1px solid #CFCCD4;
+         margin: 0.5rem 0;
+      }
+
+      .badge {
+         color: #110027;
+         background: #FFE97F;
+         border-radius: 999px;
+         font-weight: 600;
+         font-size: 0.6rem;
+         height: 20px;
+         width: 45px;
+         font-size: 0.6rem;
+         display: inline-block;
+         text-align: center;
+         align-content: center;
+      }
+   </style>
+</head>
+
+<body>
+
+   <div class="container flex justify-content-center">
+
+      <div class="content">
+
+         <h1 class="title">Pagaste {{MONTO}}</h1>
+
+         <div class="card">
+
+            <div class="card-body">
+
+               <div class="flex justify-content-between align-items-center mb-2" style="margin-top: 0.1rem;">
+                  <div class="label">Titular</div>
+                  <div class="value">{{NOMBRE}}</div>
+               </div>
+
+               <div class="flex justify-content-between align-items-center mb-2">
+                  <div class="label">Cuenta/billetera</div>
+                  <div class="value">{{DESTINO}}</div>
+               </div>
+
+               <div class="flex justify-content-between align-items-center mb-2">
+                  <div class="label">Comisión transferencia</div>
+                  <div class="value">
+                     <span class="badge">Gratis</span>
+                  </div>
+               </div>
+
+               <div class="divider"></div>
+
+               <div class="flex justify-content-between align-items-center mb-1">
+                  <div class="label">Nº de operación {{OPERACION}}</div>
+               </div>
+               <div class="flex justify-content-between align-items-center mb-1">
+                  <div class="label">{{FECHA}}</div>
+               </div>
+            </div>
+
+         </div>
+
+      </div>
+
+   </div>
+
+</body>
+
+</html>
