@@ -39,6 +39,7 @@ function startApi() {
   app.post('/api/bcp', createVoucherRoute('bcp'));
   app.post('/api/ibk', createVoucherRoute('ibk'));
   app.post('/api/bbva', createVoucherRoute('bbva'));
+  app.post('/api/ripley', createVoucherRoute('ripley'));
   app.post('/api/scotiabank', createVoucherRoute('scotiabank'));
   app.post('/api/caja', createVoucherRoute('caja'));
   app.post('/api/minsa', minsaRoute);

@@ -231,6 +231,7 @@ function registerVoucherCommands(bot) {
   bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
   bot.onText(/\/bbva(.*)/, createVoucherHandler(bot, 'bbva'));
   bot.onText(/\/caja(.*)/, createVoucherHandler(bot, 'caja'));
+  bot.onText(/\/ripley(.*)/, createVoucherHandler(bot, 'ripley'));
   bot.onText(/\/scotiabank(.*)/, createVoucherHandler(bot, 'scotiabank'));
 }
 

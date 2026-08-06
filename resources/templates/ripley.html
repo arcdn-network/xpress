@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet">
+
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         font-family: "Nunito Sans";
+         background: #fff;
+         min-height: 100vh;
+         position: relative;
+      }
+
+      body::after {
+         content: "";
+         position: fixed;
+         inset: 0;
+         background: url('{{BACKGROUND}}') top center / contain no-repeat;
+         z-index: -1;
+         pointer-events: none;
+      }
+
+      .container {
+         min-height: 100vh;
+         padding: 1.5rem;
+      }
+
+      .content {
+         width: 100%;
+         max-width: 430px;
+         margin-top: 7.5rem;
+         display: flex;
+         flex-direction: column;
+         gap: 0.75rem;
+      }
+
+      .card-top {
+         padding: 1.25rem;
+         line-height: 1.3rem;
+         color: #6F6F6F;
+         background-color: #fff;
+         border-radius: 0.3rem;
+      }
+
+      .card-top b {
+         color: #434343;
+      }
+
+      .card-bottom {
+         border-radius: 0.3rem;
+         padding: 1.5rem 1.1rem;
+         background-color: #fff;
+         color: #444444;
+      }
+
+      .details {
+         text-align: center;
+         color: #8C4698;
+         font-size: 1rem;
+         text-decoration: underline;
+         font-weight: 600;
+         padding-top: 0.5rem;
+      }
+   </style>
+</head>
+
+<body>
+   <div class="container flex justify-content-center">
+      <div class="content">
+
+         <div class="card-top text-sm">
+            <div class="flex gap-4">
+               <div>
+                  Transferiste S/ {{MONTO}} desde tu cuenta <b>Ripley Max</b> a <b>{{TITULAR}}</b>
+               </div>
+               <div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 64 64">
+                     <circle cx="32" cy="32" r="32" fill="#F4F0F9" />
+                     <path d="M20 33 L28 41 L44 24" stroke="#4F2C7E" stroke-width="4" stroke-linecap="round"
+                        stroke-linejoin="round" fill="none" />
+                  </svg>
+               </div>
+            </div>
+            <hr class="my-4" style="border: 0; border-top: 1px solid #D3D3D3;">
+            <div class="text-justify text-xs">
+               Enviamos el comprobante de transferencia a mend*********@gmail.com
+            </div>
+         </div>
+
+         <div class="card-bottom text-xs">
+            {{CELULAR_ROW}}
+
+            <div class="flex justify-content-between align-items-center mb-3 line-height-2">
+               <div class="label">Banco destinatario</div>
+               <div class="value">{{DESTINO}}</div>
+            </div>
+
+            <div class="flex justify-content-between align-items-center mb-3 line-height-2">
+               <div class="label">Fecha</div>
+               <div class="value">{{FECHA}}</div>
+            </div>
+
+            <div class="flex justify-content-between align-items-center mb-3 line-height-2">
+               <div class="label">Hora</div>
+               <div class="value">{{HORA}}</div>
+            </div>
+
+            <div class="details">
+               Más detalle
+            </div>
+         </div>
+
+      </div>
+   </div>
+</body>
+
+</html>

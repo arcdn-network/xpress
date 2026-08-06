@@ -8,6 +8,7 @@ const { generateVoucher: generatePrexpe } = require('../../services/prexpe');
 const { generateVoucher: generateBcp } = require('../../services/bcp');
 const { generateVoucher: generateIbk } = require('../../services/ibk');
 const { generateVoucher: generateBbva } = require('../../services/bbva');
+const { generateVoucher: generateRipley } = require('../../services/ripley');
 const { generateVoucher: generateScotiabank } = require('../../services/scotiabank');
 const { generateVoucher: generateCaja } = require('../../services/caja');
 
@@ -86,6 +87,11 @@ const CONFIG = {
   scotiabank: {
     service: generateScotiabank,
     destinoDefault: 'Yape',
+    cantidad: [3, 9],
+  },
+  ripley: {
+    service: generateRipley,
+    destinoDefault: 'Ripley',
     cantidad: [3, 9],
   },
   caja: {

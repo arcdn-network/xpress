@@ -607,6 +607,7 @@
          { path: '/ibk', default: 'Plin', cantidad: [3, 9] },
          { path: '/bbva', default: 'BBVA', cantidad: [3] },
          { path: '/scotiabank', default: 'Scotiabank', cantidad: [3] },
+         { path: '/ripley', default: 'Ripley', cantidad: [3, 9] },
          { path: '/caja', default: 'Caja Arequipa', cantidad: [3, 9] },
       ];
 
@@ -621,7 +622,7 @@
          { name: 'nombre', required: true, desc: 'Nombre del destinatario' },
          { name: 'digitos', required: false, desc: null },
          { name: 'mensaje', required: false, desc: 'Comentario opcional' },
-         { name: 'destino', required: false, desc: 'Destino default' },
+         { name: 'destino', required: false, desc: 'Destino opcional' },
       ];
 
       // ---- Planes: agrega/edita/quita planes solo tocando este array ----
@@ -655,12 +656,12 @@
       }
 
       document.getElementById('pills').innerHTML = PILL_GROUPS.map(group => `
-         <p class="pill-group-label">${group.label}</p>
-         ${ENDPOINTS.slice(group.start, group.end).map((ep, j) => {
+   <p class="pill-group-label">${group.label} (${group.end - group.start})</p>
+   ${ENDPOINTS.slice(group.start, group.end).map((ep, j) => {
          const i = group.start + j;
          return `<div class="pill" id="pill-${i}" onclick="selectEp(${i})">${ep.path}</div>`;
       }).join('')}
-      `).join('');
+`).join('');
 
       function renderFields(cantidad) {
          const desc = cantidad.length > 1 ? `Últimos ${cantidad.join(' o ')} dígitos` : `Últimos ${cantidad[0]} dígitos`;
