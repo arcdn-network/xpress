@@ -44,6 +44,7 @@ Ver el historial de tus activaciones.
 <code>/ibk monto|nombre|3digitos</code>
 <code>/caja monto|nombre|3digitos</code>
 <code>/ripley monto|nombre|3digitos</code>
+<code>/falabella monto|nombre|3digitos</code>
 <code>/scotiabank monto|nombre|3digitos</code>
 Genera vouchers de pago.
 `;

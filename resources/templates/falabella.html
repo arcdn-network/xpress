@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css">
+
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      @font-face {
+         font-family: "Nunito";
+         src: url('{{FONT_NUNITO}}') format('woff2-variations');
+         font-weight: 400 700;
+      }
+
+      body {
+         font-family: "Nunito";
+         background: url('{{BACKGROUND}}') top center / cover no-repeat;
+         min-height: 100vh;
+      }
+
+      .container {
+         min-height: 100vh;
+      }
+
+      .label {
+         color: #5E6267;
+         font-size: 0.97rem;
+         margin-right: 1rem;
+      }
+
+      .value {
+         color: #333537;
+         font-weight: 600;
+         font-size: 0.97rem;
+         text-align: right;
+      }
+
+      .title {
+         margin: 14.8rem 1.5rem 2.95rem;
+         color: #347B23;
+         font-weight: 600;
+         font-size: 1.21rem;
+
+      }
+
+      .hr {
+         margin: 0.8rem 0;
+         border: none;
+         border-top: 1px solid #C3CDD8;
+         height: 0;
+      }
+   </style>
+</head>
+
+<body>
+
+   <div class="container flex justify-content-center">
+
+      <div class="w-full">
+
+         <div class="title text-center">
+            Transferiste S/ {{MONTO}} a {{DESTINATARIO}}
+         </div>
+
+         <div class="mx-4">
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Cuenta cargo</span>
+               <span class="value">Cuenta Ahorro Soles</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">CCI</span>
+               <span class="value">05220582106057945631</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Comisión</span>
+               <span class="value">S/ 0.00</span>
+            </div>
+         </div>
+
+         <hr class="hr">
+
+         <div class="mx-4">
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Destinatario</span>
+               <span class="value">{{DESTINATARIO}}</span>
+            </div>
+            {{CELULAR_ROW}}
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Entidad</span>
+               <span class="value">{{DESTINO}}</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">CCI</span>
+               <span class="value">{{CCI_DESTINO}}</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Tipo de moneda</span>
+               <span class="value">Soles</span>
+            </div>
+         </div>
+
+         <hr class="hr">
+
+         <div class="mx-4">
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Fecha</span>
+               <span class="value">{{FECHA}}</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Hora</span>
+               <span class="value">{{HORA}}</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Tipo de transferencia</span>
+               <span class="value">Inmediata</span>
+            </div>
+            <div class="flex justify-content-between line-height-2 mb-2">
+               <span class="label">Nro. de operación</span>
+               <span class="value">{{NRO_OPERACION}}</span>
+            </div>
+         </div>
+
+      </div>
+
+   </div>
+
+</body>
+
+</html>

@@ -9,6 +9,7 @@ const { generateVoucher: generateBcp } = require('../../services/bcp');
 const { generateVoucher: generateIbk } = require('../../services/ibk');
 const { generateVoucher: generateBbva } = require('../../services/bbva');
 const { generateVoucher: generateRipley } = require('../../services/ripley');
+const { generateVoucher: generateFalabella } = require('../../services/falabella');
 const { generateVoucher: generateScotiabank } = require('../../services/scotiabank');
 const { generateVoucher: generateCaja } = require('../../services/caja');
 
@@ -89,6 +90,11 @@ const CONFIG = {
     destinoDefault: 'Yape',
     cantidad: [3, 9],
   },
+  falabella: {
+    service: generateFalabella,
+    destinoDefault: 'Yape',
+    cantidad: [3],
+  },
   ripley: {
     service: generateRipley,
     destinoDefault: 'Ripley',
@@ -97,7 +103,6 @@ const CONFIG = {
   caja: {
     service: generateCaja,
     destinoDefault: 'PLIN',
-    errorMsg: '❌ Formato incorrecto. Uso: /caja monto|nombre|celular(9 o 3 dígitos)|mensaje|red',
     cantidad: [9, 3],
   },
 };
