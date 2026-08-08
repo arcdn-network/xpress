@@ -1,9 +1,19 @@
 const axios = require('axios');
+const RENIEC_URL = 'https://api.azuraperu.app/servicios/reniec_free';
+const RENIEC_TOKEN = '0CeQ9Cm0KXqIKiavpy9BpGX6joSJucFjPNqUit2q';
 
 const API = axios.create({
   baseURL: process.env.API_URL,
   headers: {
     'x-api-key': 'MELEYS',
+  },
+});
+
+const RENIEC_API = axios.create({
+  baseURL: RENIEC_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Auth-Token': RENIEC_TOKEN,
   },
 });
 
@@ -35,6 +45,21 @@ const getYapeClient = (email, supplierId) =>
       throw e;
     });
 
+const consultarNombrePorDNI = (dni) =>
+  RENIEC_API.post('', { documento: dni })
+    .then((r) => r.data)
+    .then((data) => {
+      if (data?.status !== 'success' || !data?.listaAni) return null;
+
+      const { apellido_paterno, apellido_materno, nombres } = data.listaAni;
+
+      return [apellido_paterno, apellido_materno, nombres].filter(Boolean).join(' ').toUpperCase();
+    })
+    .catch((e) => {
+      console.error('[RENIEC] Error:', e.message);
+      return null;
+    });
+
 module.exports = {
   getUser,
   getHistory,
@@ -47,4 +72,5 @@ module.exports = {
   searchReseller,
   createToken,
   getBroadcastUsers,
+  consultarNombrePorDNI,
 };

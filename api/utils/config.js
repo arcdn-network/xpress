@@ -1,17 +1,17 @@
-const { generateVoucher: generateYape } = require('../../services/yape');
-const { generateVoucher: generatePlin } = require('../../services/plin');
-const { generateVoucher: generateBim } = require('../../services/bim');
-const { generateVoucher: generateSip } = require('../../services/sip');
-const { generateVoucher: generateAgora } = require('../../services/agora');
-const { generateVoucher: generateLemon } = require('../../services/lemon');
-const { generateVoucher: generatePrexpe } = require('../../services/prexpe');
-const { generateVoucher: generateBcp } = require('../../services/bcp');
-const { generateVoucher: generateIbk } = require('../../services/ibk');
-const { generateVoucher: generateBbva } = require('../../services/bbva');
-const { generateVoucher: generateRipley } = require('../../services/ripley');
-const { generateVoucher: generateFalabella } = require('../../services/falabella');
-const { generateVoucher: generateScotiabank } = require('../../services/scotiabank');
-const { generateVoucher: generateCaja } = require('../../services/caja');
+const { generateVoucher: generateYape } = require('../services/yape');
+const { generateVoucher: generatePlin } = require('../services/plin');
+const { generateVoucher: generateBim } = require('../services/bim');
+const { generateVoucher: generateSip } = require('../services/sip');
+const { generateVoucher: generateAgora } = require('../services/agora');
+const { generateVoucher: generateLemon } = require('../services/lemon');
+const { generateVoucher: generatePrexpe } = require('../services/prexpe');
+const { generateVoucher: generateBcp } = require('../services/bcp');
+const { generateVoucher: generateIbk } = require('../services/ibk');
+const { generateVoucher: generateBbva } = require('../services/bbva');
+const { generateVoucher: generateRipley } = require('../services/ripley');
+const { generateVoucher: generateFalabella } = require('../services/falabella');
+const { generateVoucher: generateScotiabank } = require('../services/scotiabank');
+const { generateVoucher: generateCaja } = require('../services/caja');
 
 function buildErrorMsg(comando, cantidad) {
   const digitosLabel = cantidad.map((n) => `${n} dígitos`).join(' o ');
@@ -47,7 +47,7 @@ const CONFIG = {
   },
   bim: {
     service: generateBim,
-    destinoDefault: 'YAPE',
+    destinoDefault: 'Yape',
     cantidad: [3],
   },
   sip: {
@@ -97,12 +97,12 @@ const CONFIG = {
   },
   ripley: {
     service: generateRipley,
-    destinoDefault: 'Ripley',
+    destinoDefault: 'Yape',
     cantidad: [3, 9],
   },
   caja: {
     service: generateCaja,
-    destinoDefault: 'PLIN',
+    destinoDefault: 'Plin',
     cantidad: [9, 3],
   },
 };

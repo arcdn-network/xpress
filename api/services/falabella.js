@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 const readFile = (relativePath, encoding = null) => fs.readFileSync(path.resolve(__dirname, relativePath), encoding);
 
@@ -9,9 +9,9 @@ const toBase64 = (relativePath, mimeType) => {
   return `data:${mimeType};base64,${buffer.toString('base64')}`;
 };
 
-const TEMPLATE_HTML = readFile('../resources/templates/falabella.html', 'utf-8');
-const BACKGROUND_BASE64 = toBase64('../resources/images/falabella.jpg', 'image/jpeg');
-const FONT_NUNITO_BASE64 = toBase64('../resources/fonts/Nunito.woff2', 'font/woff2');
+const TEMPLATE_HTML = readFile('../../resources/templates/falabella.html', 'utf-8');
+const BACKGROUND_BASE64 = toBase64('../../resources/images/falabella.jpg', 'image/jpeg');
+const FONT_NUNITO_BASE64 = toBase64('../../resources/fonts/Nunito.woff2', 'font/woff2');
 
 const pool = createBrowserPool();
 
@@ -49,7 +49,7 @@ function generarNroOperacion() {
   return `0${randomDigits(11)}`;
 }
 
-function buildFalabellaHtml({ monto, nombre, digitos, destino }) {
+function buildHtml({ monto, nombre, digitos, destino }) {
   const digitosLimpios = String(digitos || '').trim();
 
   let celularRow = '';
@@ -76,7 +76,7 @@ function buildFalabellaHtml({ monto, nombre, digitos, destino }) {
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
-    await page.setContent(buildFalabellaHtml(data), { waitUntil: 'networkidle2' });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

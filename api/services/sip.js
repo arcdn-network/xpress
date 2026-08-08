@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/sip.html'), 'utf-8');
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/sip.html'), 'utf-8');
 
 const pool = createBrowserPool();
 
@@ -55,7 +55,7 @@ function maskCelular(digitos) {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildSipHtml({ monto, nombre, digitos, destino = 'Sip', fecha }) {
+function buildHtml({ monto, nombre, digitos, destino = 'Sip', fecha }) {
   return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
     .replace('{{NOMBRE}}', String(nombre || '').toUpperCase())
     .replace('{{CELULAR}}', maskCelular(digitos))
@@ -67,8 +67,8 @@ function buildSipHtml({ monto, nombre, digitos, destino = 'Sip', fecha }) {
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 460, height: 1024, deviceScaleFactor: 3 });
-    await page.setContent(buildSipHtml(data), { waitUntil: 'networkidle2' });
+    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

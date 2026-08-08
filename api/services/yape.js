@@ -1,11 +1,11 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const BANNERS_DIR = path.resolve(__dirname, '../resources/banners');
-const AQUA_DIR = path.resolve(__dirname, '../resources/aqua');
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/yape.html'), 'utf-8');
+const BANNERS_DIR = path.resolve(__dirname, '../../resources/banners');
+const AQUA_DIR = path.resolve(__dirname, '../../resources/aqua');
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/yape.html'), 'utf-8');
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
 const CDN_CHAT = `${CDN_BASE}/chat.png`;
@@ -77,7 +77,7 @@ function getPersonajeImg(monto) {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
+function buildHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
   const [d1, d2, d3] = operacion.slice(-3).split('');
@@ -141,7 +141,7 @@ function buildYapeHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' 
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 3 });
-    await page.setContent(buildYapeHtml(data), { waitUntil: 'networkidle2' });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

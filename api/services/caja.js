@@ -1,11 +1,11 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/caja.html'), 'utf-8');
-const logoCajaBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/logo_caja.png'));
-const logoPlinBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/logo_plin.png'));
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/caja.html'), 'utf-8');
+const logoCajaBuffer = fs.readFileSync(path.resolve(__dirname, '../../resources/images/logo_caja.png'));
+const logoPlinBuffer = fs.readFileSync(path.resolve(__dirname, '../../resources/images/logo_plin.png'));
 
 const LOGO_CAJA = `data:image/png;base64,${logoCajaBuffer.toString('base64')}`;
 const LOGO_PLIN = `data:image/png;base64,${logoPlinBuffer.toString('base64')}`;
@@ -54,7 +54,7 @@ function formatTelefono(digitos) {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildCajaHtml({ monto, nombre, digitos, destino = 'plin' }) {
+function buildHtml({ monto, nombre, digitos, destino = 'plin' }) {
   return TEMPLATE_HTML.replace('{{LOGO_CAJA}}', LOGO_CAJA)
     .replace('{{LOGO_RED}}', LOGO_PLIN)
     .replace('{{MONTO}}', formatMonto(monto))
@@ -67,8 +67,8 @@ function buildCajaHtml({ monto, nombre, digitos, destino = 'plin' }) {
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 460, height: 1024, deviceScaleFactor: 3 });
-    await page.setContent(buildCajaHtml(data), { waitUntil: 'networkidle2' });
+    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

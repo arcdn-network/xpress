@@ -1,10 +1,10 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/minsa.html'), 'utf-8');
-const IMAGES_DIR = path.resolve(__dirname, '../resources/images/minsa');
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/minsa.html'), 'utf-8');
+const IMAGES_DIR = path.resolve(__dirname, '../../../resources/images/minsa');
 
 function loadBase64(filename) {
   const buffer = fs.readFileSync(path.join(IMAGES_DIR, filename));
@@ -86,7 +86,7 @@ function getHoraActual() {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildMinsaHtml({ nombre, dni, contingencia, dias, fecha, hospital }) {
+function buildHtml({ nombre, dni, contingencia, dias, fecha, hospital }) {
   const fechaInicio = fecha ? parseFecha(fecha) : new Date();
   const fechaFin = addDias(fechaInicio, dias - 1);
   const fechaOtorg = addDias(fechaFin, 3);
@@ -121,10 +121,10 @@ function buildMinsaHtml({ nombre, dni, contingencia, dias, fecha, hospital }) {
 }
 
 // ─── Generador ────────────────────────────────────────────────────────────────
-async function generateVoucher(data) {
+async function generatePDF(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
-    await page.setContent(buildMinsaHtml(data), { waitUntil: 'networkidle2' });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     await new Promise((r) => setTimeout(r, 300));
 
     const buffer = await page.pdf({
@@ -138,4 +138,4 @@ async function generateVoucher(data) {
   });
 }
 
-module.exports = { generateVoucher };
+module.exports = { generatePDF };

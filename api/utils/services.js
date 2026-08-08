@@ -1,4 +1,4 @@
-const { CONFIG } = require('../utils/config');
+const { CONFIG } = require('./config');
 
 function validarParametros(monto, nombre, digitos, cantidad) {
   if (!monto || !/^\d+(\.\d{1,2})?$/.test(String(monto))) {

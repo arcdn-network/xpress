@@ -37,7 +37,7 @@ function formatDate(timestamp) {
 
 // ─── MAIN ─────────────────────────────
 
-function registerVoucherTokenCommand(bot) {
+function registerApiTokenCommand(bot) {
   // CREATE TOKEN
   bot.onText(/^\/create_token (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
@@ -119,4 +119,4 @@ function registerVoucherTokenCommand(bot) {
   });
 }
 
-module.exports = registerVoucherTokenCommand;
+module.exports = registerApiTokenCommand;

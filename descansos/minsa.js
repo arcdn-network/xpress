@@ -1,30 +1,7 @@
-const { generateVoucher } = require('../services/minsa');
+const { consultarNombrePorDNI } = require('../utils/api');
+const { generatePDF } = require('./services/minsa');
 
 const MAX_DIAS = 20;
-const RENIEC_URL = 'https://api.azuraperu.app/servicios/reniec_free';
-const RENIEC_TOKEN = '0CeQ9Cm0KXqIKiavpy9BpGX6joSJucFjPNqUit2q';
-
-// ─── RENIEC ───────────────────────────────────────────────────────────────────
-async function consultarNombrePorDNI(dni) {
-  const res = await fetch(RENIEC_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Auth-Token': RENIEC_TOKEN,
-    },
-    body: JSON.stringify({ documento: dni }),
-  });
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-
-  if (data?.status !== 'success' || !data?.listaAni) return null;
-
-  const { apellido_paterno, apellido_materno, nombres } = data.listaAni;
-
-  return [apellido_paterno, apellido_materno, nombres].filter(Boolean).join(' ').toUpperCase();
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isValidFecha(str) {
@@ -73,7 +50,7 @@ async function minsaRoute(req, res) {
 
   // ── Generación ────────────────────────────────────────────────────────────
   try {
-    const base64 = await generateVoucher({
+    const base64 = await generatePDF({
       nombre,
       dni: String(dni),
       contingencia: contingencia.trim().toUpperCase(),

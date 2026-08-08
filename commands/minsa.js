@@ -1,12 +1,10 @@
-const { generateVoucher } = require('../services/minsa');
+const { generatePDF } = require('../descansos/services/minsa');
+const { consultarNombrePorDNI } = require('../utils/api');
 
 const COOLDOWN_MS = 10000;
 const cooldowns = new Map();
 const enProceso = new Set();
 const MAX_DIAS = 20;
-
-const RENIEC_URL = 'https://api.azuraperu.app/servicios/reniec_free';
-const RENIEC_TOKEN = '0CeQ9Cm0KXqIKiavpy9BpGX6joSJucFjPNqUit2q';
 
 const MSG_HORARIO = '🕙 *El servicio de descanso médico está disponible de 8:00 a.m. a 10:00 p.m.*';
 const MSG_USO = `❌ *Formato incorrecto*\n\nUsos válidos del comando /minsa:\n1\\) \`/minsa DNI|CONTINGENCIA|DIAS\`\n   • Autocompleta nombre por DNI\n   • Máximo: ${MAX_DIAS} días\n2\\) \`/minsa DNI|CONTINGENCIA|FECHA|DIAS\`\n   • FECHA en formato: DD\\-MM\\-YYYY\n   • Máximo: ${MAX_DIAS} días\n3\\) \`/minsa DNI|CONTINGENCIA|DIAS|HOSPITAL\`\n   • Hospital opcional \\(si no, se autocompleta con el predeterminado\\)\n   • Máximo: ${MAX_DIAS} días\n4\\) \`/minsa DNI|CONTINGENCIA|FECHA|DIAS|HOSPITAL\`\n   • Formato completo con fecha personalizada \\+ hospital\n   • Máximo: ${MAX_DIAS} días\n\nEjemplo válido:\n\`/minsa 74589632|COVID|5\`\n→ El bot consultará el DNI, autocompletará el nombre y generará el descanso\\.\n\nEjemplo completo:\n\`/minsa 74589632|ACCIDENTE|28\\-11\\-2025|7|HOSPITAL ARZOBISPO LOAYZA\``;
@@ -56,33 +54,6 @@ setInterval(() => {
     if (ahora - timestamp > COOLDOWN_MS) cooldowns.delete(userId);
   }
 }, 60_000);
-
-// ─── Consulta RENIEC ──────────────────────────────────────────────────────────
-async function consultarNombrePorDNI(dni) {
-  try {
-    const res = await fetch(RENIEC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Auth-Token': RENIEC_TOKEN,
-      },
-      body: JSON.stringify({ documento: dni }),
-    });
-
-    if (!res.ok) return null;
-
-    const data = await res.json();
-
-    if (data?.status !== 'success' || !data?.listaAni) return null;
-
-    const { apellido_paterno, apellido_materno, nombres } = data.listaAni;
-
-    return [apellido_paterno, apellido_materno, nombres].filter(Boolean).join(' ').toUpperCase();
-  } catch (err) {
-    console.error('[RENIEC] Error:', err.message);
-    return null;
-  }
-}
 
 // ─── Parser de argumentos ─────────────────────────────────────────────────────
 function parseArgs(input) {
@@ -171,7 +142,7 @@ function registerMinsaCommand(bot) {
         );
       }
 
-      const base64 = await generateVoucher({
+      const base64 = await generatePDF({
         nombre,
         dni: parsed.dni,
         contingencia: parsed.contingencia.trim().toUpperCase(),

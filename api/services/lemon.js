@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/lemon.html'), 'utf-8');
-const checkBuffer = fs.readFileSync(path.resolve(__dirname, '../resources/images/check_lemon.png'));
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/lemon.html'), 'utf-8');
+const checkBuffer = fs.readFileSync(path.resolve(__dirname, '../../resources/images/check_lemon.png'));
 const CHECK_IMG = `data:image/png;base64,${checkBuffer.toString('base64')}`;
 
 const pool = createBrowserPool();
@@ -55,7 +55,7 @@ function formatMonto(monto) {
   return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function buildLemonHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
+function buildHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
   const { fecha, hora } = formatFecha();
 
   const digitosLimpios = String(digitos || '').trim();
@@ -81,7 +81,7 @@ function buildLemonHtml({ monto, nombre, digitos, destino = 'YAPE' }) {
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
-    await page.setContent(buildLemonHtml(data), { waitUntil: 'networkidle2' });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

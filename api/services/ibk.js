@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/ibk.html'), 'utf-8');
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/ibk.html'), 'utf-8');
 const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
 const CDN_LOGO_BANK = `${CDN_BASE}/logos/interbank.png`;
 const CDN_LOGO_PLIN = `${CDN_BASE}/logos/plin.webp`;
@@ -30,7 +30,7 @@ function formatMonto(monto) {
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
+function buildHtml({ monto, nombre, digitos, destino = 'Plin' }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || '').trim();
   const es3 = /^\d{3}$/.test(digitosLimpios);
@@ -54,8 +54,8 @@ function buildPlinHtml({ monto, nombre, digitos, destino = 'Plin' }) {
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 681, height: 856, deviceScaleFactor: 3 });
-    await page.setContent(buildPlinHtml(data), { waitUntil: 'networkidle2' });
+    await page.setViewport({ width: 680, height: 860, deviceScaleFactor: 3 });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const element = await page.$('.ticket-card');
     const buffer = await element.screenshot({ type: 'jpeg', quality: 85 });
     return buffer.toString('base64');

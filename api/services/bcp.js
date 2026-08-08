@@ -1,12 +1,12 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../resources/templates/bcp.html'), 'utf-8');
-const FONT_BASE64 = fs.readFileSync(path.resolve(__dirname, '../resources/fonts/Flexo.woff')).toString('base64');
+const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/bcp.html'), 'utf-8');
+const FONT_BASE64 = fs.readFileSync(path.resolve(__dirname, '../../resources/fonts/Flexo.woff')).toString('base64');
 
 const BANNERS = ['banner_bcp_1.jpeg', 'banner_bcp_2.jpeg'].map((file) => {
-  const buffer = fs.readFileSync(path.resolve(__dirname, `../resources/images/${file}`));
+  const buffer = fs.readFileSync(path.resolve(__dirname, `../../resources/images/${file}`));
   return `data:image/jpeg;base64,${buffer.toString('base64')}`;
 });
 
@@ -52,7 +52,7 @@ function formatMonto(monto) {
   return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function buildBcpHtml({ monto, nombre, digitos, destino = 'BCP' }) {
+function buildHtml({ monto, nombre, digitos, destino = 'BCP' }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
 
@@ -71,8 +71,8 @@ function buildBcpHtml({ monto, nombre, digitos, destino = 'BCP' }) {
 
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 460, height: 1024, deviceScaleFactor: 3 });
-    await page.setContent(buildBcpHtml(data), { waitUntil: 'networkidle2' });
+    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });

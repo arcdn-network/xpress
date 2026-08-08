@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { createBrowserPool } = require('../utils/browser');
+const { createBrowserPool } = require('../../utils/browser');
 
 const readFile = (relativePath, encoding = null) => fs.readFileSync(path.resolve(__dirname, relativePath), encoding);
 
@@ -9,9 +9,9 @@ const toBase64 = (relativePath, mimeType) => {
   return `data:${mimeType};base64,${buffer.toString('base64')}`;
 };
 
-const TEMPLATE_HTML = readFile('../resources/templates/ripley.html', 'utf-8');
-const BACKGROUND_BASE64 = toBase64('../resources/images/ripley.png', 'image/png');
-const FONT_NUNITO_BASE64 = toBase64('../resources/fonts/Nunito.woff2', 'font/woff2');
+const TEMPLATE_HTML = readFile('../../resources/templates/ripley.html', 'utf-8');
+const BACKGROUND_BASE64 = toBase64('../../resources/images/ripley.png', 'image/png');
+const FONT_NUNITO_BASE64 = toBase64('../../resources/fonts/Nunito.woff2', 'font/woff2');
 
 const pool = createBrowserPool();
 
@@ -32,7 +32,7 @@ function formatMonto(monto) {
   return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function buildRipleyHtml({ monto, nombre, digitos, destino }) {
+function buildHtml({ monto, nombre, digitos, destino }) {
   const digitosLimpios = String(digitos || '').trim();
 
   let celularValue = '';
@@ -62,7 +62,7 @@ function buildRipleyHtml({ monto, nombre, digitos, destino }) {
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
-    await page.setContent(buildRipleyHtml(data), { waitUntil: 'networkidle2' });
+    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
     const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
     return buffer.toString('base64');
   });
