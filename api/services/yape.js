@@ -1,36 +1,38 @@
-const path = require('path');
-const fs = require('fs');
-const { createBrowserPool } = require('../../utils/browser');
+const path = require("path");
+const fs = require("fs");
+const { createBrowserPool } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const BANNERS_DIR = path.resolve(__dirname, '../../resources/banners');
-const AQUA_DIR = path.resolve(__dirname, '../../resources/aqua');
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/yape.html'), 'utf-8');
-const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
+const BANNERS_DIR = path.join(path.dirname(require.resolve("#root/package.json")), "resources/banners");
+const AQUA_DIR = path.join(path.dirname(require.resolve("#root/package.json")), "resources/aqua");
+const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/yape.html"), "utf-8");
+const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Roboto.ttf")).toString("base64");
+
+const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
 const CDN_CHAT = `${CDN_BASE}/chat.png`;
 
 const personajesRanges = [
-  { max: 19.99, file: '10.jpg' },
-  { max: 49.99, file: '20.jpg' },
-  { max: 99.99, file: '50.jpg' },
-  { max: 199.99, file: '100.jpg' },
-  { max: 1000, file: '200.jpg' },
+  { max: 19.99, file: "10.jpg" },
+  { max: 49.99, file: "20.jpg" },
+  { max: 99.99, file: "50.jpg" },
+  { max: 199.99, file: "100.jpg" },
+  { max: Infinity, file: "200.jpg" },
 ];
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const pool = createBrowserPool();
 
 const bannerFiles = fs
   .readdirSync(BANNERS_DIR)
-  .filter((file) => file.endsWith('.webp'))
+  .filter((file) => file.endsWith(".webp"))
   .map((file) => {
     const buffer = fs.readFileSync(path.join(BANNERS_DIR, file));
-    return `data:image/webp;base64,${buffer.toString('base64')}`;
+    return `data:image/webp;base64,${buffer.toString("base64")}`;
   });
 
 if (!bannerFiles.length) {
-  throw new Error('No hay banners disponibles');
+  throw new Error("No hay banners disponibles");
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,19 +47,19 @@ function randomOperacion() {
 function formatFecha() {
   const now = new Date();
   const horas = now.getHours();
-  const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
+  const ampm = horas >= 12 ? "p. m." : "a. m.";
   return {
-    fecha: `${now.getDate().toString().padStart(2, '0')} ${MESES[now.getMonth()]}. ${now.getFullYear()}`,
-    hora: `${(horas % 12 || 12).toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`,
+    fecha: `${now.getDate().toString().padStart(2, "0")} ${MESES[now.getMonth()]}. ${now.getFullYear()}`,
+    hora: `${(horas % 12 || 12).toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")} ${ampm}`,
   };
 }
 
 function formatMonto(monto) {
-  const numero = Number(String(monto).replace(/,/g, ''));
+  const numero = Number(String(monto).replace(/,/g, ""));
 
   return Number.isInteger(numero)
-    ? numero.toLocaleString('en-US')
-    : numero.toLocaleString('en-US', {
+    ? numero.toLocaleString("en-US")
+    : numero.toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
@@ -65,25 +67,24 @@ function formatMonto(monto) {
 
 const aquaImages = personajesRanges.reduce((acc, { file }) => {
   const buffer = fs.readFileSync(path.join(AQUA_DIR, file));
-  acc[file] = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  acc[file] = `data:image/jpeg;base64,${buffer.toString("base64")}`;
   return acc;
 }, {});
 
 function getPersonajeImg(monto) {
   const numero = Number(monto) || 0;
-  const rango = personajesRanges.find((r) => numero <= r.max);
-  const file = rango?.file ?? '200.jpg';
+  const { file } = personajesRanges.find((r) => numero <= r.max);
   return aquaImages[file];
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
+function buildHtml({ monto, nombre, digitos, mensaje = "", destino = "Yape" }) {
   const { fecha, hora } = formatFecha();
   const operacion = randomOperacion();
-  const [d1, d2, d3] = operacion.slice(-3).split('');
+  const [d1, d2, d3] = operacion.slice(-3).split("");
 
   const mostrarDigitos = !!digitos && /^\d{3}$/.test(String(digitos));
-  const mostrarCodigo = destino.toLowerCase() === 'yape';
+  const mostrarCodigo = destino.toLowerCase() === "yape";
 
   const mensajeHtml = mensaje
     ? `<div class="bg-yape-message py-2 px-1 border-round-lg mt-3 flex gap-2 align-items-center">
@@ -94,14 +95,14 @@ function buildHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
           ${mensaje}
         </div>
       </div>`
-    : '';
+    : "";
 
   const celularHtml = mostrarDigitos
     ? `<div class="flex justify-content-between text-sm mt-2">
         <span>Nro. de celular</span>
         <span class="font-medium">*** *** ${digitos}</span>
       </div>`
-    : '';
+    : "";
 
   const codigoHtml = mostrarCodigo
     ? `<div class="flex align-items-center justify-content-between mt-2">
@@ -121,29 +122,30 @@ function buildHtml({ monto, nombre, digitos, mensaje = '', destino = 'Yape' }) {
         </div>
       </div>
       <div class="border-botton mt-2"></div>`
-    : '';
+    : "";
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
-    .replace('{{NOMBRE}}', nombre)
-    .replace('{{FECHA}}', fecha)
-    .replace('{{HORA}}', hora)
-    .replace('{{CELULAR}}', celularHtml)
-    .replace('{{OPERACION}}', operacion)
-    .replace('{{MENSAJE}}', mensajeHtml)
-    .replace('{{DESTINO}}', destino)
-    .replace('{{CODIGO_SEGURIDAD}}', codigoHtml)
-    .replace('{{CDN_LOGO}}', CDN_LOGO)
-    .replace('{{PERSONAJE}}', getPersonajeImg(monto))
-    .replace('{{CDN_BANNER}}', getRandomBanner());
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+    .replace("{{MONTO}}", formatMonto(monto))
+    .replace("{{NOMBRE}}", nombre)
+    .replace("{{FECHA}}", fecha)
+    .replace("{{HORA}}", hora)
+    .replace("{{CELULAR}}", celularHtml)
+    .replace("{{OPERACION}}", operacion)
+    .replace("{{MENSAJE}}", mensajeHtml)
+    .replace("{{DESTINO}}", destino)
+    .replace("{{CODIGO_SEGURIDAD}}", codigoHtml)
+    .replace("{{CDN_LOGO}}", CDN_LOGO)
+    .replace("{{PERSONAJE}}", getPersonajeImg(monto))
+    .replace("{{CDN_BANNER}}", getRandomBanner());
 }
 
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 3 });
-    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
-    const buffer = await page.screenshot({ type: 'jpeg', quality: 85, fullPage: true });
-    return buffer.toString('base64');
+    await page.setContent(buildHtml(data), { waitUntil: "networkidle2" });
+    const buffer = await page.screenshot({ type: "jpeg", quality: 85, fullPage: true });
+    return buffer.toString("base64");
   });
 }
 

@@ -1,13 +1,13 @@
-const path = require('path');
-const fs = require('fs');
-const { createBrowserPool } = require('../../utils/browser');
+const fs = require("fs");
+const { createBrowserPool } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, '../../resources/templates/ibk.html'), 'utf-8');
-const CDN_BASE = 'https://cdn.jsdelivr.net/gh/arcdn-network/resource@main';
+const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/ibk.html"), "utf-8");
+const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Inter.ttf")).toString("base64");
+const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
 const CDN_LOGO_BANK = `${CDN_BASE}/logos/interbank.png`;
 const CDN_LOGO_PLIN = `${CDN_BASE}/logos/plin.webp`;
-const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const pool = createBrowserPool();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -18,47 +18,45 @@ function randomOperacion() {
 function formatFecha() {
   const now = new Date();
   const horas = now.getHours();
-  const ampm = horas >= 12 ? 'PM' : 'AM';
+  const ampm = horas >= 12 ? "PM" : "AM";
   return {
     fecha: `${now.getDate()} ${MESES[now.getMonth()]} ${now.getFullYear()}`,
-    hora: `${(horas % 12 || 12).toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`,
+    hora: `${(horas % 12 || 12).toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")} ${ampm}`,
   };
 }
 
 function formatMonto(monto) {
-  return Number(monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number(monto).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // ─── Builder HTML ─────────────────────────────────────────────────────────────
-function buildHtml({ monto, nombre, digitos, destino = 'Plin' }) {
+function buildHtml({ monto, nombre, digitos, destino = "Plin" }) {
   const { fecha, hora } = formatFecha();
-  const digitosLimpios = String(digitos || '').trim();
+  const digitosLimpios = String(digitos || "").trim();
   const es3 = /^\d{3}$/.test(digitosLimpios);
   const es9 = /^\d{9}$/.test(digitosLimpios);
 
-  return TEMPLATE_HTML.replace('{{MONTO}}', formatMonto(monto))
-    .replace('{{NOMBRE}}', nombre)
-    .replace(
-      '{{CELULAR}}',
-      es3 ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : es9 ? digitosLimpios : '',
-    )
-    .replace('{{SEPARADOR}}', es3 || es9 ? ' - ' : '')
-    .replace('{{DESTINO}}', destino)
-    .replace('{{FECHA}}', fecha)
-    .replace('{{HORA}}', hora)
-    .replace('{{OPERACION}}', randomOperacion())
-    .replace('{{CDN_LOGO_BANK}}', CDN_LOGO_BANK)
-    .replace('{{CDN_LOGO_PLIN}}', CDN_LOGO_PLIN);
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+    .replace("{{MONTO}}", formatMonto(monto))
+    .replace("{{NOMBRE}}", nombre)
+    .replace("{{CELULAR}}", es3 ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : es9 ? digitosLimpios : "")
+    .replace("{{SEPARADOR}}", es3 || es9 ? " - " : "")
+    .replace("{{DESTINO}}", destino)
+    .replace("{{FECHA}}", fecha)
+    .replace("{{HORA}}", hora)
+    .replace("{{OPERACION}}", randomOperacion())
+    .replace("{{CDN_LOGO_BANK}}", CDN_LOGO_BANK)
+    .replace("{{CDN_LOGO_PLIN}}", CDN_LOGO_PLIN);
 }
 
 // ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
     await page.setViewport({ width: 680, height: 860, deviceScaleFactor: 3 });
-    await page.setContent(buildHtml(data), { waitUntil: 'networkidle2' });
-    const element = await page.$('.ticket-card');
-    const buffer = await element.screenshot({ type: 'jpeg', quality: 85 });
-    return buffer.toString('base64');
+    await page.setContent(buildHtml(data), { waitUntil: "networkidle2" });
+    const element = await page.$(".ticket-card");
+    const buffer = await element.screenshot({ type: "jpeg", quality: 85 });
+    return buffer.toString("base64");
   });
 }
 

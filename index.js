@@ -38,6 +38,8 @@ async function startBot() {
     { command: 'historial', description: 'Ver historial de activaciones' },
     { command: 'tutorial', description: 'Ver tutorial de activaciones' },
     { command: 'token', description: 'Generar token autocompletado' },
+    { command: 'apk', description: 'Obtener APK' },
+    { command: 'web', description: 'Obtener Link' },
     { command: 'yape', description: 'Generar Voucher Yape' },
     { command: 'plin', description: 'Generar Voucher Plin' },
     { command: 'bim', description: 'Generar Voucher Bim' },
@@ -50,9 +52,8 @@ async function startBot() {
     { command: 'bbva', description: 'Generar Voucher BBVA' },
     { command: 'caja', description: 'Generar Voucher Caja Arequipa' },
     { command: 'ripley', description: 'Generar Voucher Ripley' },
+    { command: 'falabella', description: 'Generar Voucher Falabella' },
     { command: 'scotiabank', description: 'Generar Voucher Scotiabank' },
-    { command: 'apk', description: 'Obtener APK' },
-    { command: 'web', description: 'Obtener Link' },
   ]);
 
   registerMeCommand(bot);

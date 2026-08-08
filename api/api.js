@@ -3,9 +3,10 @@ const cors = require('cors');
 const compression = require('compression');
 
 const docsRoutes = require('../utils/docs');
-const { hourLimiter, dayLimiter } = require('./middleware/rateLimit');
-const { validateToken } = require('./middleware/validateToken');
-const { createVoucherRoute } = require('./utils/services');
+const { VOUCHER_KEYS } = require('./config/config');
+const { hourLimiter, dayLimiter } = require('../middleware/rateLimit');
+const { validateToken } = require('../middleware/validateToken');
+const { createVoucherRoute } = require('./config/routing');
 
 function startApi() {
   const app = express();
@@ -20,7 +21,6 @@ function startApi() {
         message: 'INVALID_CONTENT_TYPE',
       });
     }
-
     next();
   });
 
@@ -28,20 +28,9 @@ function startApi() {
   app.use(dayLimiter);
   app.use(validateToken);
 
-  app.post('/api/yape', createVoucherRoute('yape'));
-  app.post('/api/plin', createVoucherRoute('plin'));
-  app.post('/api/sip', createVoucherRoute('sip'));
-  app.post('/api/agora', createVoucherRoute('agora'));
-  app.post('/api/lemon', createVoucherRoute('lemon'));
-  app.post('/api/prexpe', createVoucherRoute('prexpe'));
-  app.post('/api/bim', createVoucherRoute('bim'));
-  app.post('/api/bcp', createVoucherRoute('bcp'));
-  app.post('/api/ibk', createVoucherRoute('ibk'));
-  app.post('/api/bbva', createVoucherRoute('bbva'));
-  app.post('/api/ripley', createVoucherRoute('ripley'));
-  app.post('/api/falabella', createVoucherRoute('falabella'));
-  app.post('/api/scotiabank', createVoucherRoute('scotiabank'));
-  app.post('/api/caja', createVoucherRoute('caja'));
+  VOUCHER_KEYS.forEach((comando) => {
+    app.post(`/api/${comando}`, createVoucherRoute(comando));
+  });
 
   app.use('/', docsRoutes);
   const PORT = process.env.PORT || 4000;
@@ -51,6 +40,4 @@ function startApi() {
   });
 }
 
-module.exports = {
-  startApi,
-};
+module.exports = { startApi };

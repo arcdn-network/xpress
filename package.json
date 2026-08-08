@@ -6,6 +6,10 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
+  "imports": {
+    "#resources/*": "./resources/*",
+    "#root/*": "./*"
+  },
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js"

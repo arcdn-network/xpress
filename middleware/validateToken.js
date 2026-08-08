@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { formatShortDateTime } = require('../../utils/functions');
-const { APP_USERNAME } = require('../../utils/constants');
+const { formatShortDateTime } = require('../utils/functions');
+const { APP_USERNAME } = require('../utils/constants');
 
-const DATA_FILE = path.resolve(__dirname, '../../data.json');
+const DATA_FILE = path.resolve(__dirname, '../data.json');
 const DETAILS = `Contáctame en Telegram @${APP_USERNAME}.`;
 
 let db = [];

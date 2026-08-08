@@ -1,5 +1,14 @@
 const { isOwner } = require('../middleware/isAdmin');
 const { buildButtonsCredits } = require('../utils/constants');
+const { CONFIG, VOUCHER_KEYS } = require('../api/config/config');
+
+function buildVoucherCommandsBlock() {
+  return VOUCHER_KEYS.map((comando) => {
+    const { cantidad } = CONFIG[comando];
+    const digitosLabel = cantidad.includes(0) ? '' : `|${cantidad[0]}digitos`;
+    return `<code>/${comando} monto|nombre${digitosLabel}</code>`;
+  }).join('\n');
+}
 
 function buildCommandsMessage(admin = false) {
   let msg = `
@@ -32,20 +41,7 @@ Ver el historial de tus activaciones.
 •···························•····························•
 
 🧾 <b>PLAN VOUCHERS</b>
-<code>/yape monto|nombre|3digitos</code>
-<code>/plin monto|nombre|3digitos</code>
-<code>/bim monto|nombre|3digitos</code>
-<code>/sip monto|nombre|3digitos</code>
-<code>/agora monto|nombre|3digitos</code>
-<code>/lemon monto|nombre|3digitos</code>
-<code>/prexpe monto|nombre|3digitos</code>
-<code>/bcp monto|nombre|3digitos</code>
-<code>/bbva monto|nombre|3digitos</code>
-<code>/ibk monto|nombre|3digitos</code>
-<code>/caja monto|nombre|3digitos</code>
-<code>/ripley monto|nombre|3digitos</code>
-<code>/falabella monto|nombre|3digitos</code>
-<code>/scotiabank monto|nombre|3digitos</code>
+${buildVoucherCommandsBlock()}
 Genera vouchers de pago.
 `;
 

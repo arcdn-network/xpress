@@ -7,7 +7,6 @@
   <title>Ticket Plin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     /* ─── Reset ─── */
@@ -19,6 +18,14 @@
       padding: 0;
     }
 
+
+    @font-face {
+      font-family: 'Inter';
+      src: url('{{FONT_BASE64}}') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     /* ─── Base ─── */
     body {
       min-height: 100vh;
@@ -26,7 +33,7 @@
       justify-content: center;
       align-items: center;
       background: #04BE4F;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter';
       text-align: center;
     }
 

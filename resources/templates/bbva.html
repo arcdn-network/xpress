@@ -6,7 +6,6 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <title>Operación Exitosa</title>
    <link href="https://cdnjs.cloudflare.com/ajax/libs/primeflex/3.3.1/primeflex.min.css" rel="stylesheet" />
-   <link href="https://fonts.cdnfonts.com/css/bentonsans-regular" rel="stylesheet" />
 
    <style>
       * {
@@ -15,8 +14,15 @@
          padding: 0;
       }
 
+      @font-face {
+         font-family: 'BentonSans';
+         src: url('{{FONT_BASE64}}') format('woff');
+         font-weight: normal;
+         font-style: normal;
+      }
+
       body {
-         font-family: 'BentonSans Regular', sans-serif;
+         font-family: 'BentonSans';
          background: #f0f2f5;
          display: flex;
          justify-content: center;

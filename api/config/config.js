@@ -103,7 +103,7 @@ const CONFIG = {
   caja: {
     service: generateCaja,
     destinoDefault: 'Plin',
-    cantidad: [9, 3],
+    cantidad: [3, 9],
   },
 };
 
@@ -111,4 +111,6 @@ Object.keys(CONFIG).forEach((comando) => {
   CONFIG[comando].errorMsg = buildErrorMsg(comando, CONFIG[comando].cantidad);
 });
 
-module.exports = { CONFIG, buildErrorMsg };
+const VOUCHER_KEYS = Object.keys(CONFIG);
+
+module.exports = { CONFIG, VOUCHER_KEYS };

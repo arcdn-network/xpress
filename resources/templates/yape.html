@@ -7,10 +7,7 @@
    <title>Yape - Confirmación de pago</title>
    <link href="https://cdn.jsdelivr.net/npm/primeflex@4.0.0/primeflex.min.css" rel="stylesheet">
    <link href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css" rel="stylesheet">
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-      rel="stylesheet">
+
    <style>
       :root {
          --yape-bg-start: #4a1972;
@@ -31,11 +28,18 @@
          --yape-badge-text: #1a1000;
       }
 
+      @font-face {
+         font-family: 'Roboto';
+         src: url('{{FONT_BASE64}}') format('truetype');
+         font-weight: normal;
+         font-style: normal;
+      }
+
       body {
          margin: 0;
          padding: 0;
          -webkit-touch-callout: none;
-         font-family: "Roboto", sans-serif;
+         font-family: "Roboto";
       }
 
       .bg-yape-payment {

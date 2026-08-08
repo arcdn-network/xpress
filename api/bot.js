@@ -1,5 +1,5 @@
 const { LOCAL, FREE_BONUS_VOUCHER, FREE_DAILY_LIMIT, USE_DAILY_LIMIT } = require('../utils/constants');
-const { CONFIG } = require('./utils/config');
+const { CONFIG, VOUCHER_KEYS } = require('./config/config');
 const { getUser, updateUser } = require('../utils/api');
 const { buildButtonsVoucherPlan } = require('../utils/constants');
 const { getFiles, saveFileTelegram } = require('../utils/files');
@@ -220,20 +220,9 @@ function createVoucherHandler(bot, comando) {
 }
 
 function registerVoucherCommands(bot) {
-  bot.onText(/\/yape(.*)/, createVoucherHandler(bot, 'yape'));
-  bot.onText(/\/plin(.*)/, createVoucherHandler(bot, 'plin'));
-  bot.onText(/\/bim(.*)/, createVoucherHandler(bot, 'bim'));
-  bot.onText(/\/sip(.*)/, createVoucherHandler(bot, 'sip'));
-  bot.onText(/\/agora(.*)/, createVoucherHandler(bot, 'agora'));
-  bot.onText(/\/prexpe(.*)/, createVoucherHandler(bot, 'prexpe'));
-  bot.onText(/\/lemon(.*)/, createVoucherHandler(bot, 'lemon'));
-  bot.onText(/\/bcp(.*)/, createVoucherHandler(bot, 'bcp'));
-  bot.onText(/\/ibk(.*)/, createVoucherHandler(bot, 'ibk'));
-  bot.onText(/\/bbva(.*)/, createVoucherHandler(bot, 'bbva'));
-  bot.onText(/\/caja(.*)/, createVoucherHandler(bot, 'caja'));
-  bot.onText(/\/ripley(.*)/, createVoucherHandler(bot, 'ripley'));
-  bot.onText(/\/falabella(.*)/, createVoucherHandler(bot, 'falabella'));
-  bot.onText(/\/scotiabank(.*)/, createVoucherHandler(bot, 'scotiabank'));
+  VOUCHER_KEYS.forEach((comando) => {
+    bot.onText(new RegExp(`\\/${comando}(.*)`), createVoucherHandler(bot, comando));
+  });
 }
 
 module.exports = registerVoucherCommands;
