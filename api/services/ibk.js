@@ -1,9 +1,8 @@
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/ibk.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Inter.ttf")).toString("base64");
+const TEMPLATE_HTML = readResource("#resources/templates/ibk.html");
+const FONT_BASE64 = readResource("#resources/fonts/Inter.ttf");
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
 const CDN_LOGO_BANK = `${CDN_BASE}/logos/interbank.png`;
 const CDN_LOGO_PLIN = `${CDN_BASE}/logos/plin.webp`;
@@ -36,7 +35,7 @@ function buildHtml({ monto, nombre, digitos, destino = "Plin" }) {
   const es3 = /^\d{3}$/.test(digitosLimpios);
   const es9 = /^\d{9}$/.test(digitosLimpios);
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{CELULAR}}", es3 ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : es9 ? digitosLimpios : "")

@@ -1,12 +1,12 @@
 const path = require("path");
 const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
 const BANNERS_DIR = path.join(path.dirname(require.resolve("#root/package.json")), "resources/banners");
-const AQUA_DIR = path.join(path.dirname(require.resolve("#root/package.json")), "resources/aqua");
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/yape.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Roboto.ttf")).toString("base64");
+const CHARACTERS_DIR = path.join(path.dirname(require.resolve("#root/package.json")), "resources/characters");
+const TEMPLATE_HTML = readResource("#resources/templates/yape.html");
+const FONT_BASE64 = readResource("#resources/fonts/Roboto.woff2");
 
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
 const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
@@ -66,7 +66,7 @@ function formatMonto(monto) {
 }
 
 const aquaImages = personajesRanges.reduce((acc, { file }) => {
-  const buffer = fs.readFileSync(path.join(AQUA_DIR, file));
+  const buffer = fs.readFileSync(path.join(CHARACTERS_DIR, file));
   acc[file] = `data:image/jpeg;base64,${buffer.toString("base64")}`;
   return acc;
 }, {});
@@ -124,7 +124,7 @@ function buildHtml({ monto, nombre, digitos, mensaje = "", destino = "Yape" }) {
       <div class="border-botton mt-2"></div>`
     : "";
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{FECHA}}", fecha)

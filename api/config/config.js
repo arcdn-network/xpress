@@ -62,7 +62,7 @@ const CONFIG = {
   },
   lemon: {
     service: generateLemon,
-    destinoDefault: 'YAPE',
+    destinoDefault: 'Yape',
     cantidad: [3],
   },
   prexpe: {
@@ -72,7 +72,7 @@ const CONFIG = {
   },
   bcp: {
     service: generateBcp,
-    destinoDefault: 'BCP',
+    destinoDefault: 'Yape',
     cantidad: [3],
   },
   ibk: {

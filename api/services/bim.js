@@ -1,12 +1,9 @@
-const path = require("path");
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/bim.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Roboto.ttf")).toString("base64");
-const bimLogoBuffer = fs.readFileSync(require.resolve("#resources/images/logo-bim.png"));
-const BIM_LOGO = `data:image/png;base64,${bimLogoBuffer.toString("base64")}`;
+const TEMPLATE_HTML = readResource("#resources/templates/bim.html");
+const FONT_BASE64 = readResource("#resources/fonts/Roboto.woff2");
+const BIM_LOGO = readResource("#resources/images/logo-bim.png");
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const pool = createBrowserPool();
@@ -42,7 +39,7 @@ function buildHtml({ monto, nombre, digitos, mensaje = "", destino = "Bim" }) {
 
   const comentarioHtml = mensaje ? `<div class="mb-2"><span>Comentario:</span><span>${mensaje}</span></div>` : "";
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{DESTINO}}", destino.toUpperCase())

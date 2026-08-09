@@ -1,14 +1,10 @@
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
 // ─── Constantes estáticas ─────────────────────────────────────────────────────
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/agora.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Inter.ttf")).toString("base64");
-const checkBuffer = fs.readFileSync(require.resolve("#resources/images/check_agora.png"));
-const ticketBuffer = fs.readFileSync(require.resolve("#resources/images/ticket_agora.png"));
-
-const CHECK_IMG = `data:image/png;base64,${checkBuffer.toString("base64")}`;
-const TICKET_IMG = `data:image/png;base64,${ticketBuffer.toString("base64")}`;
+const TEMPLATE_HTML = readResource("#resources/templates/agora.html");
+const FONT_BASE64 = readResource("#resources/fonts/Inter.ttf");
+const CHECK_IMG = readResource("#resources/images/check_agora.png");
+const TICKET_IMG = readResource("#resources/images/ticket_agora.png");
 
 const pool = createBrowserPool();
 
@@ -79,7 +75,7 @@ function buildHtml({ monto, nombre, digitos, mensaje, destino = "AGORA/OH!" }) {
        </div>`
     : "";
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{TITULO}}", tituloHtml)
     .replace("{{TITULAR}}", titularHtml)

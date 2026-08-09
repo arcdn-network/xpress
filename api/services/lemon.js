@@ -1,10 +1,8 @@
-const path = require("path");
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
-const TEMPLATE_HTML = fs.readFileSync(path.resolve(__dirname, "../../resources/templates/lemon.html"), "utf-8");
-const checkBuffer = fs.readFileSync(path.resolve(__dirname, "../../resources/images/check_lemon.png"));
-const CHECK_IMG = `data:image/png;base64,${checkBuffer.toString("base64")}`;
+const TEMPLATE_HTML = readResource("#resources/templates/lemon.html");
+const FONT_BASE64 = readResource("#resources/fonts/Manrope.woff2");
+const CHECK_IMG = readResource("#resources/images/check_lemon.png");
 
 const pool = createBrowserPool();
 
@@ -55,7 +53,8 @@ function buildHtml({ monto, nombre, digitos, destino = "YAPE" }) {
        </div>`
     : "";
 
-  return TEMPLATE_HTML.replace("{{CHECK_IMG}}", CHECK_IMG)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
+    .replace("{{CHECK_IMG}}", CHECK_IMG)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{FECHA}}", fecha)

@@ -1,8 +1,7 @@
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/bbva.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/BentonSans.woff")).toString("base64");
+const TEMPLATE_HTML = readResource("#resources/templates/bbva.html");
+const FONT_BASE64 = readResource("#resources/fonts/BentonSans.woff");
 
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -42,7 +41,7 @@ function buildHtml({ monto, nombre, digitos, destino = "BBVA Perú" }) {
 
   const digitosHtml = digitos ? `<div class="text-right font-bold text-black font-italic">•${digitos}</div>` : "";
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{DIGITOS}}", digitosHtml)

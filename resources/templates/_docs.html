@@ -162,7 +162,8 @@
 
       #btn-plans,
       .modal-close,
-      .copy-btn {
+      .copy-btn,
+      .icon-btn {
          width: auto;
          display: inline-flex;
          align-items: center;
@@ -172,6 +173,11 @@
       #btn-plans {
          padding: .5rem 1rem;
          font-size: .8rem;
+      }
+
+      .icon-btn {
+         padding: .5rem .625rem;
+         justify-content: center;
       }
 
       .modal-close {
@@ -290,10 +296,6 @@
          margin-bottom: .5rem;
       }
 
-      .mb-4 {
-         margin-bottom: 1rem;
-      }
-
       .mb-5 {
          margin-bottom: 1.25rem;
       }
@@ -339,7 +341,7 @@
          background: var(--accent);
       }
 
-      /* ---- Modal Planes ---- */
+      /* ---- Modal Planes / Galería ---- */
 
       .modal-overlay {
          display: none;
@@ -358,8 +360,9 @@
 
       .modal-box {
          width: 100%;
-         max-width: 35rem;
+         max-width: 30rem;
          max-height: 90vh;
+         overflow-x: hidden;
          overflow-y: auto;
          padding: 1.5rem;
          user-select: none;
@@ -369,7 +372,7 @@
          display: flex;
          justify-content: space-between;
          align-items: flex-start;
-         margin-bottom: 1.25rem;
+         margin-bottom: 2rem;
       }
 
       .modal-header p {
@@ -479,12 +482,6 @@
          line-height: 1.2;
       }
 
-      .plan-permes {
-         font-size: .72rem;
-         color: var(--text-mute);
-         margin-top: .125rem;
-      }
-
       .terms-footer {
          font-size: .65rem;
          color: var(--text-faint);
@@ -494,9 +491,100 @@
          padding-top: .875rem;
       }
 
+      /* ---- Visor de vouchers (imagen única + navegación) ---- */
+      .viewer {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         gap: .875rem;
+         line-height: 1.5rem;
+      }
+
+      .viewer-frame {
+         position: relative;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         width: 100%;
+         padding: 0 3rem;
+      }
+
+      .viewer-stage {
+         width: 100%;
+         max-width: 18.75rem;
+         aspect-ratio: 430 / 932;
+         border-radius: var(--radius-lg);
+         overflow: hidden;
+         border: 1px solid var(--border);
+         background: var(--surface-alt);
+      }
+
+      .viewer-img {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+         display: block;
+         user-select: none;
+      }
+
+      .viewer-arrow {
+         position: absolute;
+         top: 50%;
+         transform: translateY(-50%);
+         width: 2.25rem;
+         height: 2.25rem;
+         border-radius: 50%;
+         background: rgba(0, 0, 0, .55);
+         border: 1px solid var(--border-alt);
+         color: #fff;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         cursor: pointer;
+         font-size: .9rem;
+         padding: 0;
+      }
+
+      .viewer-arrow:hover {
+         background: var(--accent);
+         border-color: var(--accent);
+      }
+
+      .viewer-arrow.prev {
+         left: .5rem;
+      }
+
+      .viewer-arrow.next {
+         right: .5rem;
+      }
+
+      .viewer-info {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         gap: .2rem;
+      }
+
+      .viewer-label {
+         font-size: .85rem;
+         color: #fff;
+         font-weight: 700;
+      }
+
+      .viewer-counter {
+         font-size: .68rem;
+         color: var(--text-mute);
+      }
+
       @media (max-width: 767px) {
          .grid {
             grid-template-columns: 1fr;
+         }
+      }
+
+      @media (max-width: 26rem) {
+         .viewer-frame {
+            padding: 0 2.25rem;
          }
       }
    </style>
@@ -509,9 +597,14 @@
          <div class="flex justify-content-between align-items-center flex-wrap gap-2" style="margin-bottom:.5rem">
             <h1 style="font-size:1.5rem;font-weight:300;color:#fff">Genera vouchers de pago listos para
                integrar.</h1>
-            <button class="btn-outline" id="btn-plans" onclick="openPlans()">
-               Ver planes
-            </button>
+            <div class="flex gap-2">
+               <button class="btn-outline icon-btn" id="btn-gallery" onclick="openGallery()" title="Ver ejemplos">
+                  <i class="pi pi-eye"></i>
+               </button>
+               <button class="btn-outline" id="btn-plans" onclick="openPlans()">
+                  Ver planes
+               </button>
+            </div>
          </div>
          <div class="flex gap-4">
             <p class="text-xs" style="color:var(--text-mute)">BASE URL — <span style="color:var(--text-faint)"
@@ -592,30 +685,67 @@
       </div>
    </div>
 
+   <!-- Modal Galería -->
+   <div class="modal-overlay" id="gallery-overlay" onclick="closeGallery(event)">
+      <div class="modal-box" onclick="event.stopPropagation()">
+         <div class="modal-header">
+            <h2>Formatos</h2>
+            <button class="modal-close btn-outline" onclick="closeGallery()">Cerrar</button>
+         </div>
+
+         <div class="modal-content">
+            <div class="viewer">
+               <div class="viewer-frame">
+                  <button class="viewer-arrow prev" onclick="galleryPrev()" title="Anterior">
+                     <i class="pi pi-chevron-left"></i>
+                  </button>
+                  <div class="viewer-stage" id="viewer-stage">
+                     <img class="viewer-img" id="viewer-img" src="" alt="">
+                  </div>
+                  <button class="viewer-arrow next" onclick="galleryNext()" title="Siguiente">
+                     <i class="pi pi-chevron-right"></i>
+                  </button>
+               </div>
+               <div class="viewer-info">
+                  <p class="viewer-label" id="viewer-label">—</p>
+                  <p class="viewer-counter" id="viewer-counter">—</p>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+
    <script>
       const BASE_URL = window.location.origin + '/api';
+      const CAPTURES_BASE = 'https://cdn.jsdelivr.net/gh/devlow157-a11y/resources@main/captures/';
 
-      const ENDPOINTS = [
-         { path: '/yape', default: 'Yape', cantidad: [3] },
-         { path: '/plin', default: 'Plin', cantidad: [3, 9] },
-         { path: '/bim', default: 'Bim', cantidad: [3] },
-         { path: '/sip', default: 'Sip', cantidad: [3] },
-         { path: '/agora', default: 'AGORA/OH!', cantidad: [3, 9] },
-         { path: '/lemon', default: 'Yape', cantidad: [3] },
-         { path: '/prexpe', default: 'Prexpe', cantidad: [0] },
-         { path: '/bcp', default: 'Yape', cantidad: [3] },
-         { path: '/ibk', default: 'Plin', cantidad: [3, 9] },
-         { path: '/bbva', default: 'BBVA', cantidad: [3] },
-         { path: '/scotiabank', default: 'Yape', cantidad: [3] },
-         { path: '/ripley', default: 'Yape', cantidad: [3, 9] },
-         { path: '/falabella', default: 'Yape', cantidad: [3] },
-         { path: '/caja', default: 'Yape', cantidad: [3, 9] },
+      // ---- Fuente única: agrega/edita/quita un voucher solo tocando este array ----
+      const DEFAULT_RATIO = '430 / 932';
+
+      const VOUCHERS = [
+         { path: '/yape', label: 'Yape', default: 'Yape', cantidad: [3], capture: 'yape.jpg' },
+         { path: '/plin', label: 'Plin', default: 'Plin', cantidad: [3, 9], capture: 'plin.jpg' },
+         { path: '/bim', label: 'Bim', default: 'Bim', cantidad: [3], capture: 'bim.jpg' },
+         { path: '/sip', label: 'Sip', default: 'Sip', cantidad: [3], capture: 'sip.jpg' },
+         { path: '/agora', label: 'Agora', default: 'AGORA/OH!', cantidad: [3, 9], capture: 'agora.jpg' },
+         { path: '/lemon', label: 'Lemon', default: 'Yape', cantidad: [3], capture: 'lemon.jpg' },
+         { path: '/prexpe', label: 'Prexpe', default: 'Prexpe', cantidad: [0], capture: 'prexpe.jpg' },
+         { path: '/bcp', label: 'BCP', default: 'Yape', cantidad: [3], capture: 'bcp.jpg' },
+         { path: '/ibk', label: 'IBK', default: 'Plin', cantidad: [3, 9], capture: 'interbank.jpg', ratio: '680 / 860' },
+         { path: '/bbva', label: 'BBVA', default: 'BBVA', cantidad: [3], capture: 'bbva.jpg' },
+         { path: '/scotiabank', label: 'Scotiabank', default: 'Yape', cantidad: [3], capture: 'skotiabank.png' },
+         { path: '/ripley', label: 'Ripley', default: 'Yape', cantidad: [3, 9], capture: 'ripley.jpg' },
+         { path: '/falabella', label: 'Falabella', default: 'Yape', cantidad: [3], capture: 'falabella.jpg' },
+         { path: '/caja', label: 'Caja', default: 'Yape', cantidad: [3, 9], capture: 'caja.jpg' },
       ];
 
-      // Los 7 primeros endpoints son billeteras digitales, el resto son bancas.
+      const GALLERY = VOUCHERS.filter(v => v.capture);
+      let galleryIndex = 0;
+
+      // Los 7 primeros son billeteras digitales, el resto son bancas.
       const PILL_GROUPS = [
          { label: 'BILLETERAS', start: 0, end: 7 },
-         { label: 'BANCAS', start: 7, end: ENDPOINTS.length },
+         { label: 'BANCAS', start: 7, end: VOUCHERS.length },
       ];
 
       const PARAMS = [
@@ -628,8 +758,8 @@
 
       // ---- Planes: agrega/edita/quita planes solo tocando este array ----
       const PLANS = [
-         { name: 'Mensual', price: 50, permes: 50.00 },
-         { name: 'Anual', price: 420, permes: 35.00 },
+         { name: 'Mensual', price: 50 },
+         { name: 'Anual', price: 420 },
       ];
 
       // ---- Beneficios incluidos en todos los planes ----
@@ -658,7 +788,7 @@
 
       document.getElementById('pills').innerHTML = PILL_GROUPS.map(group => `
    <p class="pill-group-label">${group.label} (${group.end - group.start})</p>
-   ${ENDPOINTS.slice(group.start, group.end).map((ep, j) => {
+   ${VOUCHERS.slice(group.start, group.end).map((ep, j) => {
          const i = group.start + j;
          return `<div class="pill" id="pill-${i}" onclick="selectEp(${i})">${ep.path}</div>`;
       }).join('')}
@@ -731,12 +861,12 @@
          const btn = document.getElementById('btn-send');
 
          btn.disabled = false;
-         btn.textContent = `POST ${ENDPOINTS[i].path} →`;
+         btn.textContent = `POST ${VOUCHERS[i].path} →`;
 
          document.getElementById('url-display').value =
-            BASE_URL + ENDPOINTS[i].path;
+            BASE_URL + VOUCHERS[i].path;
 
-         renderFields(ENDPOINTS[i].cantidad);
+         renderFields(VOUCHERS[i].cantidad);
 
          PARAMS.forEach(p => {
             const el = document.getElementById(`f-${p.name}`);
@@ -758,7 +888,7 @@
          btn.disabled = true;
          btn.textContent = '⏳ Generando...';
 
-         const ep = ENDPOINTS[selected];
+         const ep = VOUCHERS[selected];
          const body = {};
 
          PARAMS.forEach(p => {
@@ -842,7 +972,7 @@
 
       function startCooldown() {
          const btn = document.getElementById('btn-send');
-         const ep = ENDPOINTS[selected];
+         const ep = VOUCHERS[selected];
          let remaining = COOLDOWN_MS / 1000;
 
          btn.disabled = true;
@@ -918,13 +1048,68 @@
          document.getElementById('modal-overlay').classList.remove('open');
       }
 
+      function openGallery() {
+         galleryIndex = 0;
+         updateViewer();
+         document.getElementById('gallery-overlay').classList.add('open');
+      }
+
+      function closeGallery(e) {
+         document.getElementById('gallery-overlay').classList.remove('open');
+      }
+
+      function updateViewer() {
+         const item = GALLERY[galleryIndex];
+
+         document.getElementById('viewer-img').src = CAPTURES_BASE + item.capture;
+         document.getElementById('viewer-img').alt = item.label;
+         document.getElementById('viewer-label').textContent = item.label;
+         document.getElementById('viewer-counter').textContent = `${galleryIndex + 1} / ${GALLERY.length}`;
+         document.getElementById('viewer-stage').style.aspectRatio = item.ratio || DEFAULT_RATIO;
+      }
+
+      function galleryPrev() {
+         galleryIndex = (galleryIndex - 1 + GALLERY.length) % GALLERY.length;
+         updateViewer();
+      }
+
+      function galleryNext() {
+         galleryIndex = (galleryIndex + 1) % GALLERY.length;
+         updateViewer();
+      }
+
       function goToTelegram() {
          window.open('https://t.me/dev_lguss', '_blank');
       }
 
       document.addEventListener('keydown', (e) => {
-         if (e.key === 'Escape') closePlans();
+         if (e.key === 'Escape') {
+            closePlans();
+            closeGallery();
+         }
+
+         const galleryOpen = document.getElementById('gallery-overlay').classList.contains('open');
+
+         if (galleryOpen && e.key === 'ArrowLeft') galleryPrev();
+         if (galleryOpen && e.key === 'ArrowRight') galleryNext();
       });
+
+      const isLocal = ['localhost'].includes(window.location.hostname);
+      if (!isLocal) {
+         document.addEventListener('contextmenu', e => e.preventDefault());
+
+         document.addEventListener('keydown', e => {
+            const k = e.key.toLowerCase();
+
+            if (
+               k === 'f12' ||
+               (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(k)) ||
+               (e.ctrlKey && k === 'u')
+            ) {
+               e.preventDefault();
+            }
+         });
+      }
    </script>
 </body>
 

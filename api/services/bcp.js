@@ -1,13 +1,9 @@
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/bcp.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Flexo.woff")).toString("base64");
+const TEMPLATE_HTML = readResource("#resources/templates/bcp.html");
+const FONT_BASE64 = readResource("#resources/fonts/Flexo.woff");
 
-const BANNERS = ["banner_bcp_1.jpeg", "banner_bcp_2.jpeg"].map((file) => {
-  const buffer = fs.readFileSync(require.resolve(`#resources/images/${file}`));
-  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
-});
+const BANNERS = ["banner_bcp_1.jpeg", "banner_bcp_2.jpeg"].map((file) => readResource(`#resources/images/${file}`));
 
 function getRandomBanner() {
   return BANNERS[Math.floor(Math.random() * BANNERS.length)];
@@ -44,7 +40,7 @@ function buildHtml({ monto, nombre, digitos, destino = "BCP" }) {
 
   const celularHtml = digitos ? `<div class="bcp-gray text-sm">*** *** ${digitos}</div>` : "";
 
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{DIGITOS}}", celularHtml)

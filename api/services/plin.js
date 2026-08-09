@@ -1,17 +1,9 @@
-const path = require("path");
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
-const readFile = (relativePath) => fs.readFileSync(path.resolve(__dirname, relativePath));
+const TEMPLATE_HTML = readResource("#resources/templates/plin.html");
+const BACKGROUND = readResource("#resources/images/template_plin.png");
+const FONT_BASE64 = readResource("#resources/fonts/Geometria.ttf");
 
-const toBase64 = (relativePath, mimeType) => {
-  const buffer = readFile(relativePath);
-  return `data:${mimeType};base64,${buffer.toString("base64")}`;
-};
-
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/plin.html"), "utf-8");
-const BACKGROUND_BASE64 = toBase64(require.resolve("#resources/images/template_plin.png"), "image/png");
-const FONT_BASE64 = toBase64(require.resolve("#resources/fonts/Geometria.ttf"), "font/ttf");
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const pool = createBrowserPool();
 
@@ -44,8 +36,8 @@ function buildHtml({ monto, nombre, digitos, destino = "Plin" }) {
     celularHtml = `${digitosLimpios} - `;
   }
 
-  return TEMPLATE_HTML.replace("{{FONT}}", FONT_BASE64)
-    .replace("{{BACKGROUND}}", BACKGROUND_BASE64)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
+    .replace("{{BACKGROUND}}", BACKGROUND)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{CELULAR}}", celularHtml)

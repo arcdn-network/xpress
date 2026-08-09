@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Voucher BIM</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeflex@3.3.1/primeflex.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/primeflex@4.0.0/primeflex.min.css" rel="stylesheet">
 
   <style>
     * {
@@ -17,14 +17,15 @@
 
     @font-face {
       font-family: 'Roboto';
-      src: url('{{FONT_BASE64}}') format('truetype');
-      font-weight: normal;
+      src: url('{{FONT_BASE64}}') format('woff2-variations');
+      font-weight: 100 900;
       font-style: normal;
+      font-display: swap;
     }
 
     body {
       background: #f4f4f4;
-      font-family: "Roboto", sans-serif;
+      font-family: "Roboto";
     }
 
     .btn-outline {

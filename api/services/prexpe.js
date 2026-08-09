@@ -1,10 +1,8 @@
-const fs = require("fs");
-const { createBrowserPool } = require("../../utils/browser");
+const { createBrowserPool, readResource } = require("../../utils/browser");
 
-const TEMPLATE_HTML = fs.readFileSync(require.resolve("#resources/templates/prexpe.html"), "utf-8");
-const FONT_BASE64 = fs.readFileSync(require.resolve("#resources/fonts/Inter.ttf")).toString("base64");
-const BACKGROUND_BUFFER = fs.readFileSync(require.resolve("#resources/images/prexpe.png"));
-const BACKGROUND_BASE64 = `data:image/png;base64,${BACKGROUND_BUFFER.toString("base64")}`;
+const TEMPLATE_HTML = readResource("#resources/templates/prexpe.html");
+const FONT_BASE64 = readResource("#resources/fonts/Inter.ttf");
+const BACKGROUND = readResource("#resources/images/prexpe.png");
 
 const pool = createBrowserPool();
 
@@ -27,8 +25,8 @@ function formatMonto(monto) {
 }
 
 function buildHtml({ monto, nombre, destino = "Yape" }) {
-  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", `data:font/woff;base64,${FONT_BASE64}`)
-    .replace("{{BACKGROUND}}", BACKGROUND_BASE64)
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
+    .replace("{{BACKGROUND}}", BACKGROUND)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
     .replace("{{DESTINO}}", destino)

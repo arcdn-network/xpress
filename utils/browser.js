@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
 
 const DEFAULT_OPTIONS = {
   maxConcurrent: 5,
@@ -30,7 +30,7 @@ function createBrowserPool(launchOptions = {}, poolOptions = {}) {
       browser = await puppeteer.launch({
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
         ...launchOptions,
       });
 
@@ -62,7 +62,7 @@ function createBrowserPool(launchOptions = {}, poolOptions = {}) {
 
         const result = await Promise.race([
           fn(page),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout al generar voucher')), timeoutMs)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout al generar voucher")), timeoutMs)),
         ]);
 
         resolve(result);
@@ -86,4 +86,34 @@ function createBrowserPool(launchOptions = {}, poolOptions = {}) {
   return { withPage, stats };
 }
 
-module.exports = { createBrowserPool };
+const fs = require("fs");
+const path = require("path");
+
+const MIME_TYPES = {
+  ".html": null,
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+};
+
+const readResource = (specifier) => {
+  const filePath = require.resolve(specifier);
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeType = MIME_TYPES[ext];
+
+  if (mimeType === undefined) {
+    throw new Error(`Extensión no soportada: ${ext}`);
+  }
+  if (mimeType === null) {
+    return fs.readFileSync(filePath, "utf-8");
+  }
+
+  const base64 = fs.readFileSync(filePath).toString("base64");
+  return `data:${mimeType};base64,${base64}`;
+};
+
+module.exports = { createBrowserPool, readResource };
