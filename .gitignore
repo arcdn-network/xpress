@@ -15,6 +15,8 @@ yarn-error.log*
 
 # runtime
 data.json
+files.json
+files.develop.json
 pids
 *.pid
 *.seed

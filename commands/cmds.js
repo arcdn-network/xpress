@@ -1,13 +1,13 @@
-const { isOwner } = require('../middleware/isAdmin');
-const { buildButtonsCredits } = require('../utils/constants');
-const { CONFIG, VOUCHER_KEYS } = require('../api/config/config');
+const { isOwner } = require("../middleware/isAdmin");
+const { buildButtonsCredits } = require("../utils/constants");
+const { CONFIG, VOUCHER_KEYS } = require("../api/config/config");
 
 function buildVoucherCommandsBlock() {
   return VOUCHER_KEYS.map((comando) => {
     const { cantidad } = CONFIG[comando];
-    const digitosLabel = cantidad.includes(0) ? '' : `|${cantidad[0]}digitos`;
+    const digitosLabel = cantidad.includes(0) ? "" : `|${cantidad[0]}digitos`;
     return `<code>/${comando} monto|nombre${digitosLabel}</code>`;
-  }).join('\n');
+  }).join("\n");
 }
 
 function buildCommandsMessage(admin = false) {
@@ -41,6 +41,9 @@ Ver el historial de tus activaciones.
 •···························•····························•
 
 🧾 <b>PLAN VOUCHERS</b>
+<code>/ejemplos</code>
+Ver galería de ejemplos
+
 ${buildVoucherCommandsBlock()}
 Genera vouchers de pago.
 `;
@@ -78,7 +81,7 @@ function registerCmdsCommand(bot) {
     const admin = isOwner(msg.from.id);
 
     await bot.sendMessage(msg.chat.id, buildCommandsMessage(admin), {
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
       reply_markup: buildButtonsCredits(),
     });
   });
