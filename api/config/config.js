@@ -11,6 +11,7 @@ const { generateVoucher: generateBbva } = require("../services/bbva");
 const { generateVoucher: generateRipley } = require("../services/ripley");
 const { generateVoucher: generateFalabella } = require("../services/falabella");
 const { generateVoucher: generateScotiabank } = require("../services/scotiabank");
+const { generateVoucher: generatePanda } = require("../services/panda");
 const { generateVoucher: generateCaja } = require("../services/caja");
 
 // Lista de ejemplos compartida entre el mensaje de error y el de ayuda/galería.
@@ -75,6 +76,11 @@ const CONFIG = {
     service: generateLemon,
     destinoDefault: "Yape",
     cantidad: [3],
+  },
+  panda: {
+    service: generatePanda,
+    destinoDefault: "Yape",
+    cantidad: [0],
   },
   prexpe: {
     service: generatePrexpe,

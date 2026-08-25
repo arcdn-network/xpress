@@ -729,6 +729,7 @@
          { path: '/sip', label: 'Sip', default: 'Sip', cantidad: [3], capture: 'sip.jpg' },
          { path: '/agora', label: 'Agora', default: 'AGORA/OH!', cantidad: [3, 9], capture: 'agora.jpg' },
          { path: '/lemon', label: 'Lemon', default: 'Yape', cantidad: [3], capture: 'lemon.jpg' },
+         { path: '/panda', label: 'Panda', default: 'Yape', cantidad: [0], capture: 'panda.png' },
          { path: '/prexpe', label: 'Prexpe', default: 'Prexpe', cantidad: [0], capture: 'prexpe.jpg' },
          { path: '/bcp', label: 'BCP', default: 'Yape', cantidad: [3], capture: 'bcp.jpg' },
          { path: '/ibk', label: 'IBK', default: 'Plin', cantidad: [3, 9], capture: 'interbank.jpg', ratio: '680 / 860' },
@@ -744,8 +745,8 @@
 
       // Los 7 primeros son billeteras digitales, el resto son bancas.
       const PILL_GROUPS = [
-         { label: 'BILLETERAS', start: 0, end: 7 },
-         { label: 'BANCAS', start: 7, end: VOUCHERS.length },
+         { label: 'BILLETERAS', start: 0, end: 8 },
+         { label: 'BANCAS', start: 8, end: VOUCHERS.length },
       ];
 
       const PARAMS = [
