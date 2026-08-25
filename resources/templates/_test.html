@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <title>Tester /api/sky</title>
+   <style>
+      body {
+         font-family: system-ui, sans-serif;
+         max-width: 900px;
+         margin: 30px auto;
+         padding: 0 16px;
+         background: #f5f5f7;
+      }
+
+      h1 {
+         font-size: 20px;
+      }
+
+      label {
+         display: block;
+         margin-top: 12px;
+         font-weight: 600;
+         font-size: 14px;
+      }
+
+      input,
+      textarea {
+         width: 100%;
+         box-sizing: border-box;
+         padding: 8px;
+         font-family: monospace;
+         font-size: 13px;
+         border: 1px solid #ccc;
+         border-radius: 6px;
+      }
+
+      textarea {
+         height: 260px;
+      }
+
+      button {
+         margin-top: 14px;
+         padding: 10px 18px;
+         border: none;
+         border-radius: 6px;
+         background: #111;
+         color: #fff;
+         font-size: 14px;
+         cursor: pointer;
+      }
+
+      button:disabled {
+         background: #999;
+         cursor: default;
+      }
+
+      button.secondary {
+         background: #555;
+         margin-left: 8px;
+      }
+
+      #status {
+         margin-top: 12px;
+         font-size: 14px;
+         white-space: pre-wrap;
+      }
+
+      .ok {
+         color: #0a7a2f;
+      }
+
+      .err {
+         color: #b3261e;
+      }
+
+      .panel {
+         background: #fff;
+         padding: 20px;
+         border-radius: 10px;
+         box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+         margin-top: 16px;
+      }
+   </style>
+</head>
+
+<body>
+   <h1>Tester manual — /api/sky</h1>
+
+   <div class="panel">
+      <label for="url">URL del endpoint</label>
+      <input id="url" value="http://localhost:4000/api/sky">
+
+      <label for="xtoken">x-token (si aplica, opcional)</label>
+      <input id="xtoken" placeholder="Valor del header x-token" value="417301e09fe20cbc44a626ce262f40cd">
+
+      <label for="body">Body JSON</label>
+      <textarea id="body">{
+  "dni": "70800963",
+  "origen": "LIM",
+  "destino": "CUZ",
+  "fecha": "01-08-2026",
+  "hora": "17:35",
+  "importe": 43.5,
+  "dias": 0
+}</textarea>
+
+      <button id="sendBtn">Enviar</button>
+      <button id="downloadBtn" class="secondary" disabled>Descargar</button>
+
+      <div id="status"></div>
+   </div>
+
+   <script>
+      let lastBase64 = null;
+
+      const sendBtn = document.getElementById('sendBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const statusEl = document.getElementById('status');
+
+      function setStatus(msg, kind) {
+         statusEl.textContent = msg;
+         statusEl.className = kind || '';
+      }
+
+      sendBtn.addEventListener('click', async () => {
+         const url = document.getElementById('url').value.trim();
+         const xtoken = document.getElementById('xtoken').value.trim();
+         let bodyText = document.getElementById('body').value;
+
+         let parsedBody;
+         try {
+            parsedBody = JSON.parse(bodyText);
+         } catch (e) {
+            setStatus('JSON inválido: ' + e.message, 'err');
+            return;
+         }
+
+         sendBtn.disabled = true;
+         downloadBtn.disabled = true;
+         lastBase64 = null;
+         setStatus('Enviando...');
+
+         try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (xtoken) headers['x-token'] = xtoken;
+
+            const res = await fetch(url, {
+               method: 'POST',
+               headers,
+               body: JSON.stringify(parsedBody)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.status === false) {
+               setStatus('Error (' + res.status + '):\n' + JSON.stringify(data, null, 2), 'err');
+               return;
+            }
+
+            lastBase64 = data.base64;
+            downloadBtn.disabled = !lastBase64;
+            setStatus('OK. expires: ' + data.expires + '\nLargo base64: ' + (lastBase64 ? lastBase64.length : 0), 'ok');
+         } catch (e) {
+            setStatus('Error de red: ' + e.message, 'err');
+         } finally {
+            sendBtn.disabled = false;
+         }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+         if (!lastBase64) return;
+         const byteChars = atob(lastBase64);
+         const byteNumbers = new Array(byteChars.length);
+         for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+         const byteArray = new Uint8Array(byteNumbers);
+         const blob = new Blob([byteArray], {
+            type: 'application/pdf'
+         });
+         const link = document.createElement('a');
+         link.href = URL.createObjectURL(blob);
+         link.download = 'document-' + Date.now() + '.pdf';
+         document.body.appendChild(link);
+         link.click();
+         link.remove();
+      });
+   </script>
+</body>
+
+</html>

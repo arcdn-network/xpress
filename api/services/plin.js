@@ -31,9 +31,10 @@ function buildHtml({ monto, nombre, digitos, destino = "Plin" }) {
 
   let celularHtml = "";
   if (/^\d{3}$/.test(digitosLimpios)) {
-    celularHtml = `*** *** ${digitosLimpios} - `;
+    celularHtml = `••• ••• ${digitosLimpios} - `;
   } else if (/^\d{9}$/.test(digitosLimpios)) {
-    celularHtml = `${digitosLimpios} - `;
+    const formateado = digitosLimpios.match(/.{1,3}/g).join(" ");
+    celularHtml = `${formateado} - `;
   }
 
   return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)

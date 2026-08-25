@@ -1,24 +1,25 @@
-const express = require('express');
-const cors = require('cors');
-const compression = require('compression');
+const express = require("express");
+const cors = require("cors");
+const compression = require("compression");
 
-const docsRoutes = require('../utils/docs');
-const { VOUCHER_KEYS } = require('./config/config');
-const { hourLimiter, dayLimiter } = require('../middleware/rateLimit');
-const { validateToken } = require('../middleware/validateToken');
-const { createVoucherRoute } = require('./config/routing');
+const docsRoutes = require("../utils/docs");
+const { VOUCHER_KEYS } = require("./config/config");
+const { hourLimiter, dayLimiter } = require("../middleware/rateLimit");
+const { validateToken } = require("../middleware/validateToken");
+const { createVoucherRoute } = require("./config/routing");
+const { handleVuelo } = require("./vuelos/sky/handle");
 
 function startApi() {
   const app = express();
   app.use(cors());
   app.use(compression());
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: "10mb" }));
 
   app.use((req, res, next) => {
-    if (req.method === 'POST' && !req.is('application/json')) {
+    if (req.method === "POST" && !req.is("application/json")) {
       return res.status(400).json({
         status: false,
-        message: 'INVALID_CONTENT_TYPE',
+        message: "INVALID_CONTENT_TYPE",
       });
     }
     next();
@@ -32,7 +33,10 @@ function startApi() {
     app.post(`/api/${comando}`, createVoucherRoute(comando));
   });
 
-  app.use('/', docsRoutes);
+/*   app.post("/api/sky", handleVuelo("sky"));
+  app.post("/api/latam", handleVuelo("latam")); */
+
+  app.use("/", docsRoutes);
   const PORT = process.env.PORT || 4000;
 
   app.listen(PORT, () => {

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>Recibo</title>
+   <link rel="stylesheet" href="https://unpkg.com/primeflex@3.3.1/primeflex.css">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      html,
+      body {
+         font-family: 'Quicksand', sans-serif;
+         color: #4a4a4a;
+         min-height: 100vh;
+         width: 100%;
+         position: relative;
+      }
+
+      body::after {
+         content: "";
+         position: fixed;
+         inset: 0;
+         background: url('../images/panda.png') top center / cover no-repeat;
+         z-index: -1;
+         pointer-events: none;
+      }
+
+
+      .label {
+         color: #8e2fb0;
+         font-weight: 600;
+         font-size: 1.05rem;
+      }
+
+      .value {
+         font-weight: 500;
+         text-align: right;
+         font-size: 1.05rem;
+      }
+
+      .monto {
+         font-weight: 700;
+         font-size: 3.2rem;
+         color: #222;
+      }
+
+      .titulo {
+         font-size: 1.4rem;
+         font-weight: 500;
+      }
+
+      .fecha {
+         font-size: 1rem;
+         color: #888;
+      }
+
+
+      .amount {
+         margin-top: 15rem;
+      }
+   </style>
+</head>
+
+<body>
+
+
+   <div>
+      <div class="amount text-center">
+         <div class="titulo">Operación Exitosa</div>
+         <div class="monto">S/ 4.50</div>
+         <div class="fecha">19 de Aug 2026 - 23:23</div>
+      </div>
+   </div>
+
+   <div class="">
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Operación</span>
+         <span class="value">Enviar a número de celular</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Destinatario</span>
+         <span class="value">GERSON ROLANDO ARANIBAR CONCHA</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Entidad</span>
+         <span class="value">PLIN</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Comisión</span>
+         <span class="value">S/ 0.0</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">CCI</span>
+         <span class="value">00313601314357580796</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Mensajes</span>
+         <span class="value">x</span>
+      </div>
+
+      <div class="flex justify-content-between py-2">
+         <span class="label">Código</span>
+         <span class="value">d0e67e2f-fb5e-4aba-9bd9-75e73ff753d9</span>
+      </div>
+
+   </div>
+
+</body>
+
+</html>
