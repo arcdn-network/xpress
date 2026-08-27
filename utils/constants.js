@@ -3,7 +3,7 @@ const LOCAL = {
   WELCOME_IMAGE: 'welcome.png',
   CREDITS_IMAGE: 'credits.png',
   RECHARGE_IMAGE: 'recharge.png',
-  VOUCHER_IMAGE: 'voucher.png',
+  VOUCHER_IMAGE: 'prices.png',
   BROADCAST_IMAGE: 'flayer.png',
   APK_FILE: 'resources/files/Yape_Fake.apk',
 };
