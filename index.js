@@ -3,6 +3,7 @@ require("dotenv").config({ quiet: true });
 const { APP_NAME } = require("./utils/constants");
 
 const TelegramBot = require("node-telegram-bot-api");
+const { installBotResilience, errorSummary } = require("./utils/bot-resilience");
 
 const registerMeCommand = require("./commands/me");
 const registerStartCommand = require("./commands/start");
@@ -29,35 +30,40 @@ async function startBot() {
     throw new Error("Falta BOT_TOKEN en el archivo .env");
   }
 
-  const bot = new TelegramBot(token, { polling: true });
+  const bot = new TelegramBot(token, {
+    polling: { autoStart: false, interval: 1000, params: { timeout: 20 } },
+    request: { timeout: 35000 },
+  });
+  installBotResilience(bot);
 
-  await bot.setMyCommands([
-    { command: "me", description: "Ver tu perfil" },
-    { command: "cmds", description: "Ver comandos disponibles" },
-    { command: "buy", description: "Ver precios y compras" },
-    { command: "activate", description: "Activar licencias" },
-    { command: "historial", description: "Ver historial de activaciones" },
-    { command: "tutorial", description: "Ver tutorial de activaciones" },
-    { command: "token", description: "Generar token autocompletado" },
-    { command: "apk", description: "Obtener APK" },
-    { command: "web", description: "Obtener Link" },
-    { command: "ejemplos", description: "Ver galería de ejemplos" },
-    { command: "yape", description: "Generar Voucher Yape" },
-    { command: "plin", description: "Generar Voucher Plin" },
-    { command: "bim", description: "Generar Voucher Bim" },
-    { command: "sip", description: "Generar Voucher Sip" },
-    { command: "agora", description: "Generar Voucher Agora" },
-    { command: "lemon", description: "Generar Voucher Lemon" },
-    { command: "panda", description: "Generar Voucher Panda" },
-    { command: "prexpe", description: "Generar Voucher Prexpe" },
-    { command: "bcp", description: "Generar Voucher BCP" },
-    { command: "ibk", description: "Generar Voucher Interbank" },
-    { command: "bbva", description: "Generar Voucher BBVA" },
-    { command: "caja", description: "Generar Voucher Caja Arequipa" },
-    { command: "ripley", description: "Generar Voucher Ripley" },
-    { command: "falabella", description: "Generar Voucher Falabella" },
-    { command: "scotiabank", description: "Generar Voucher Scotiabank" },
-  ]);
+  const configureMenu = () =>
+    bot.setMyCommands([
+      { command: "me", description: "Ver tu perfil" },
+      { command: "cmds", description: "Ver comandos disponibles" },
+      { command: "buy", description: "Ver precios y compras" },
+      { command: "activate", description: "Activar licencias" },
+      { command: "historial", description: "Ver historial de activaciones" },
+      { command: "tutorial", description: "Ver tutorial de activaciones" },
+      { command: "token", description: "Generar token autocompletado" },
+      { command: "apk", description: "Obtener APK" },
+      { command: "web", description: "Obtener Link" },
+      { command: "ejemplos", description: "Ver galería de ejemplos" },
+      { command: "yape", description: "Generar Voucher Yape" },
+      { command: "plin", description: "Generar Voucher Plin" },
+      { command: "bim", description: "Generar Voucher Bim" },
+      { command: "sip", description: "Generar Voucher Sip" },
+      { command: "agora", description: "Generar Voucher Agora" },
+      { command: "lemon", description: "Generar Voucher Lemon" },
+      { command: "panda", description: "Generar Voucher Panda" },
+      { command: "prexpe", description: "Generar Voucher Prexpe" },
+      { command: "bcp", description: "Generar Voucher BCP" },
+      { command: "ibk", description: "Generar Voucher Interbank" },
+      { command: "bbva", description: "Generar Voucher BBVA" },
+      { command: "caja", description: "Generar Voucher Caja Arequipa" },
+      { command: "ripley", description: "Generar Voucher Ripley" },
+      { command: "falabella", description: "Generar Voucher Falabella" },
+      { command: "scotiabank", description: "Generar Voucher Scotiabank" },
+    ]);
 
   registerMeCommand(bot);
   registerStartCommand(bot);
@@ -76,9 +82,10 @@ async function startBot() {
   registerApiTokenCommand(bot);
   registerDiasCommand(bot);
 
-  bot.on("polling_error", (error) => {
-    console.error("Polling error:", error.code, error.message);
+  configureMenu().catch((error) => {
+    console.error("Error configurando menú:", errorSummary(error));
   });
+  await bot.startPolling();
 
   console.log(`🚀 Iniciando ${APP_NAME} en modo ${isDevelop ? "DESARROLLO" : "PRODUCCIÓN"}`);
 }
@@ -90,5 +97,6 @@ async function startApp() {
 }
 
 startApp().catch((error) => {
-  console.error("Error al iniciar la app:", error.message);
+  console.error("Error al iniciar la app:", errorSummary(error));
+  process.exit(1);
 });

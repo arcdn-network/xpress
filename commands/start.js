@@ -1,8 +1,8 @@
-const { sendMessage } = require('../utils/sender');
-const { formatDate } = require('../utils/functions');
-const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
-const { getFiles, saveFileTelegram } = require('../utils/files');
-const { getUser, createUser } = require('../utils/api');
+const { sendMessage } = require("../utils/sender");
+const { formatDate } = require("../utils/functions");
+const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME, LOCAL } = require("../utils/constants");
+const { getFiles, saveFileTelegram } = require("../utils/files");
+const { getUser, createUser, updateUser } = require("../utils/api");
 
 function buildStartMessage(firstName) {
   return `
@@ -51,45 +51,47 @@ async function sendWelcomeMessage(bot, chatId, text, replyMarkup) {
     replyMarkup,
   });
 
-  saveFileTelegram(telegramResponse, 'WELCOME_IMAGE');
+  saveFileTelegram(telegramResponse, "WELCOME_IMAGE");
 
   return telegramResponse;
 }
 
 function registerStartCommand(bot) {
+  const pendingRegistrations = new Set();
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const firstName = msg.from?.first_name || 'usuario';
+    const firstName = msg.from?.first_name || "usuario";
 
     try {
       const response = buildStartMessage(firstName);
       await sendWelcomeMessage(bot, chatId, response, buildButtonsCreditsWithApk());
     } catch (error) {
-      console.error('Error en /start:', error.message);
-      await bot.sendMessage(chatId, 'Error al mostrar el mensaje de bienvenida');
+      console.error("Error en /start:", error.message);
+      await bot.sendMessage(chatId, "Error al mostrar el mensaje de bienvenida");
     }
   });
 
   bot.onText(/\/register/, async (msg) => {
     const chatId = msg.chat.id;
-    const firstName = msg.from?.first_name || 'usuario';
+    const firstName = msg.from?.first_name || "usuario";
+    const telegramId = msg.from.id;
+    if (pendingRegistrations.has(telegramId)) return;
+    pendingRegistrations.add(telegramId);
 
     try {
-      const telegramId = msg.from.id;
-      const username = msg.from.username || '';
+      const username = msg.from.username || "";
 
       let user = await getUser(telegramId);
 
       if (user) {
         if (user.username !== username) {
-          user.username = username;
-          await user.save();
+          await updateUser(telegramId, { username });
         }
 
         const response = buildAlreadyRegisteredMessage(firstName);
 
         await bot.sendMessage(chatId, response, {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
 
         return;
@@ -100,8 +102,8 @@ function registerStartCommand(bot) {
         username,
         registeredAt: new Date(),
         credits: 0,
-        status: 'activo',
-        role: 'user',
+        status: "activo",
+        role: "user",
       };
 
       user = await createUser(body);
@@ -109,8 +111,10 @@ function registerStartCommand(bot) {
       const response = buildRegisterSuccessMessage(firstName, user);
       await sendWelcomeMessage(bot, chatId, response, buildButtonsCredits());
     } catch (error) {
-      console.error('Error en /register:', error.message);
-      await bot.sendMessage(chatId, 'Error al procesar tu registro');
+      console.error("Error en /register:", error.message);
+      await bot.sendMessage(chatId, error.code === "BACKEND_UNAVAILABLE" ? error.message : "Error al procesar tu registro");
+    } finally {
+      pendingRegistrations.delete(telegramId);
     }
   });
 }
