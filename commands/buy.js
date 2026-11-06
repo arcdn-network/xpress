@@ -1,14 +1,14 @@
-const { sendMessage } = require('../utils/sender');
-const { buildButtonsCredits, LOCAL } = require('../utils/constants');
-const { getFiles, saveFileTelegram } = require('../utils/files');
+const { sendMessage } = require("../utils/sender");
+const { buildButtonsCredits, LOCAL, BASE_ACTIVATION_COST, EXTRA_BANK_COST } = require("../utils/constants");
+const { getFiles, saveFileTelegram } = require("../utils/files");
 
 function buildBuyMessage() {
   return `
 💳 <b>TARIFARIO DE CRÉDITOS</b>
 
 🎯 <b>Consumo de créditos</b>
-- Yape Fake ➤ 20 créditos
-- Banca Fake ➤ 5 créditos
+- Yape Fake ➤ ${BASE_ACTIVATION_COST} créditos
+- Banca Fake ➤ ${EXTRA_BANK_COST} créditos
 
 📈 Ganancia reseller: hasta 60%. Precios libres.
 
@@ -25,8 +25,8 @@ function registerBuyCommand(bot) {
 
       await sendBuyMessage(bot, chatId, response);
     } catch (error) {
-      console.error('Error en /buy:', error.message);
-      await bot.sendMessage(chatId, 'Error al mostrar la información de compra');
+      console.error("Error en /buy:", error.message);
+      await bot.sendMessage(chatId, "Error al mostrar la información de compra");
     }
   });
 }
@@ -48,7 +48,7 @@ async function sendBuyMessage(bot, chatId, text) {
     replyMarkup: buildButtonsCredits(),
   });
 
-  saveFileTelegram(telegramResponse, 'CREDITS_IMAGE');
+  saveFileTelegram(telegramResponse, "CREDITS_IMAGE");
 
   return telegramResponse;
 }

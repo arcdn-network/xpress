@@ -1,15 +1,24 @@
 const LOCAL = {
-  TARGET_IMAGE: 'target.png',
-  WELCOME_IMAGE: 'welcome.png',
-  CREDITS_IMAGE: 'credits.png',
-  RECHARGE_IMAGE: 'recharge.png',
-  VOUCHER_IMAGE: 'prices.png',
-  BROADCAST_IMAGE: 'flayer.png',
-  APK_FILE: 'resources/files/Yape_Fake.apk',
+  TARGET_IMAGE: "target.png",
+  WELCOME_IMAGE: "welcome.png",
+  CREDITS_IMAGE: "credits.png",
+  RECHARGE_IMAGE: "recharge.png",
+  VOUCHER_IMAGE: "prices.png",
+  BROADCAST_IMAGE: "flayer.png",
+  APK_FILE: "resources/files/Yape_Fake.apk",
 };
 
-const APP_NAME = 'YapeXpress';
-const APP_USERNAME = 'dev_lguss';
+const APP_NAME = "YapeXpress";
+const APP_USERNAME = "dev_lguss";
+const BASE_ACTIVATION_COST = 25;
+const EXTRA_BANK_COST = 7;
+const MIN_INFO_CREDITS = EXTRA_BANK_COST;
+
+const TOKEN_COST = {
+  7: 3,
+  15: 7,
+  30: 10,
+};
 
 // USE_DAILY_LIMIT
 // true -> 3 gratis cada 24 horas
@@ -24,7 +33,7 @@ function buildTelegramLink(username, mensaje) {
 
 const RESELLERS = [
   {
-    text: '💰 Comprar créditos',
+    text: "💰 Comprar créditos",
     url: buildTelegramLink(APP_USERNAME, `Hola, quiero comprar créditos de ${APP_NAME}`),
     visible: true,
   },
@@ -32,14 +41,14 @@ const RESELLERS = [
 
 const VOUCHER_PLAN_CONTACT = [
   {
-    text: '⭐ Adquirir plan de vouchers',
+    text: "⭐ Adquirir plan de vouchers",
     url: buildTelegramLink(APP_USERNAME, `Hola, quiero adquirir el plan de vouchers de ${APP_NAME}`),
     visible: true,
   },
 ];
 
 const TARIFARIO = [
-  { credits: 40, price: 40, active: true },
+  { credits: 50, price: 50, active: true },
   { credits: 100, price: 95, active: true },
   { credits: 200, price: 180, active: true },
   { credits: 500, price: 400, active: true, label: null },
@@ -78,12 +87,12 @@ function buildButtonsCreditsWithApk() {
   const buttons = [
     [
       {
-        text: '🌐 WEB (Android/IPhone)',
-        switch_inline_query_current_chat: '/web',
+        text: "🌐 WEB (Android/IPhone)",
+        switch_inline_query_current_chat: "/web",
       },
       {
-        text: '⬇️ APK (Android)',
-        switch_inline_query_current_chat: '/apk',
+        text: "⬇️ APK (Android)",
+        switch_inline_query_current_chat: "/apk",
       },
     ],
     ...resellers,
@@ -98,13 +107,17 @@ function buildPaquetesMessage() {
   return TARIFARIO.filter((item) => item.active)
     .sort((a, b) => a.credits - b.credits)
     .map((item) => {
-      const label = item.label ? ` ${item.label}` : '';
+      const label = item.label ? ` ${item.label}` : "";
       return `• ${item.credits} créditos ➤ <b>S/ ${item.price}</b>${label}`;
     })
-    .join('\n');
+    .join("\n");
 }
 
 module.exports = {
+  BASE_ACTIVATION_COST,
+  EXTRA_BANK_COST,
+  TOKEN_COST,
+  MIN_INFO_CREDITS,
   LOCAL,
   APP_NAME,
   APP_USERNAME,

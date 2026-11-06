@@ -1,15 +1,13 @@
-const { getUser, updateUser, getYapeClient, updateYapeClient, createActivacionLog } = require('../utils/api');
-const { sendMessage } = require('../utils/sender');
-const { buildButtonsCredits, APP_NAME, LOCAL } = require('../utils/constants');
-const { getFiles, saveFileTelegram } = require('../utils/files');
-const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require('../utils/data');
+const { buildButtonsCredits, APP_NAME, LOCAL, BASE_ACTIVATION_COST, EXTRA_BANK_COST } = require("../utils/constants");
+const { getUser, updateUser, getYapeClient, updateYapeClient, createActivacionLog } = require("../utils/api");
+const { sendMessage } = require("../utils/sender");
+const { getFiles, saveFileTelegram } = require("../utils/files");
+const { getUnlimitedStatus } = require("../utils/unlimited");
+const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require("../utils/data");
 
-const BASE_ACTIVATION_COST = 20;
-const EXTRA_BANK_COST = 5;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ACTIVATION_TTL_MS = 2 * 60 * 1000;
-const DEFAULT_RESELLER_ID = '698bcab283fedfc8230cbc65';
+const DEFAULT_RESELLER_ID = "698bcab283fedfc8230cbc65";
 
 const pendingActivations = new Map();
 const processingActivations = new Set();
@@ -39,7 +37,7 @@ async function sendRechargeMessage(bot, chatId, text) {
     replyMarkup: buildButtonsCredits(),
   });
 
-  saveFileTelegram(telegramResponse, 'RECHARGE_IMAGE');
+  saveFileTelegram(telegramResponse, "RECHARGE_IMAGE");
 
   return telegramResponse;
 }
@@ -61,13 +59,13 @@ async function sendTargetMessage(bot, chatId, text, replyMarkup) {
     replyMarkup,
   });
 
-  saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
+  saveFileTelegram(telegramResponse, "TARGET_IMAGE");
 
   return telegramResponse;
 }
 
 function getUserDisplayName(user) {
-  return user?.username ? `@${user.username}` : `ID ${user?.telegramId || ''}`.trim();
+  return user?.username ? `@${user.username}` : `ID ${user?.telegramId || ""}`.trim();
 }
 
 function resolveSupplierId(unlimitedStatus, telegramId) {
@@ -87,20 +85,20 @@ function resolveSupplierId(unlimitedStatus, telegramId) {
 function getPendingLicenses(client, requestedLicenses) {
   const pendingLicenses = [];
 
-  if (requestedLicenses.includes('YAPE') && client.payment !== true) {
-    pendingLicenses.push('YAPE');
+  if (requestedLicenses.includes("YAPE") && client.payment !== true) {
+    pendingLicenses.push("YAPE");
   }
 
-  if (requestedLicenses.includes('BCP') && client.bcp !== true) {
-    pendingLicenses.push('BCP');
+  if (requestedLicenses.includes("BCP") && client.bcp !== true) {
+    pendingLicenses.push("BCP");
   }
 
-  if (requestedLicenses.includes('BBVA') && client.bbva !== true) {
-    pendingLicenses.push('BBVA');
+  if (requestedLicenses.includes("BBVA") && client.bbva !== true) {
+    pendingLicenses.push("BBVA");
   }
 
-  if (requestedLicenses.includes('IBK') && client.ibk !== true) {
-    pendingLicenses.push('IBK');
+  if (requestedLicenses.includes("IBK") && client.ibk !== true) {
+    pendingLicenses.push("IBK");
   }
 
   return pendingLicenses;
@@ -113,11 +111,11 @@ function getActivationCost(licenses) {
 
   let cost = 0;
 
-  if (licenses.includes('YAPE')) {
+  if (licenses.includes("YAPE")) {
     cost += BASE_ACTIVATION_COST;
   }
 
-  const banksCount = licenses.filter((item) => item !== 'YAPE').length;
+  const banksCount = licenses.filter((item) => item !== "YAPE").length;
   cost += banksCount * EXTRA_BANK_COST;
 
   return cost;
@@ -126,19 +124,19 @@ function getActivationCost(licenses) {
 function buildClientUpdateData(pendingLicenses, currentClient, resellerId, supplierId) {
   const updateData = {};
 
-  if (pendingLicenses.includes('YAPE')) {
+  if (pendingLicenses.includes("YAPE")) {
     updateData.payment = true;
   }
 
-  if (pendingLicenses.includes('BCP')) {
+  if (pendingLicenses.includes("BCP")) {
     updateData.bcp = true;
   }
 
-  if (pendingLicenses.includes('BBVA')) {
+  if (pendingLicenses.includes("BBVA")) {
     updateData.bbva = true;
   }
 
-  if (pendingLicenses.includes('IBK')) {
+  if (pendingLicenses.includes("IBK")) {
     updateData.ibk = true;
   }
 
@@ -166,19 +164,19 @@ function updateUserActivationStats(user, activatedLicenses) {
     };
   }
 
-  if (activatedLicenses.includes('YAPE')) {
+  if (activatedLicenses.includes("YAPE")) {
     user.activationStats.yape += 1;
   }
 
-  if (activatedLicenses.includes('BCP')) {
+  if (activatedLicenses.includes("BCP")) {
     user.activationStats.bcp += 1;
   }
 
-  if (activatedLicenses.includes('IBK')) {
+  if (activatedLicenses.includes("IBK")) {
     user.activationStats.ibk += 1;
   }
 
-  if (activatedLicenses.includes('BBVA')) {
+  if (activatedLicenses.includes("BBVA")) {
     user.activationStats.bbva += 1;
   }
 
@@ -200,27 +198,27 @@ function getAvailableBanks(client) {
   const banks = [];
 
   if (client.bcp !== true) {
-    banks.push('BCP');
+    banks.push("BCP");
   }
 
   if (client.ibk !== true) {
-    banks.push('IBK');
+    banks.push("IBK");
   }
 
   if (client.bbva !== true) {
-    banks.push('BBVA');
+    banks.push("BBVA");
   }
 
   return banks;
 }
 
 function getRequestedLicensesFromSelection(selectedBanks = []) {
-  const requestedLicenses = ['YAPE'];
+  const requestedLicenses = ["YAPE"];
   const uniqueBanks = [];
   const seen = new Set();
 
   for (const bank of selectedBanks) {
-    if (['BCP', 'IBK', 'BBVA'].includes(bank) && !seen.has(bank)) {
+    if (["BCP", "IBK", "BBVA"].includes(bank) && !seen.has(bank)) {
       seen.add(bank);
       uniqueBanks.push(bank);
     }
@@ -234,19 +232,19 @@ function getRequestedLicensesFromSelection(selectedBanks = []) {
 function licensesToRawValue(email, requestedLicenses) {
   const extras = [];
 
-  if (requestedLicenses.includes('BCP')) {
-    extras.push('bcp');
+  if (requestedLicenses.includes("BCP")) {
+    extras.push("bcp");
   }
 
-  if (requestedLicenses.includes('IBK')) {
-    extras.push('ibk');
+  if (requestedLicenses.includes("IBK")) {
+    extras.push("ibk");
   }
 
-  if (requestedLicenses.includes('BBVA')) {
-    extras.push('bbva');
+  if (requestedLicenses.includes("BBVA")) {
+    extras.push("bbva");
   }
 
-  return extras.length ? `${email}|${extras.join(',')}` : email;
+  return extras.length ? `${email}|${extras.join(",")}` : email;
 }
 
 function getMinimumActivationCost(client) {
@@ -262,9 +260,7 @@ function getMinimumActivationCost(client) {
 }
 
 function buildActivationSuccessMessage(client, user, activatedLicenses, cost, resellerName, unlimitedStatus) {
-  const detalle = unlimitedStatus?.isUnlimited
-    ? `• Costo ➣ 0 créditos`
-    : `• Costo ➣ ${cost} créditos\n• Créditos restantes ➣ ${user.credits}`;
+  const detalle = unlimitedStatus?.isUnlimited ? `• Costo ➣ 0 créditos` : `• Costo ➣ ${cost} créditos\n• Créditos restantes ➣ ${user.credits}`;
 
   return `<b>[#${APP_NAME}]</b> ➣ ACTIVACIÓN COMPLETADA
 
@@ -273,7 +269,7 @@ function buildActivationSuccessMessage(client, user, activatedLicenses, cost, re
 - Solicitado por ➣ ${resellerName}
 
 <b>[🔐] LICENCIAS ACTIVADAS</b>
-- Licencias ➣ ${activatedLicenses.join(', ')}
+- Licencias ➣ ${activatedLicenses.join(", ")}
 
 <b>[💳] DETALLE</b>
 ${detalle}
@@ -290,7 +286,7 @@ function buildAlreadyActivatedMessage(client, resellerName, requestedLicenses) {
 - Solicitado por ➣ ${resellerName}
 
 <b>[🔐] LICENCIAS SOLICITADAS</b>
-- Licencias ➣ ${requestedLicenses.join(', ')}
+- Licencias ➣ ${requestedLicenses.join(", ")}
 
 <b>[📌] INFORMACIÓN</b>
 - Todas las licencias solicitadas ya se encontraban activas.
@@ -333,10 +329,10 @@ function buildConfirmActivationMessage(client, pendingLicenses, cost, unlimitedS
 - Correo ➣ <code>${client.email}</code>
 
 <b>[🔐] LICENCIAS</b>
-- Productos ➣ ${pendingLicenses.join(' + ')}
+- Productos ➣ ${pendingLicenses.join(" + ")}
 
 <b>[💰] COSTO</b>
-- Créditos ➣ ${unlimitedStatus?.isUnlimited ? '0 créditos' : cost}`;
+- Créditos ➣ ${unlimitedStatus?.isUnlimited ? "0 créditos" : cost}`;
 }
 
 function buildCanceledActivationMessage() {
@@ -360,16 +356,16 @@ function buildActivationSelectorMessage(client, user, selectedBanks = []) {
 - Correo ➣ <code>${client.email}</code>
 
 <b>[🙎‍♂️] TU ESTADO</b>
-- Saldo ➣ ${unlimitedStatus.isUnlimited ? '♾️ ILIMITADO' : `${user.credits} créditos`}
+- Saldo ➣ ${unlimitedStatus.isUnlimited ? "♾️ ILIMITADO" : `${user.credits} créditos`}
 
 <b>[🔐] LICENCIAS DISPONIBLES</b>
-${status.YAPE ? '🔒 <b>YAPE</b> ya activo' : '✅ <b>YAPE</b>'}
-${status.BCP ? '🔒 <b>BCP</b> ya activo' : `${selectedBanks.includes('BCP') ? '✅' : '⬜'} <b>BCP</b>`}
-${status.IBK ? '🔒 <b>INTERBANK</b> ya activo' : `${selectedBanks.includes('IBK') ? '✅' : '⬜'} <b>INTERBANK</b>`}
-${status.BBVA ? '🔒 <b>BBVA</b> ya activo' : `${selectedBanks.includes('BBVA') ? '✅' : '⬜'} <b>BBVA</b>`}
+${status.YAPE ? "🔒 <b>YAPE</b> ya activo" : "✅ <b>YAPE</b>"}
+${status.BCP ? "🔒 <b>BCP</b> ya activo" : `${selectedBanks.includes("BCP") ? "✅" : "⬜"} <b>BCP</b>`}
+${status.IBK ? "🔒 <b>INTERBANK</b> ya activo" : `${selectedBanks.includes("IBK") ? "✅" : "⬜"} <b>INTERBANK</b>`}
+${status.BBVA ? "🔒 <b>BBVA</b> ya activo" : `${selectedBanks.includes("BBVA") ? "✅" : "⬜"} <b>BBVA</b>`}
 
-<b>[${insufficientCredits ? '⚠️' : '💰'}] COSTO</b>
-- Total ➣ ${unlimitedStatus.isUnlimited ? '0 créditos' : insufficientCredits ? 'No tienes créditos suficientes.' : `${cost} créditos`}`;
+<b>[${insufficientCredits ? "⚠️" : "💰"}] COSTO</b>
+- Total ➣ ${unlimitedStatus.isUnlimited ? "0 créditos" : insufficientCredits ? "No tienes créditos suficientes." : `${cost} créditos`}`;
 }
 
 function buildActivationSelectorKeyboard(telegramId, client, user, selectedBanks = []) {
@@ -377,21 +373,21 @@ function buildActivationSelectorKeyboard(telegramId, client, user, selectedBanks
 
   if (client.bcp !== true) {
     banksRow.push({
-      text: `${selectedBanks.includes('BCP') ? '✅' : '⬜'} BCP`,
+      text: `${selectedBanks.includes("BCP") ? "✅" : "⬜"} BCP`,
       callback_data: `activate_flow:${telegramId}:toggle:BCP`,
     });
   }
 
   if (client.ibk !== true) {
     banksRow.push({
-      text: `${selectedBanks.includes('IBK') ? '✅' : '⬜'} IBK`,
+      text: `${selectedBanks.includes("IBK") ? "✅" : "⬜"} IBK`,
       callback_data: `activate_flow:${telegramId}:toggle:IBK`,
     });
   }
 
   if (client.bbva !== true) {
     banksRow.push({
-      text: `${selectedBanks.includes('BBVA') ? '✅' : '⬜'} BBVA`,
+      text: `${selectedBanks.includes("BBVA") ? "✅" : "⬜"} BBVA`,
       callback_data: `activate_flow:${telegramId}:toggle:BBVA`,
     });
   }
@@ -402,8 +398,8 @@ function buildActivationSelectorKeyboard(telegramId, client, user, selectedBanks
     keyboard.push(banksRow);
   }
 
-  keyboard.push([{ text: '➡️ CONTINUAR', callback_data: `activate_flow:${telegramId}:continue` }]);
-  keyboard.push([{ text: '❌ CANCELAR', callback_data: `activate_flow:${telegramId}:cancel` }]);
+  keyboard.push([{ text: "➡️ CONTINUAR", callback_data: `activate_flow:${telegramId}:continue` }]);
+  keyboard.push([{ text: "❌ CANCELAR", callback_data: `activate_flow:${telegramId}:cancel` }]);
 
   return {
     inline_keyboard: keyboard,
@@ -414,10 +410,10 @@ function buildActivationConfirmKeyboard(confirmId) {
   return {
     inline_keyboard: [
       [
-        { text: '✅ CONFIRMAR', callback_data: `activate_confirm_${confirmId}` },
-        { text: '❌ CANCELAR', callback_data: `activate_cancel_${confirmId}` },
+        { text: "✅ CONFIRMAR", callback_data: `activate_confirm_${confirmId}` },
+        { text: "❌ CANCELAR", callback_data: `activate_cancel_${confirmId}` },
       ],
-      [{ text: '⬅️ REGRESAR', callback_data: `activate_back_${confirmId}` }],
+      [{ text: "⬅️ REGRESAR", callback_data: `activate_back_${confirmId}` }],
     ],
   };
 }
@@ -439,7 +435,7 @@ async function safeEditCaption(bot, chatId, messageId, caption, replyMarkup) {
     .editMessageCaption(caption, {
       chat_id: chatId,
       message_id: messageId,
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
       reply_markup: replyMarkup,
     })
     .catch(() => {});
@@ -523,7 +519,7 @@ async function openActivationSelector(bot, flow) {
   pendingActivationFlows.set(flow.telegramId, {
     ...flow,
     user: freshUser,
-    step: 'select',
+    step: "select",
   });
 }
 
@@ -541,7 +537,7 @@ async function openActivationConfirmation(
   const user = await getUser(telegramId);
 
   if (!user) {
-    await bot.sendMessage(chatId, 'No estás registrado. Usa /register');
+    await bot.sendMessage(chatId, "No estás registrado. Usa /register");
     return;
   }
 
@@ -549,12 +545,12 @@ async function openActivationConfirmation(
   const freshClient = await getYapeClient(client.email, resolvedSupplierId);
 
   if (!freshClient) {
-    await bot.sendMessage(chatId, 'El correo ingresado no existe');
+    await bot.sendMessage(chatId, "El correo ingresado no existe");
     return;
   }
 
   if (freshClient.banned) {
-    await bot.sendMessage(chatId, 'No es posible activar esta cuenta porque el cliente se encuentra baneado');
+    await bot.sendMessage(chatId, "No es posible activar esta cuenta porque el cliente se encuentra baneado");
     return;
   }
 
@@ -565,7 +561,7 @@ async function openActivationConfirmation(
   if (pendingLicenses.length === 0) {
     await safeDeleteMessage(bot, chatId, messageId);
     await bot.sendMessage(chatId, buildAlreadyActivatedMessage(freshClient, resellerName, requestedLicenses), {
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
     });
     return;
   }
@@ -609,38 +605,38 @@ function registerActivateCallback(bot) {
 
   bot._activateCallbackRegistered = true;
 
-  bot.on('callback_query', async (query) => {
-    const data = query.data || '';
+  bot.on("callback_query", async (query) => {
+    const data = query.data || "";
     const chatId = query.message?.chat?.id;
     const messageId = query.message?.message_id;
 
     if (
-      !data.startsWith('activate_confirm_') &&
-      !data.startsWith('activate_cancel_') &&
-      !data.startsWith('activate_back_') &&
-      !data.startsWith('activate_flow:')
+      !data.startsWith("activate_confirm_") &&
+      !data.startsWith("activate_cancel_") &&
+      !data.startsWith("activate_back_") &&
+      !data.startsWith("activate_flow:")
     ) {
       return;
     }
 
-    let confirmId = '';
+    let confirmId = "";
 
     try {
-      if (data.startsWith('activate_cancel_')) {
-        confirmId = data.replace('activate_cancel_', '');
+      if (data.startsWith("activate_cancel_")) {
+        confirmId = data.replace("activate_cancel_", "");
 
         const payload = pendingActivations.get(confirmId);
 
         if (!payload) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
           });
           return;
         }
 
         if (query.from.id !== payload.telegramId) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'No puedes cancelar esta activación',
+            text: "No puedes cancelar esta activación",
           });
           return;
         }
@@ -648,32 +644,32 @@ function registerActivateCallback(bot) {
         clearActivationState(confirmId);
 
         await bot.answerCallbackQuery(query.id, {
-          text: 'Activación cancelada',
+          text: "Activación cancelada",
         });
 
         await safeDeleteMessage(bot, chatId, messageId);
         await bot.sendMessage(chatId, buildCanceledActivationMessage(), {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
 
         return;
       }
 
-      if (data.startsWith('activate_back_')) {
-        confirmId = data.replace('activate_back_', '');
+      if (data.startsWith("activate_back_")) {
+        confirmId = data.replace("activate_back_", "");
 
         const payload = pendingActivations.get(confirmId);
 
         if (!payload) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
           });
           return;
         }
 
         if (query.from.id !== payload.telegramId) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'No puedes regresar en esta activación',
+            text: "No puedes regresar en esta activación",
           });
           return;
         }
@@ -684,12 +680,12 @@ function registerActivateCallback(bot) {
         clearActivationState(confirmId);
 
         await bot.answerCallbackQuery(query.id, {
-          text: 'Regresando...',
+          text: "Regresando...",
         });
 
         if (!user || !client) {
           await safeDeleteMessage(bot, chatId, messageId);
-          await bot.sendMessage(chatId, 'No fue posible regresar al menú de activación.');
+          await bot.sendMessage(chatId, "No fue posible regresar al menú de activación.");
           return;
         }
 
@@ -710,35 +706,35 @@ function registerActivateCallback(bot) {
           client,
           user,
           supplierId: payload.supplierId,
-          step: 'select',
+          step: "select",
           selectedBanks,
         });
 
         return;
       }
 
-      if (data.startsWith('activate_confirm_')) {
-        confirmId = data.replace('activate_confirm_', '');
+      if (data.startsWith("activate_confirm_")) {
+        confirmId = data.replace("activate_confirm_", "");
 
         const payload = pendingActivations.get(confirmId);
 
         if (!payload) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
           });
           return;
         }
 
         if (query.from.id !== payload.telegramId) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'No puedes confirmar esta activación',
+            text: "No puedes confirmar esta activación",
           });
           return;
         }
 
         if (processingActivations.has(confirmId)) {
           await bot.answerCallbackQuery(query.id, {
-            text: '⏳ Ya se está procesando...',
+            text: "⏳ Ya se está procesando...",
           });
           return;
         }
@@ -751,9 +747,9 @@ function registerActivateCallback(bot) {
 
         if (!user) {
           clearActivationState(confirmId);
-          await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+          await bot.answerCallbackQuery(query.id, { text: "Usuario no encontrado" });
           await safeDeleteMessage(bot, chatId, messageId);
-          await bot.sendMessage(chatId, '❌ No fue posible completar la activación.');
+          await bot.sendMessage(chatId, "❌ No fue posible completar la activación.");
           return;
         }
 
@@ -761,17 +757,17 @@ function registerActivateCallback(bot) {
 
         if (!client || String(client._id) !== String(clientId)) {
           clearActivationState(confirmId);
-          await bot.answerCallbackQuery(query.id, { text: 'Cliente no disponible' });
+          await bot.answerCallbackQuery(query.id, { text: "Cliente no disponible" });
           await safeDeleteMessage(bot, chatId, messageId);
-          await bot.sendMessage(chatId, '❌ El cliente ya no se encuentra disponible.');
+          await bot.sendMessage(chatId, "❌ El cliente ya no se encuentra disponible.");
           return;
         }
 
         if (client.banned) {
           clearActivationState(confirmId);
-          await bot.answerCallbackQuery(query.id, { text: 'Cliente baneado' });
+          await bot.answerCallbackQuery(query.id, { text: "Cliente baneado" });
           await safeDeleteMessage(bot, chatId, messageId);
-          await bot.sendMessage(chatId, '❌ No es posible activar esta cuenta porque el cliente se encuentra baneado.');
+          await bot.sendMessage(chatId, "❌ No es posible activar esta cuenta porque el cliente se encuentra baneado.");
           return;
         }
 
@@ -780,13 +776,9 @@ function registerActivateCallback(bot) {
 
         if (pendingLicenses.length === 0) {
           clearActivationState(confirmId);
-          await bot.answerCallbackQuery(query.id, { text: 'Ya estaba activado' });
+          await bot.answerCallbackQuery(query.id, { text: "Ya estaba activado" });
           await safeDeleteMessage(bot, chatId, messageId);
-          await bot.sendMessage(
-            chatId,
-            buildAlreadyActivatedMessage(client, getUserDisplayName(user), requestedLicenses),
-            { parse_mode: 'HTML' },
-          );
+          await bot.sendMessage(chatId, buildAlreadyActivatedMessage(client, getUserDisplayName(user), requestedLicenses), { parse_mode: "HTML" });
           return;
         }
 
@@ -794,19 +786,18 @@ function registerActivateCallback(bot) {
 
         if (!unlimitedStatus.isUnlimited && user.credits < cost) {
           clearActivationState(confirmId);
-          await bot.answerCallbackQuery(query.id, { text: 'Créditos insuficientes' });
+          await bot.answerCallbackQuery(query.id, { text: "Créditos insuficientes" });
           await safeDeleteMessage(bot, chatId, messageId);
           await sendRechargeMessage(bot, chatId, buildInsufficientCreditsMessage(user, cost));
           return;
         }
 
         const resellerId =
-          PROVIDER_BY_TELEGRAM_ID[telegramId]?.resellerId ??
-          (unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID);
+          PROVIDER_BY_TELEGRAM_ID[telegramId]?.resellerId ?? (unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID);
 
         const newCredits = unlimitedStatus.isUnlimited ? user.credits : user.credits - cost;
 
-        await bot.answerCallbackQuery(query.id, { text: 'Procesando activación...' });
+        await bot.answerCallbackQuery(query.id, { text: "Procesando activación..." });
 
         await safeEditCaption(bot, chatId, messageId, `<b>[#${APP_NAME}]</b> ➣ PROCESANDO ACTIVACIÓN`, {
           inline_keyboard: [],
@@ -832,10 +823,10 @@ function registerActivateCallback(bot) {
             clientEmail: client.email,
             activatedLicenses: pendingLicenses,
             creditsCost: cost,
-            commandRaw: '/activate ' + rawValue,
+            commandRaw: "/activate " + rawValue,
           });
         } catch (logError) {
-          console.error('Error guardando activation log:', logError.message);
+          console.error("Error guardando activation log:", logError.message);
         }
 
         const updatedUser = { ...user, credits: newCredits };
@@ -853,16 +844,16 @@ function registerActivateCallback(bot) {
         return;
       }
 
-      if (data.startsWith('activate_flow:')) {
-        const parts = data.split(':');
+      if (data.startsWith("activate_flow:")) {
+        const parts = data.split(":");
         const ownerId = Number(parts[1]);
         const action = parts[2];
-        const value = parts.slice(3).join(':');
+        const value = parts.slice(3).join(":");
         const telegramId = query.from.id;
 
         if (telegramId !== ownerId) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'No puedes usar esta activación',
+            text: "No puedes usar esta activación",
           });
           return;
         }
@@ -871,31 +862,31 @@ function registerActivateCallback(bot) {
 
         if (!flow) {
           await bot.answerCallbackQuery(query.id, {
-            text: 'La selección expiró o ya fue procesada',
+            text: "La selección expiró o ya fue procesada",
           });
           return;
         }
 
         if (processingActivationFlows.has(telegramId)) {
           await bot.answerCallbackQuery(query.id, {
-            text: '⏳ Ya se está procesando...',
+            text: "⏳ Ya se está procesando...",
           });
           return;
         }
 
         processingActivationFlows.add(telegramId);
 
-        if (action === 'cancel') {
-          await bot.answerCallbackQuery(query.id, { text: 'Cancelado' });
+        if (action === "cancel") {
+          await bot.answerCallbackQuery(query.id, { text: "Cancelado" });
           await safeDeleteMessage(bot, chatId, messageId);
           clearActivationFlow(telegramId);
           return;
         }
 
-        if (action === 'toggle') {
+        if (action === "toggle") {
           if (!getAvailableBanks(flow.client).includes(value)) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, { text: 'Esa licencia ya está activa' });
+            await bot.answerCallbackQuery(query.id, { text: "Esa licencia ya está activa" });
             return;
           }
 
@@ -915,18 +906,18 @@ function registerActivateCallback(bot) {
 
           const nextFlow = { ...flow, selectedBanks: uniqueBanks };
 
-          await bot.answerCallbackQuery(query.id, { text: 'Actualizado' });
+          await bot.answerCallbackQuery(query.id, { text: "Actualizado" });
           await openActivationSelector(bot, nextFlow);
           processingActivationFlows.delete(telegramId);
           return;
         }
 
-        if (action === 'continue') {
+        if (action === "continue") {
           const freshUser = await getUser(telegramId);
 
           if (!freshUser) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado' });
+            await bot.answerCallbackQuery(query.id, { text: "Usuario no encontrado" });
             return;
           }
 
@@ -936,7 +927,7 @@ function registerActivateCallback(bot) {
 
           if (pendingLicenses.length === 0) {
             processingActivationFlows.delete(telegramId);
-            await bot.answerCallbackQuery(query.id, { text: 'No hay licencias pendientes para activar' });
+            await bot.answerCallbackQuery(query.id, { text: "No hay licencias pendientes para activar" });
             return;
           }
 
@@ -945,7 +936,7 @@ function registerActivateCallback(bot) {
           if (!unlimitedStatus.isUnlimited && cost > freshUser.credits) {
             processingActivationFlows.delete(telegramId);
             await bot.answerCallbackQuery(query.id, {
-              text: 'No tienes créditos suficientes',
+              text: "No tienes créditos suficientes",
               show_alert: true,
             });
 
@@ -963,7 +954,7 @@ function registerActivateCallback(bot) {
 
           const rawValue = licensesToRawValue(flow.client.email, requestedLicenses);
 
-          await bot.answerCallbackQuery(query.id, { text: 'Continuando...' });
+          await bot.answerCallbackQuery(query.id, { text: "Continuando..." });
 
           clearActivationFlow(telegramId);
 
@@ -984,21 +975,21 @@ function registerActivateCallback(bot) {
         }
 
         processingActivationFlows.delete(telegramId);
-        await bot.answerCallbackQuery(query.id, { text: 'Acción no válida' });
+        await bot.answerCallbackQuery(query.id, { text: "Acción no válida" });
       }
     } catch (error) {
       if (confirmId) {
         clearActivationState(confirmId);
       }
 
-      if (data.startsWith('activate_flow:')) {
+      if (data.startsWith("activate_flow:")) {
         processingActivationFlows.delete(query.from.id);
       }
 
-      console.error('Error en callback de activación:', error.message);
+      console.error("Error en callback de activación:", error.message);
 
       if (chatId) {
-        await bot.sendMessage(chatId, '❌ Ocurrió un error al procesar la activación.').catch(() => {});
+        await bot.sendMessage(chatId, "❌ Ocurrió un error al procesar la activación.").catch(() => {});
       }
     }
   });
@@ -1016,17 +1007,17 @@ function registerActivateCommand(bot) {
       const user = await getUser(telegramId);
 
       if (!user) {
-        return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
+        return bot.sendMessage(chatId, "No estás registrado. Usa /register");
       }
 
-      if (rawValue.includes('|')) {
-        return bot.sendMessage(chatId, 'Formato no permitido. Usa únicamente:\n/activate correo@gmail.com');
+      if (rawValue.includes("|")) {
+        return bot.sendMessage(chatId, "Formato no permitido. Usa únicamente:\n/activate correo@gmail.com");
       }
 
       const email = rawValue.toLowerCase();
 
       if (!EMAIL_REGEX.test(email)) {
-        return bot.sendMessage(chatId, 'Debes ingresar un correo válido');
+        return bot.sendMessage(chatId, "Debes ingresar un correo válido");
       }
 
       const unlimitedStatus = getUnlimitedStatus(user);
@@ -1035,18 +1026,18 @@ function registerActivateCommand(bot) {
       const client = await getYapeClient(email, supplierId);
 
       if (!client) {
-        return bot.sendMessage(chatId, 'El correo ingresado no existe');
+        return bot.sendMessage(chatId, "El correo ingresado no existe");
       }
 
       if (client.banned) {
-        return bot.sendMessage(chatId, 'No es posible activar esta cuenta porque el cliente se encuentra baneado');
+        return bot.sendMessage(chatId, "No es posible activar esta cuenta porque el cliente se encuentra baneado");
       }
 
       const allActive = client.payment === true && client.bcp === true && client.ibk === true && client.bbva === true;
 
       if (allActive) {
         return bot.sendMessage(chatId, buildFullyActivatedMessage(client, getUserDisplayName(user)), {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
       }
 
@@ -1074,12 +1065,12 @@ function registerActivateCommand(bot) {
         client,
         user,
         supplierId,
-        step: 'select',
+        step: "select",
         selectedBanks: initialSelectedBanks,
       });
     } catch (error) {
-      console.error('Error en /activate:', error.message);
-      await bot.sendMessage(chatId, 'Ocurrió un error al activar la cuenta');
+      console.error("Error en /activate:", error.message);
+      await bot.sendMessage(chatId, "Ocurrió un error al activar la cuenta");
     }
   });
 }

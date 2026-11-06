@@ -1,10 +1,10 @@
-const { APP_NAME, LOCAL } = require('../utils/constants');
-const { getYapeClient, getUser } = require('../utils/api');
-const { formatDate } = require('../utils/functions');
-const { sendMessage } = require('../utils/sender');
-const { getFiles, saveFileTelegram } = require('../utils/files');
-const { getUnlimitedStatus } = require('../utils/unlimited');
-const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require('../utils/data');
+const { APP_NAME, LOCAL, MIN_INFO_CREDITS, buildButtonsCredits } = require("../utils/constants");
+const { getYapeClient, getUser } = require("../utils/api");
+const { formatDate } = require("../utils/functions");
+const { sendMessage } = require("../utils/sender");
+const { getFiles, saveFileTelegram } = require("../utils/files");
+const { getUnlimitedStatus } = require("../utils/unlimited");
+const { mySupplierId, PROVIDER_BY_TELEGRAM_ID } = require("../utils/data");
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,22 +12,22 @@ function buildProducts(client) {
   const products = [];
 
   if (client.payment) {
-    products.push('YAPE');
+    products.push("YAPE");
   }
 
   if (client.bcp) {
-    products.push('BCP');
+    products.push("BCP");
   }
 
   if (client.ibk) {
-    products.push('INTERBANK');
+    products.push("INTERBANK");
   }
 
   if (client.bbva) {
-    products.push('BBVA');
+    products.push("BBVA");
   }
 
-  return products.length ? products.join(', ') : 'NINGUNO';
+  return products.length ? products.join(", ") : "NINGUNO";
 }
 
 function buildNotFoundClientMessage(email) {
@@ -73,10 +73,10 @@ function buildAvailableClientMessage(client) {
 <b>[#${APP_NAME}]</b> <b>INFO DE USUARIO</b>
 •···························•····························•
 [📧] CORREO ➤ <code>${client.email}</code>
-[👤] TITULAR ➤ ${client.titular || 'NO DEFINIDO'}
+[👤] TITULAR ➤ ${client.titular || "NO DEFINIDO"}
 [📅] REGISTRADO ➤ ${formatDate(client.createdAt)}
-[👾] ESTADO ➤ ${client.status ? 'ACTIVO' : 'INACTIVO'}
-[🚫] BANEADO ➤ ${client.banned ? 'SI' : 'NO'}
+[👾] ESTADO ➤ ${client.status ? "ACTIVO" : "INACTIVO"}
+[🚫] BANEADO ➤ ${client.banned ? "SI" : "NO"}
 [📦] LICENCIAS ➤ ${buildProducts(client)}
 •···························•····························•
 `.trim();
@@ -103,13 +103,20 @@ function registerInfoCommand(bot) {
       const user = await getUser(telegramId);
 
       if (!user) {
-        return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
+        return bot.sendMessage(chatId, "No estás registrado. Usa /register");
+      }
+
+      const credits = Number(user.credits);
+      if (!Number.isFinite(credits) || credits < MIN_INFO_CREDITS) {
+        return bot.sendMessage(chatId, `Necesitas tener créditos suficientes. Esta consulta no descuenta créditos.`, {
+          reply_markup: buildButtonsCredits(),
+        });
       }
 
       const email = match[1].trim().toLowerCase();
 
       if (!EMAIL_REGEX.test(email)) {
-        return bot.sendMessage(chatId, 'Debes ingresar un correo válido');
+        return bot.sendMessage(chatId, "Debes ingresar un correo válido");
       }
 
       const unlimitedStatus = getUnlimitedStatus(user);
@@ -131,10 +138,10 @@ function registerInfoCommand(bot) {
         filePath: LOCAL.TARGET_IMAGE,
       });
 
-      saveFileTelegram(telegramResponse, 'TARGET_IMAGE');
+      saveFileTelegram(telegramResponse, "TARGET_IMAGE");
     } catch (error) {
-      console.error('Error en /info:', error.message);
-      await bot.sendMessage(chatId, 'Error al consultar la información del cliente');
+      console.error("Error en /info:", error.message);
+      await bot.sendMessage(chatId, "Error al consultar la información del cliente");
     }
   });
 }

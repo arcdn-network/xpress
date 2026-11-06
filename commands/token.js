@@ -1,15 +1,11 @@
-const { getUser, updateUser, createToken } = require('../utils/api');
-const { APP_NAME } = require('../utils/constants');
-const { getUnlimitedStatus } = require('../utils/unlimited');
+const { getUser, updateUser, createToken } = require("../utils/api");
+const { APP_NAME, TOKEN_COST } = require("../utils/constants");
+const { getUnlimitedStatus } = require("../utils/unlimited");
 
 const pendingTokens = new Map();
 const pendingTokenConfirms = new Map();
 
-const TOKEN_PRICES = {
-  7: 3,
-  15: 7,
-  30: 10,
-};
+const TOKEN_PRICES = TOKEN_COST;
 
 function getTokenCost(days) {
   return TOKEN_PRICES[days] ?? null;
@@ -19,13 +15,13 @@ function buildTokenMessage(user, selectedDays = 7) {
   const cost = getTokenCost(selectedDays);
   const unlimitedStatus = getUnlimitedStatus(user);
 
-  const costoLine = unlimitedStatus.isUnlimited ? '' : `\n<b>[💰] COSTO</b>\n- Créditos ➣ ${cost} créditos`;
+  const costoLine = unlimitedStatus.isUnlimited ? "" : `\n<b>[💰] COSTO</b>\n- Créditos ➣ ${cost} créditos`;
 
   return `<b>[#${APP_NAME}]</b> ➣ GENERAR TOKEN
 
 <b>[🙎‍♂️] TU ESTADO</b>
-- Usuario ➣ ${user.username ? '@' + user.username : user.telegramId}
-- Saldo ➣ ${unlimitedStatus.isUnlimited ? '♾️ ILIMITADO' : `${user.credits} créditos`}
+- Usuario ➣ ${user.username ? "@" + user.username : user.telegramId}
+- Saldo ➣ ${unlimitedStatus.isUnlimited ? "♾️ ILIMITADO" : `${user.credits} créditos`}
 
 <b>[⚙️] CONFIGURACIÓN</b>
 - Duración ➣ ${selectedDays} días${costoLine}
@@ -41,7 +37,7 @@ function buildConfirmTokenMessage(user, selectedDays) {
   return `<b>[#${APP_NAME}]</b> ➣ CONFIRMAR GENERACIÓN
 
 <b>[🙎‍♂️] TU ESTADO</b>
-- Usuario ➣ ${user.username ? '@' + user.username : user.telegramId}
+- Usuario ➣ ${user.username ? "@" + user.username : user.telegramId}
 - Saldo ➣ ${user.credits} créditos
 
 <b>[⚙️] CONFIGURACIÓN</b>
@@ -99,14 +95,14 @@ function buildTokenKeyboard(telegramId, selectedDays = 7) {
   for (let i = 0; i < entries.length; i += 2) {
     keyboard.push(
       entries.slice(i, i + 2).map(([days]) => ({
-        text: `${selectedDays === Number(days) ? '✅' : '⬜'} ${days} días`,
+        text: `${selectedDays === Number(days) ? "✅" : "⬜"} ${days} días`,
         callback_data: `token_days:${telegramId}:${days}`,
       })),
     );
   }
 
-  keyboard.push([{ text: '🎟 GENERAR TOKEN', callback_data: `token_generate:${telegramId}` }]);
-  keyboard.push([{ text: '❌ CANCELAR', callback_data: `token_cancel:${telegramId}` }]);
+  keyboard.push([{ text: "🎟 GENERAR TOKEN", callback_data: `token_generate:${telegramId}` }]);
+  keyboard.push([{ text: "❌ CANCELAR", callback_data: `token_cancel:${telegramId}` }]);
 
   return { inline_keyboard: keyboard };
 }
@@ -115,10 +111,10 @@ function buildTokenConfirmKeyboard(confirmId) {
   return {
     inline_keyboard: [
       [
-        { text: '✅ CONFIRMAR', callback_data: `token_confirm_${confirmId}` },
-        { text: '❌ CANCELAR', callback_data: `token_reject_${confirmId}` },
+        { text: "✅ CONFIRMAR", callback_data: `token_confirm_${confirmId}` },
+        { text: "❌ CANCELAR", callback_data: `token_reject_${confirmId}` },
       ],
-      [{ text: '⬅️ REGRESAR', callback_data: `token_back_${confirmId}` }],
+      [{ text: "⬅️ REGRESAR", callback_data: `token_back_${confirmId}` }],
     ],
   };
 }
@@ -134,67 +130,67 @@ function registerTokenCallback(bot) {
 
   bot._tokenCallbackRegistered = true;
 
-  bot.on('callback_query', async (query) => {
-    const data = query.data || '';
+  bot.on("callback_query", async (query) => {
+    const data = query.data || "";
     const chatId = query.message?.chat?.id;
     const messageId = query.message?.message_id;
     const telegramId = query.from.id;
 
     const isTokenData =
-      data.startsWith('token_days:') ||
-      data.startsWith('token_generate:') ||
-      data.startsWith('token_cancel:') ||
-      data.startsWith('token_confirm_') ||
-      data.startsWith('token_reject_') ||
-      data.startsWith('token_back_');
+      data.startsWith("token_days:") ||
+      data.startsWith("token_generate:") ||
+      data.startsWith("token_cancel:") ||
+      data.startsWith("token_confirm_") ||
+      data.startsWith("token_reject_") ||
+      data.startsWith("token_back_");
 
     if (!isTokenData) return;
 
     try {
       // ── CANCELAR desde selector ──────────────────────────────────────
-      if (data.startsWith('token_cancel:')) {
-        const ownerId = Number(data.split(':')[1]);
+      if (data.startsWith("token_cancel:")) {
+        const ownerId = Number(data.split(":")[1]);
 
         if (ownerId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes usar este menú' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes usar este menú" });
         }
 
         const current = pendingTokens.get(telegramId);
 
         if (!current || current.messageId !== messageId) {
-          return bot.answerCallbackQuery(query.id, { text: 'Este menú ya no está activo', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Este menú ya no está activo", show_alert: true });
         }
 
         pendingTokens.delete(telegramId);
 
-        await bot.answerCallbackQuery(query.id, { text: 'Cancelado' });
+        await bot.answerCallbackQuery(query.id, { text: "Cancelado" });
         await bot.editMessageText(buildCanceledMessage(), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
 
         return;
       }
 
       // ── SELECCIONAR DÍAS ─────────────────────────────────────────────
-      if (data.startsWith('token_days:')) {
-        const [, ownerIdRaw, daysRaw] = data.split(':');
+      if (data.startsWith("token_days:")) {
+        const [, ownerIdRaw, daysRaw] = data.split(":");
         const ownerId = Number(ownerIdRaw);
         const days = Number(daysRaw);
 
         if (ownerId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes usar este menú' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes usar este menú" });
         }
 
         if (getTokenCost(days) === null) {
-          return bot.answerCallbackQuery(query.id, { text: 'Duración no válida', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Duración no válida", show_alert: true });
         }
 
         const current = pendingTokens.get(telegramId);
 
         if (!current || current.messageId !== messageId) {
-          return bot.answerCallbackQuery(query.id, { text: 'Este menú ya no está activo', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Este menú ya no está activo", show_alert: true });
         }
 
         if (current.days === days) {
@@ -209,7 +205,7 @@ function registerTokenCallback(bot) {
         await bot.editMessageText(buildTokenMessage(user, days), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
           reply_markup: buildTokenKeyboard(telegramId, days),
         });
 
@@ -217,41 +213,41 @@ function registerTokenCallback(bot) {
       }
 
       // ── GENERAR ──────────────────────────────────────────────────────
-      if (data.startsWith('token_generate:')) {
-        const ownerId = Number(data.split(':')[1]);
+      if (data.startsWith("token_generate:")) {
+        const ownerId = Number(data.split(":")[1]);
 
         if (ownerId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes usar este menú' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes usar este menú" });
         }
 
         const config = pendingTokens.get(telegramId);
 
         if (!config || config.messageId !== messageId) {
-          return bot.answerCallbackQuery(query.id, { text: 'Este menú ya no está activo', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Este menú ya no está activo", show_alert: true });
         }
 
         const cost = getTokenCost(config.days);
 
         if (cost === null) {
-          return bot.answerCallbackQuery(query.id, { text: 'Duración no válida', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Duración no válida", show_alert: true });
         }
 
         const user = await getUser(telegramId);
 
         if (!user) {
-          return bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Usuario no encontrado", show_alert: true });
         }
 
         const unlimitedStatus = getUnlimitedStatus(user);
 
         // Sin confirmación para ilimitados: generar directo
         if (unlimitedStatus.isUnlimited) {
-          await bot.answerCallbackQuery(query.id, { text: 'Generando token...' });
+          await bot.answerCallbackQuery(query.id, { text: "Generando token..." });
 
           const resp = await createToken({ days: config.days, telegramId });
 
           if (!resp.status) {
-            return bot.sendMessage(chatId, resp.msg || 'No se pudo generar el token');
+            return bot.sendMessage(chatId, resp.msg || "No se pudo generar el token");
           }
 
           pendingTokens.delete(telegramId);
@@ -259,7 +255,7 @@ function registerTokenCallback(bot) {
           await bot.editMessageText(buildGeneratedTokenMessage(resp.token, config.days), {
             chat_id: chatId,
             message_id: messageId,
-            parse_mode: 'HTML',
+            parse_mode: "HTML",
           });
 
           return;
@@ -271,7 +267,7 @@ function registerTokenCallback(bot) {
           await bot.editMessageText(buildInsufficientCreditsMessage(user, cost), {
             chat_id: chatId,
             message_id: messageId,
-            parse_mode: 'HTML',
+            parse_mode: "HTML",
           });
 
           return;
@@ -295,11 +291,11 @@ function registerTokenCallback(bot) {
           cost,
         });
 
-        await bot.answerCallbackQuery(query.id, { text: 'Confirma la generación' });
+        await bot.answerCallbackQuery(query.id, { text: "Confirma la generación" });
         await bot.editMessageText(buildConfirmTokenMessage(user, config.days), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
           reply_markup: buildTokenConfirmKeyboard(confirmId),
         });
 
@@ -307,26 +303,26 @@ function registerTokenCallback(bot) {
       }
 
       // ── CONFIRMAR ────────────────────────────────────────────────────
-      if (data.startsWith('token_confirm_')) {
-        const confirmId = data.replace('token_confirm_', '');
+      if (data.startsWith("token_confirm_")) {
+        const confirmId = data.replace("token_confirm_", "");
         const payload = pendingTokenConfirms.get(confirmId);
 
         if (!payload) {
           return bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
             show_alert: true,
           });
         }
 
         if (payload.telegramId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes confirmar esta acción' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes confirmar esta acción" });
         }
 
         const user = await getUser(telegramId);
 
         if (!user) {
           clearConfirm(confirmId);
-          return bot.answerCallbackQuery(query.id, { text: 'Usuario no encontrado', show_alert: true });
+          return bot.answerCallbackQuery(query.id, { text: "Usuario no encontrado", show_alert: true });
         }
 
         const unlimitedStatus = getUnlimitedStatus(user);
@@ -337,19 +333,19 @@ function registerTokenCallback(bot) {
           await bot.editMessageText(buildInsufficientCreditsMessage(user, payload.cost), {
             chat_id: chatId,
             message_id: messageId,
-            parse_mode: 'HTML',
+            parse_mode: "HTML",
           });
 
           return;
         }
 
-        await bot.answerCallbackQuery(query.id, { text: 'Generando token...' });
+        await bot.answerCallbackQuery(query.id, { text: "Generando token..." });
 
         const resp = await createToken({ days: payload.days, telegramId: payload.telegramId });
 
         if (!resp.status) {
           clearConfirm(confirmId);
-          return bot.sendMessage(chatId, resp.msg || 'No se pudo generar el token');
+          return bot.sendMessage(chatId, resp.msg || "No se pudo generar el token");
         }
 
         const newCredits = user.credits - payload.cost;
@@ -362,55 +358,55 @@ function registerTokenCallback(bot) {
         await bot.editMessageText(buildGeneratedTokenMessage(resp.token, payload.days), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
 
         return;
       }
 
       // ── RECHAZAR desde confirmación ──────────────────────────────────
-      if (data.startsWith('token_reject_')) {
-        const confirmId = data.replace('token_reject_', '');
+      if (data.startsWith("token_reject_")) {
+        const confirmId = data.replace("token_reject_", "");
         const payload = pendingTokenConfirms.get(confirmId);
 
         if (!payload) {
           return bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
             show_alert: true,
           });
         }
 
         if (payload.telegramId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes cancelar esta acción' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes cancelar esta acción" });
         }
 
         clearConfirm(confirmId);
         pendingTokens.delete(telegramId);
 
-        await bot.answerCallbackQuery(query.id, { text: 'Cancelado' });
+        await bot.answerCallbackQuery(query.id, { text: "Cancelado" });
         await bot.editMessageText(buildCanceledMessage(), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
 
         return;
       }
 
       // ── REGRESAR desde confirmación ──────────────────────────────────
-      if (data.startsWith('token_back_')) {
-        const confirmId = data.replace('token_back_', '');
+      if (data.startsWith("token_back_")) {
+        const confirmId = data.replace("token_back_", "");
         const payload = pendingTokenConfirms.get(confirmId);
 
         if (!payload) {
           return bot.answerCallbackQuery(query.id, {
-            text: 'La confirmación expiró o ya fue procesada',
+            text: "La confirmación expiró o ya fue procesada",
             show_alert: true,
           });
         }
 
         if (payload.telegramId !== telegramId) {
-          return bot.answerCallbackQuery(query.id, { text: 'No puedes usar este menú' });
+          return bot.answerCallbackQuery(query.id, { text: "No puedes usar este menú" });
         }
 
         clearConfirm(confirmId);
@@ -420,19 +416,19 @@ function registerTokenCallback(bot) {
         // Restaurar messageId en pendingTokens al regresar
         pendingTokens.set(telegramId, { days: payload.days, messageId: payload.messageId });
 
-        await bot.answerCallbackQuery(query.id, { text: 'Regresando...' });
+        await bot.answerCallbackQuery(query.id, { text: "Regresando..." });
         await bot.editMessageText(buildTokenMessage(user, payload.days), {
           chat_id: chatId,
           message_id: messageId,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
           reply_markup: buildTokenKeyboard(telegramId, payload.days),
         });
 
         return;
       }
     } catch (error) {
-      console.error('Error token:', error.message);
-      await bot.sendMessage(chatId, '❌ Ocurrió un error al generar el token').catch(() => {});
+      console.error("Error token:", error.message);
+      await bot.sendMessage(chatId, "❌ Ocurrió un error al generar el token").catch(() => {});
     }
   });
 }
@@ -448,7 +444,7 @@ function registerTokenCommand(bot) {
       const user = await getUser(telegramId);
 
       if (!user) {
-        return bot.sendMessage(chatId, 'No estás registrado. Usa /register');
+        return bot.sendMessage(chatId, "No estás registrado. Usa /register");
       }
 
       // Limpiar estado anterior
@@ -463,14 +459,14 @@ function registerTokenCommand(bot) {
       const selectedDays = 7;
 
       const sentMessage = await bot.sendMessage(chatId, buildTokenMessage(user, selectedDays), {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
         reply_markup: buildTokenKeyboard(telegramId, selectedDays),
       });
 
       pendingTokens.set(telegramId, { days: selectedDays, messageId: sentMessage.message_id });
     } catch (error) {
-      console.error('Error /token:', error.message);
-      await bot.sendMessage(chatId, '❌ Ocurrió un error al abrir el generador');
+      console.error("Error /token:", error.message);
+      await bot.sendMessage(chatId, "❌ Ocurrió un error al abrir el generador");
     }
   });
 }
