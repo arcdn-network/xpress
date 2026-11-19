@@ -7,7 +7,7 @@ let sharedConfiguration;
 function createBrowserPool(launchOptions = {}, poolOptions = {}) {
   const configuration = JSON.stringify([launchOptions, poolOptions]);
   if (sharedPool && configuration !== sharedConfiguration) {
-    throw new Error('Todos los servicios de Xpress deben compartir la configuración del navegador');
+    throw new Error("Todos los servicios de Xpress deben compartir la configuración del navegador");
   }
   if (!sharedPool) {
     sharedPool = buildPool(puppeteer, launchOptions, poolOptions);
@@ -25,6 +25,7 @@ const MIME_TYPES = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
+  ".svg": "image/svg+xml",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
   ".ttf": "font/ttf",

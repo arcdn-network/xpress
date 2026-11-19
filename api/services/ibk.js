@@ -1,15 +1,12 @@
 const { createBrowserPool, readResource } = require("../../utils/browser");
 
-// ─── Constantes estáticas ─────────────────────────────────────────────────────
 const TEMPLATE_HTML = readResource("#resources/templates/ibk.html");
-const FONT_BASE64 = readResource("#resources/fonts/Inter.ttf");
-const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
-const CDN_LOGO_BANK = `${CDN_BASE}/logos/interbank.png`;
-const CDN_LOGO_PLIN = `${CDN_BASE}/logos/plin.webp`;
+const BACKGROUND = readResource("#resources/images/template_plin.png");
+const FONT_BASE64 = readResource("#resources/fonts/Geometria.ttf");
+
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const pool = createBrowserPool();
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function randomOperacion() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
@@ -19,7 +16,7 @@ function formatFecha() {
   const horas = now.getHours();
   const ampm = horas >= 12 ? "PM" : "AM";
   return {
-    fecha: `${now.getDate()} ${MESES[now.getMonth()]} ${now.getFullYear()}`,
+    fecha: `${now.getDate().toString().padStart(2, "0")} ${MESES[now.getMonth()]} ${now.getFullYear()}`,
     hora: `${(horas % 12 || 12).toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")} ${ampm}`,
   };
 }
@@ -28,33 +25,34 @@ function formatMonto(monto) {
   return Number(monto).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ─── Builder HTML ─────────────────────────────────────────────────────────────
 function buildHtml({ monto, nombre, digitos, destino = "Plin" }) {
   const { fecha, hora } = formatFecha();
   const digitosLimpios = String(digitos || "").trim();
-  const es3 = /^\d{3}$/.test(digitosLimpios);
-  const es9 = /^\d{9}$/.test(digitosLimpios);
+
+  let celularHtml = "";
+  if (/^\d{3}$/.test(digitosLimpios)) {
+    celularHtml = `••• ••• ${digitosLimpios} - `;
+  } else if (/^\d{9}$/.test(digitosLimpios)) {
+    const formateado = digitosLimpios.match(/.{1,3}/g).join(" ");
+    celularHtml = `${formateado} - `;
+  }
 
   return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
+    .replace("{{BACKGROUND}}", BACKGROUND)
     .replace("{{MONTO}}", formatMonto(monto))
     .replace("{{NOMBRE}}", nombre)
-    .replace("{{CELULAR}}", es3 ? `<span class="voucher-phone-dots">••• •••</span> ${digitosLimpios}` : es9 ? digitosLimpios : "")
-    .replace("{{SEPARADOR}}", es3 || es9 ? " - " : "")
+    .replace("{{CELULAR}}", celularHtml)
     .replace("{{DESTINO}}", destino)
-    .replace("{{FECHA}}", fecha)
-    .replace("{{HORA}}", hora)
-    .replace("{{OPERACION}}", randomOperacion())
-    .replace("{{CDN_LOGO_BANK}}", CDN_LOGO_BANK)
-    .replace("{{CDN_LOGO_PLIN}}", CDN_LOGO_PLIN);
+    .replace("{{FECHA}}", `${fecha} ${hora}`)
+    .replace("{{OPERACION}}", randomOperacion());
 }
 
-// ─── Generador ────────────────────────────────────────────────────────────────
 async function generateVoucher(data) {
   return pool.withPage(async (page) => {
-    await page.setViewport({ width: 680, height: 860, deviceScaleFactor: 3 });
+    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 });
     await page.setContent(buildHtml(data), { waitUntil: "networkidle2" });
-    const element = await page.$(".ticket-card");
-    const buffer = await element.screenshot({ type: "jpeg", quality: 85 });
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const buffer = await page.screenshot({ type: "jpeg", quality: 85, fullPage: true });
     return buffer.toString("base64");
   });
 }
