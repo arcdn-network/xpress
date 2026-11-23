@@ -16,7 +16,12 @@ function installBotResilience(bot, logger = console) {
     };
 
   const onText = bot.onText.bind(bot);
-  bot.onText = (regexp, handler) => onText(regexp, guard(handler, String(regexp)));
+
+  bot.onText = (regexp, handler) => {
+    const pattern = regexp.ignoreCase ? regexp : new RegExp(regexp.source, `${regexp.flags}i`);
+    return onText(pattern, guard(handler, String(regexp)));
+  };
+
   const on = bot.on.bind(bot);
   bot.on = (event, handler) => on(event, ["message", "callback_query"].includes(event) ? guard(handler, event) : handler);
 
