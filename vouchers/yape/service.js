@@ -1,0 +1,153 @@
+const path = require("path");
+const fs = require("fs");
+const { createBrowserPool } = require("../access/browser");
+const { readResource } = require("../access/resources");
+
+// ─── Constantes estáticas ─────────────────────────────────────────────────────
+const BANNERS_DIR = path.join(__dirname, "resources/banners");
+const CHARACTERS_DIR = path.join(__dirname, "resources/characters");
+const TEMPLATE_HTML = readResource(__dirname, "template.html");
+const FONT_BASE64 = readResource(__dirname, "../access/fonts/Roboto.woff2");
+
+const CDN_BASE = "https://cdn.jsdelivr.net/gh/arcdn-network/resource@main";
+const CDN_LOGO = `${CDN_BASE}/logos/yape.png`;
+const CDN_CHAT = `${CDN_BASE}/chat.png`;
+
+const personajesRanges = [
+  { max: 19.99, file: "10.jpg" },
+  { max: 49.99, file: "20.jpg" },
+  { max: 99.99, file: "50.jpg" },
+  { max: 199.99, file: "100.jpg" },
+  { max: Infinity, file: "200.jpg" },
+];
+
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const pool = createBrowserPool();
+
+const bannerFiles = fs
+  .readdirSync(BANNERS_DIR)
+  .filter((file) => file.endsWith(".webp"))
+  .map((file) => {
+    const buffer = fs.readFileSync(path.join(BANNERS_DIR, file));
+    return `data:image/webp;base64,${buffer.toString("base64")}`;
+  });
+
+if (!bannerFiles.length) {
+  throw new Error("No hay banners disponibles");
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getRandomBanner() {
+  return bannerFiles[Math.floor(Math.random() * bannerFiles.length)];
+}
+
+function randomOperacion() {
+  return Math.floor(10000000 + Math.random() * 90000000).toString();
+}
+
+function formatFecha() {
+  const now = new Date();
+  const horas = now.getHours();
+  const ampm = horas >= 12 ? "p. m." : "a. m.";
+  return {
+    fecha: `${now.getDate().toString().padStart(2, "0")} ${MESES[now.getMonth()]}. ${now.getFullYear()}`,
+    hora: `${(horas % 12 || 12).toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")} ${ampm}`,
+  };
+}
+
+function formatMonto(monto) {
+  const numero = Number(String(monto).replace(/,/g, ""));
+
+  return Number.isInteger(numero)
+    ? numero.toLocaleString("en-US")
+    : numero.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+}
+
+const aquaImages = personajesRanges.reduce((acc, { file }) => {
+  const buffer = fs.readFileSync(path.join(CHARACTERS_DIR, file));
+  acc[file] = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+  return acc;
+}, {});
+
+function getPersonajeImg(monto) {
+  const numero = Number(monto) || 0;
+  const { file } = personajesRanges.find((r) => numero <= r.max);
+  return aquaImages[file];
+}
+
+// ─── Builder HTML ─────────────────────────────────────────────────────────────
+function buildHtml({ monto, nombre, digitos, mensaje = "", destino = "Yape" }) {
+  const { fecha, hora } = formatFecha();
+  const operacion = randomOperacion();
+  const [d1, d2, d3] = operacion.slice(-3).split("");
+
+  const mostrarDigitos = !!digitos && /^\d{3}$/.test(String(digitos));
+  const mostrarCodigo = destino.toLowerCase() === "yape";
+
+  const mensajeHtml = mensaje
+    ? `<div class="bg-yape-message py-2 px-1 border-round-lg mt-3 flex gap-2 align-items-center">
+        <div class="mx-1 flex">
+          <img src="${CDN_CHAT}" alt="" width="16">
+        </div>
+        <div class="font-semibold text-xs" style="color: #403554;">
+          ${mensaje}
+        </div>
+      </div>`
+    : "";
+
+  const celularHtml = mostrarDigitos
+    ? `<div class="flex justify-content-between text-sm mt-2">
+        <span>Nro. de celular</span>
+        <span class="font-medium">*** *** ${digitos}</span>
+      </div>`
+    : "";
+
+  const codigoHtml = mostrarCodigo
+    ? `<div class="flex align-items-center justify-content-between mt-2">
+        <div class="flex align-items-center gap-2 text-uxs font-semibold"
+          style="color: var(--yape-text-label); letter-spacing: 0.5px;">
+          <span>CÓDIGO DE SEGURIDAD</span>
+          <svg style="width: 1.20rem; height: 1.20rem; color: #06C7B1;" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor"
+              d="M4.929 19.07A10 10 0 0 0 12 22c5.522 0 10-4.477 10-10S17.522 2 12 2 2 6.478 2 12a10 10 0 0 0 2.929 7.07M13 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-2 3a1 1 0 1 1 2 0v5a1 1 0 0 1-2 0z" />
+          </svg>
+        </div>
+        <div class="my-1 flex" style="gap: 5px;">
+          <div class="box-code"><span class="font-bold">${d1}</span></div>
+          <div class="box-code"><span class="font-bold">${d2}</span></div>
+          <div class="box-code"><span class="font-bold">${d3}</span></div>
+        </div>
+      </div>
+      <div class="border-botton mt-2"></div>`
+    : "";
+
+  return TEMPLATE_HTML.replace("{{FONT_BASE64}}", FONT_BASE64)
+    .replace("{{MONTO}}", formatMonto(monto))
+    .replace("{{NOMBRE}}", nombre)
+    .replace("{{FECHA}}", fecha)
+    .replace("{{HORA}}", hora)
+    .replace("{{CELULAR}}", celularHtml)
+    .replace("{{OPERACION}}", operacion)
+    .replace("{{MENSAJE}}", mensajeHtml)
+    .replace("{{DESTINO}}", destino)
+    .replace("{{CODIGO_SEGURIDAD}}", codigoHtml)
+    .replace("{{CDN_LOGO}}", CDN_LOGO)
+    .replace("{{PERSONAJE}}", getPersonajeImg(monto))
+    .replace("{{CDN_BANNER}}", getRandomBanner());
+}
+
+// ─── Generador ────────────────────────────────────────────────────────────────
+async function generateVoucher(data) {
+  return pool.withPage(async (page) => {
+    await page.setViewport({ width: 390, height: 824, deviceScaleFactor: 3 });
+    await page.setContent(buildHtml(data), { waitUntil: "networkidle2" });
+    const buffer = await page.screenshot({ type: "jpeg", quality: 85, fullPage: true });
+    return buffer.toString("base64");
+  });
+}
+
+module.exports = { generateVoucher };

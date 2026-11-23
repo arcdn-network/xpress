@@ -1,5 +1,5 @@
 const { isOwner } = require("../middleware/isAdmin");
-const { CONFIG, VOUCHER_KEYS } = require("../api/config/config");
+const { CONFIG, VOUCHER_KEYS } = require("../vouchers");
 const { LOCAL, buildButtonsCredits, buildButtonsVoucherPlan } = require("../utils/constants");
 const { sendMessage } = require("../utils/sender");
 const { getFiles, saveFileTelegram } = require("../utils/files");

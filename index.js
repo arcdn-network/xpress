@@ -19,8 +19,9 @@ const registerAppCommands = require("./commands/apk");
 const registerInfoCommand = require("./commands/info");
 const registerDiasCommand = require("./commands/days");
 const registerApiTokenCommand = require("./commands/api-token");
-const registerGalleryCommand = require("./api/gallery");
-const registerVoucherCommands = require("./api/bot");
+const registerGalleryCommand = require("./vouchers/access/telegram/gallery");
+const registerVoucherCommands = require("./vouchers/access/telegram/commands");
+const { MENU_COMMANDS } = require("./vouchers");
 
 async function startBot() {
   const isDevelop = process.env.DEVELOP === "TRUE";
@@ -47,22 +48,7 @@ async function startBot() {
       { command: "token", description: "Generar token autocompletado" },
       { command: "apk", description: "Obtener APK" },
       { command: "web", description: "Obtener Link" },
-      { command: "ejemplos", description: "Ver galería de ejemplos" },
-      { command: "yape", description: "Generar Voucher Yape" },
-      { command: "plin", description: "Generar Voucher Plin" },
-      { command: "bim", description: "Generar Voucher Bim" },
-      { command: "sip", description: "Generar Voucher Sip" },
-      { command: "agora", description: "Generar Voucher Agora" },
-      { command: "lemon", description: "Generar Voucher Lemon" },
-      { command: "panda", description: "Generar Voucher Panda" },
-      { command: "prexpe", description: "Generar Voucher Prexpe" },
-      { command: "bcp", description: "Generar Voucher BCP" },
-      { command: "ibk", description: "Generar Voucher Interbank" },
-      { command: "bbva", description: "Generar Voucher BBVA" },
-      { command: "caja", description: "Generar Voucher Caja Arequipa" },
-      { command: "ripley", description: "Generar Voucher Ripley" },
-      { command: "falabella", description: "Generar Voucher Falabella" },
-      { command: "scotiabank", description: "Generar Voucher Scotiabank" },
+      ...MENU_COMMANDS,
     ]);
 
   registerMeCommand(bot);
@@ -90,7 +76,7 @@ async function startBot() {
   console.log(`🚀 Iniciando ${APP_NAME} en modo ${isDevelop ? "DESARROLLO" : "PRODUCCIÓN"}`);
 }
 
-const { startApi } = require("./api/api");
+const { startApi } = require("./vouchers/api");
 async function startApp() {
   await startBot();
   startApi();
