@@ -15,6 +15,27 @@ function installBotResilience(bot, logger = console) {
       }
     };
 
+  // Filter once before dispatch so multiple listeners cannot repeat the notice.
+  const privateOnlyMessage = "❌ Este bot solo puede usarse en chat privado.";
+  const processUpdate = bot.processUpdate.bind(bot);
+  const rejectNonPrivate = guard(async (update, message) => {
+    if (update.callback_query) {
+      await bot.answerCallbackQuery(update.callback_query.id, {
+        text: privateOnlyMessage,
+        show_alert: true,
+      });
+    } else if (update.message && /\/\w+/.test(message.text || "")) {
+      await bot.sendMessage(message.chat.id, privateOnlyMessage);
+    }
+  }, "private-only");
+  bot.processUpdate = (update) => {
+    const message = update.callback_query?.message || update.message || update.edited_message || update.channel_post || update.edited_channel_post;
+    if (message?.chat && message.chat.type !== "private") {
+      return rejectNonPrivate(update, message);
+    }
+    return processUpdate(update);
+  };
+
   const onText = bot.onText.bind(bot);
 
   bot.onText = (regexp, handler) => {

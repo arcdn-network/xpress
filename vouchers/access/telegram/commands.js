@@ -85,10 +85,6 @@ function createVoucherHandler(bot, comando) {
       reply_to_message_id: msg.message_id,
     };
 
-    if (msg.chat.type !== "private") {
-      return bot.sendMessage(chatId, "❌ Este comando solo está disponible en chat privado.", replyOpts);
-    }
-
     const sendError = () => bot.sendMessage(chatId, errorMsg, replyOpts);
 
     const user = await getUser(userId);

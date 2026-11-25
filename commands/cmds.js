@@ -130,10 +130,6 @@ function registerCmdsCommand(bot) {
       }
       await bot.answerCallbackQuery(query.id);
       if (match[2] === "gallery") {
-        if (query.message.chat.type !== "private") {
-          await bot.sendMessage(query.message.chat.id, "La galería está disponible en chat privado.");
-          return;
-        }
         await sendGalleryMessage(bot, query.message.chat.id, 0);
         return;
       }

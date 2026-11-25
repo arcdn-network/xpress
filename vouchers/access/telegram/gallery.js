@@ -149,10 +149,6 @@ function registerGalleryCommand(bot) {
   if (state.registered) return;
   state.registered = true;
   bot.onText(/^\/(?:ejemplos?|galeria)(?:@\w+)?\s*$/i, async (msg) => {
-    if (msg.chat.type !== "private") {
-      return bot.sendMessage(msg.chat.id, "❌ Este comando solo está disponible en chat privado.");
-    }
-
     try {
       await sendGalleryMessage(bot, msg.chat.id, 0);
     } catch (error) {
