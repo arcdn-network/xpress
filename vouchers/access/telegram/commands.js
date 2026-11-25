@@ -1,4 +1,4 @@
-const { LOCAL, FREE_BONUS_VOUCHER, FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
+const { LOCAL, FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
 const { CONFIG, VOUCHER_KEYS } = require("../../catalog");
 
 const COOLDOWN_MS = 10000;
@@ -6,25 +6,7 @@ const COOLDOWN_MS_PLAN = COOLDOWN_MS / 2;
 const cooldowns = new Map();
 const enProceso = new Set();
 
-function restantesGratis(user) {
-  if (USE_DAILY_LIMIT) {
-    const hoy = formatDateLima();
-    const usadosHoy = user?.voucher?.dailyDate === hoy ? user.voucher.dailyUsed || 0 : 0;
-    return Math.max(FREE_DAILY_LIMIT - usadosHoy, 0);
-  }
-
-  return user?.voucher?.freeQty ?? FREE_BONUS_VOUCHER;
-}
-
-function puedeUsarGratis(user) {
-  return restantesGratis(user) > 0;
-}
-
-function tienePlanActivo(user) {
-  if (!user?.voucher?.active) return false;
-  if (!user.voucher.expiresAt) return true;
-  return new Date(user.voucher.expiresAt) > new Date();
-}
+const { restantesGratis, puedeUsarGratis, tienePlanActivo } = require("../availability");
 
 async function descontarUsoGratis(userId, user) {
   if (USE_DAILY_LIMIT) {
@@ -56,9 +38,7 @@ async function descontarUsoGratis(userId, user) {
 }
 
 function textoLimiteAlcanzado() {
-  return USE_DAILY_LIMIT
-    ? `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.`
-    : `⏰ Ya agotaste tu bono gratis.\n🚀 Adquiere el plan para uso ilimitado.`;
+  return USE_DAILY_LIMIT ? `⏰ Alcanzaste tu límite diario.\n🚀 Adquiere el plan para uso ilimitado.` : `⏰ Ya agotaste tu bono gratis.\n🚀 Adquiere el plan para uso ilimitado.`;
 }
 
 function lineaEstadoGratis(restantes) {

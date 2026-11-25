@@ -1,4 +1,5 @@
 const LOCAL = {
+  BOT_IMAGE: "bot.png",
   TARGET_IMAGE: "target.png",
   WELCOME_IMAGE: "welcome.png",
   CREDITS_IMAGE: "credits.png",

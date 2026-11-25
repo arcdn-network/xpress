@@ -14,6 +14,9 @@
     "start": "node index.js",
     "server": "nodemon index.js"
   },
+  "nodemonConfig": {
+    "ignore": ["files*.json", "data.json", "logs/**", "uploads/**", "temp/**", "tmp/**", ".cache/**", ".tmp/**"]
+  },
   "dependencies": {
     "axios": "^1.15.0",
     "compression": "^1.8.1",

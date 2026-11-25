@@ -20,6 +20,7 @@ const registerInfoCommand = require("./commands/info");
 const registerDiasCommand = require("./commands/days");
 const registerApiTokenCommand = require("./commands/api-token");
 const registerGalleryCommand = require("./vouchers/access/telegram/gallery");
+const registerCacheCommands = require("./commands/cache");
 const registerVoucherCommands = require("./vouchers/access/telegram/commands");
 const { MENU_COMMANDS } = require("./vouchers");
 
@@ -64,6 +65,7 @@ async function startBot() {
   registerAppCommands(bot);
   registerInfoCommand(bot);
   registerGalleryCommand(bot);
+  registerCacheCommands(bot);
   registerVoucherCommands(bot);
   registerApiTokenCommand(bot);
   registerDiasCommand(bot);

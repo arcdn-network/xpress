@@ -18,25 +18,21 @@ const { generateVoucher: generateCaja } = require("./caja/service");
 function buildEjemplos(comando, cantidad) {
   return [
     // Sin dígitos
-    `/${comando} 150|Pedro Castillo`,
+    `/${comando} 150|Luis`,
     // Con dígitos
-    ...cantidad.map((n) => `/${comando} 150|Pedro Castillo|${"9".repeat(n)}`),
+    ...cantidad.filter((n) => n > 0).map((n) => `/${comando} 150|Luis|${"987654321".slice(0, n)}`),
     // Con mensaje
-    `/${comando} 150|Pedro Castillo|${"9".repeat(cantidad[0])}|Pago realizado`,
+    `/${comando} 150|Luis|${"987654321".slice(0, cantidad[0])}|Mensaje`,
+    `/${comando} 150|Luis|${"987654321".slice(0, cantidad[cantidad.length - 1])}||Yape`,
     // Con destino
-    `/${comando} 150|Pedro Castillo|${"9".repeat(cantidad[0])}|Pago realizado|Plin`,
+    `/${comando} 150|Luis|${"987654321".slice(0, cantidad[0])}|Mensaje|Plin`,
   ];
 }
 
 function buildErrorMsg(comando, cantidad) {
   const digitosLabel = cantidad.map((n) => `${n} dígitos`).join(" o ");
   const ejemplos = buildEjemplos(comando, cantidad).join("\n");
-
-  return (
-    `⚠️ Formato incorrecto.\n` +
-    `Uso: \`/${comando} monto|titular|${digitosLabel}|mensaje|destino\`\n\n` +
-    `✅ Ejemplo de uso:\n\`\`\`\n${ejemplos}\n\`\`\``
-  );
+  return `⚠️ Formato incorrecto.\n` + `Uso: \`/${comando} monto|titular|${digitosLabel}|mensaje|destino\`\n\n` + `✅ Ejemplo de uso:\n\`\`\`\n${ejemplos}\n\`\`\``;
 }
 
 function buildEjemploUso(comando, cantidad) {
@@ -145,20 +141,15 @@ const DISPLAY_NAMES = {
 };
 
 Object.keys(CONFIG).forEach((comando) => {
+  CONFIG[comando].examples = buildEjemplos(comando, CONFIG[comando].cantidad);
   CONFIG[comando].name = DISPLAY_NAMES[comando];
   CONFIG[comando].description = `Generar Voucher ${DISPLAY_NAMES[comando]}`;
-  CONFIG[comando].examplePath = [".jpg", ".jpeg", ".png"]
-    .map((ext) => path.join(__dirname, comando, "resources", `example${ext}`))
-    .find((file) => fs.existsSync(file));
+  CONFIG[comando].examplePath = [".jpg", ".jpeg", ".png"].map((ext) => path.join(__dirname, comando, "resources", `example${ext}`)).find((file) => fs.existsSync(file));
   CONFIG[comando].errorMsg = buildErrorMsg(comando, CONFIG[comando].cantidad);
   CONFIG[comando].ejemploUso = buildEjemploUso(comando, CONFIG[comando].cantidad);
 });
 
 const VOUCHER_KEYS = Object.keys(CONFIG);
-
-const MENU_COMMANDS = [
-  { command: "ejemplos", description: "Ver galería de ejemplos" },
-  ...VOUCHER_KEYS.map((command) => ({ command, description: CONFIG[command].description })),
-];
+const MENU_COMMANDS = [{ command: "ejemplos", description: "Ver galería de ejemplos" }, ...VOUCHER_KEYS.map((command) => ({ command, description: CONFIG[command].description }))];
 
 module.exports = { CONFIG, VOUCHER_KEYS, MENU_COMMANDS };
