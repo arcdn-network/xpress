@@ -14,8 +14,8 @@ function createBrowserPool(launchOptions = {}, poolOptions = {}) {
 
   if (!sharedPool) {
     sharedPool = buildPool(puppeteer, launchOptions, poolOptions);
-    const withPage = sharedPool.withPage.bind(sharedPool);
-    sharedPool.withPage = (fn) => withPage((page) => fn(protectScreenshots(page)));
+    //const withPage = sharedPool.withPage.bind(sharedPool);
+    //sharedPool.withPage = (fn) => withPage((page) => fn(protectScreenshots(page)));
     sharedConfiguration = configuration;
   }
   return sharedPool;

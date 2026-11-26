@@ -12,7 +12,7 @@ const PRODUCTS = [
     description: "Aplicación para Android y iPhone. Realiza Yapeos, transferencias, recargas y mucho más. Es de pago único y acceso permanente.\n",
     rules: "➤ Descarga Android → /apk\n➤ Descarga IPhone → /iphone",
     button: "🚀 Comprar Aplicación",
-    message: "Hola, quiero comprar la aplicación de Yape Fake",
+    message: "Hola, información de la aplicación Yape Fake",
   },
   {
     key: "vouchers",

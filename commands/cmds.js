@@ -2,13 +2,11 @@ const { renderPhotoView } = require("../utils/photo-view");
 const { CONFIG, VOUCHER_KEYS } = require("../vouchers");
 const { LOCAL, APP_USERNAME, buildButtonsVoucherPlan } = require("../utils/constants");
 
-const { getUser } = require("../utils/api");
 const { isOwner } = require("../middleware/isAdmin");
 
 const { getActiveProducts, PRODUCTS_BY_KEY, VOUCHER_PRODUCT, buildProductButton } = require("../utils/products");
-const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, FREE_BONUS_VOUCHER } = require("../utils/constants");
+const { FREE_DAILY_LIMIT } = require("../utils/constants");
 
-const { restantesGratis, tienePlanActivo } = require("../vouchers/access/availability");
 const { sendGalleryMessage } = require("../vouchers/access/telegram/gallery");
 const { escapeHtml } = require("../utils/functions");
 
@@ -23,7 +21,7 @@ function buildVoucherCommandsBlock(commands, offset) {
     .join("\n\n");
 }
 
-function buildView(section, admin, userId, requestedPage = 0, availability = "") {
+function buildView(section, admin, userId, requestedPage = 0) {
   const callback = (value) => `cmds:${userId}:${value}`;
   if (section === "menu") {
     const buttons = getActiveProducts().map((product) => [{ text: product.name, callback_data: callback(product.key) }]);
@@ -40,7 +38,7 @@ function buildView(section, admin, userId, requestedPage = 0, availability = "")
     const offset = page * VOUCHERS_PER_PAGE;
     const commands = VOUCHER_KEYS.slice(offset, offset + VOUCHERS_PER_PAGE);
     return {
-      text: `<b>${escapeHtml(VOUCHER_PRODUCT.title || VOUCHER_PRODUCT.name)}</b>\n📂 Página ${page + 1}/${totalPages} · ${VOUCHER_KEYS.length} comandos\n\n${buildVoucherCommandsBlock(commands, offset)}\n\n🎁 ${availability}`,
+      text: `<b>${escapeHtml(VOUCHER_PRODUCT.title || VOUCHER_PRODUCT.name)}</b>\n📂 Página ${page + 1}/${totalPages} · ${VOUCHER_KEYS.length} comandos\n\n${buildVoucherCommandsBlock(commands, offset)}\n\n🎁 Tienes ${FREE_DAILY_LIMIT} vouchers diarios gratis`,
       reply_markup: {
         inline_keyboard: [
           [
@@ -128,20 +126,7 @@ function registerCmdsCommand(bot) {
         await sendGalleryMessage(bot, query.message.chat.id, 0);
         return;
       }
-      let availability = "";
-      if (match[2] === "vouchers") {
-        try {
-          const user = await getUser(query.from.id);
-          availability = !user
-            ? "Disponibilidad: regístrate con /register"
-            : tienePlanActivo(user)
-              ? "Disponibilidad: ilimitada · Plan activo ✅"
-              : `Disponibilidad: ${restantesGratis(user)}/${USE_DAILY_LIMIT ? FREE_DAILY_LIMIT : FREE_BONUS_VOUCHER} vouchers gratis`;
-        } catch {
-          availability = "Disponibilidad: no se pudo consultar. Inténtalo nuevamente.";
-        }
-      }
-      const view = buildView(match[2], admin, query.from.id, Number(match[3] || 0), availability);
+      const view = buildView(match[2], admin, query.from.id, Number(match[3] || 0));
       const product = selectedProduct;
       const imageKey = product ? product.cacheKey : "TARGET_IMAGE";
       const imagePath = product ? product.image : LOCAL.TARGET_IMAGE;
