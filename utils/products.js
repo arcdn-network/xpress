@@ -1,32 +1,66 @@
 const PRODUCTS = [
   {
+    key: "app",
+    asset: 1,
     name: "🚀 Yape App",
+    title: "🚀 YAPE APP - ANDROID/IPHONE",
+    commands: [
+      { command: "/apk", description: "Descargar la aplicación para Android." },
+      { command: "/iphone", description: "Descargar la aplicación para iPhone." },
+    ],
     status: true,
-    description: "Aplicación de demostración para simular la experiencia de uso. No realiza pagos reales.",
-    rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
-    button: "🚀 Comprar App",
-    message: "Hola, quiero comprar la aplicación Yape de demostración, sin validez de pago.",
+    description: "Aplicación para Android y iPhone. Realiza Yapeos, transferencias, recargas y mucho más. Es de pago único y acceso permanente.\n",
+    rules: "➤ Descarga Android → /apk\n➤ Descarga IPhone → /iphone",
+    button: "🚀 Comprar Aplicación",
+    message: "Hola, quiero comprar la aplicación de Yape Fake",
   },
   {
+    key: "vouchers",
+    asset: 2,
     name: "⭐ Plan Vouchers",
+    title: "⭐ PLAN VOUCHERS",
+    commands: [],
     status: true,
-    description: "Formatos de ejemplo con marca SIMULACIÓN — SIN VALIDEZ DE PAGO. No acreditan transferencias.",
+    description: "Genera todos los vouchers que necesites, cuando quieras. Más de 15 formatos disponibles.\n",
     rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
     button: "⭐ Adquirir plan vouchers",
-    message: "Hola, quiero adquirir el plan de vouchers de demostración de YapeXpress, sin validez de pago.",
+    message: "Hola, quiero adquirir el plan de vouchers de YapeXpress",
   },
   {
-    name: "💰 Activaciones Apps",
+    key: "credits",
+    asset: 3,
+    name: "💰 Compra de Créditos",
+    title: "💰 ACTIVACIONES YAPE APP - ANDROID/IPHONE",
+    commands: [
+      { command: "/activate correo@gmail.com", description: "Activa una cuenta de un cliente registrado." },
+      { command: "/info correo@gmail.com", description: "Ver información del cliente." },
+      { command: "/token", description: "Genera token de autocompletado." },
+      { command: "/historial", description: "Ver el historial de activaciones y tokens." },
+    ],
     status: true,
-    description: "Créditos para activar aplicaciones de demostración. No representan saldo bancario ni permiten realizar pagos.",
-    rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
+    description: "Bot exclusivo para clientes que tienen su cuenta de Yape Fake en aplicativo. Te permite activar a mitad de precio para que puedas ganar el 50% 💸.\n",
+    rules: "➤ Costo por activación 25 créditos.\n➤ Recarga minima 50 créditos.\n➤ Tutorial de uso → /tutorial",
     button: "💰 Comprar créditos",
-    message: "Hola, quiero comprar créditos de YapeXpress para aplicaciones de demostración, sin validez de pago.",
+    message: "Hola, quiero comprar créditos de YapeXpress",
   },
-].map((product, index) => ({ ...product, image: `buy/buy${index + 1}.png`, cacheKey: `BUY_${index + 1}_IMAGE` }));
+].map((product) => ({ ...product, image: `buy/buy${product.asset}.png`, cacheKey: `BUY_${product.asset}_IMAGE` }));
+
+const PRODUCTS_BY_KEY = Object.fromEntries(PRODUCTS.map((product) => [product.key, product]));
+
+function getActiveProducts() {
+  return PRODUCTS.filter((product) => product.status === true);
+}
 
 function buildProductButton(product, username) {
   return { text: product.button, url: "https://t.me/" + username + "?text=" + encodeURIComponent(product.message) };
 }
 
-module.exports = { PRODUCTS, APP_PRODUCT: PRODUCTS[0], VOUCHER_PRODUCT: PRODUCTS[1], CREDITS_PRODUCT: PRODUCTS[2], buildProductButton };
+module.exports = {
+  PRODUCTS,
+  PRODUCTS_BY_KEY,
+  APP_PRODUCT: PRODUCTS_BY_KEY.app,
+  VOUCHER_PRODUCT: PRODUCTS_BY_KEY.vouchers,
+  CREDITS_PRODUCT: PRODUCTS_BY_KEY.credits,
+  buildProductButton,
+  getActiveProducts,
+};

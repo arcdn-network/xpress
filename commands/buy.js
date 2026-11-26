@@ -1,18 +1,18 @@
-const path = require("path");
+const { renderPhotoView } = require("../utils/photo-view");
+const { escapeHtml } = require("../utils/functions");
 const { APP_USERNAME } = require("../utils/constants");
-const { getFiles, saveFileTelegram } = require("../utils/files");
 
-const { PRODUCTS, buildProductButton } = require("../utils/products");
+const { getActiveProducts, buildProductButton } = require("../utils/products");
 
 function buildPage(page) {
-  const products = PRODUCTS.filter((product) => product.status === true);
+  const products = getActiveProducts();
   if (!products.length) return null;
   const index = ((page % products.length) + products.length) % products.length;
   const product = products[index];
   return {
     key: product.cacheKey,
-    file: path.resolve(__dirname, "../resources", product.image),
-    caption: `<b>${product.name}</b> · ${index + 1}/${products.length}\n\n${product.description}\n${product.rules}`,
+    file: product.image,
+    caption: `<b>${escapeHtml(product.name)}</b> · ${index + 1}/${products.length}\n\n${escapeHtml(product.description)}\n${escapeHtml(product.rules || "")}`,
     reply_markup: {
       inline_keyboard: [
         [
@@ -27,30 +27,23 @@ function buildPage(page) {
 
 module.exports = function registerBuyCommand(bot) {
   const pending = new Set();
-  async function show(chatId, page, messageId) {
+  async function show(chatId, page, message) {
+    const messageId = message?.message_id;
     const view = buildPage(page);
     if (!view) {
       const text = "No hay productos disponibles en el catálogo por el momento.";
-      return messageId
-        ? bot.editMessageCaption(text, { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } })
-        : bot.sendMessage(chatId, text);
+      return messageId ? bot.editMessageCaption(text, { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } }) : bot.sendMessage(chatId, text);
     }
-    const cached = getFiles()[view.key];
-    const options = { caption: view.caption, parse_mode: "HTML", reply_markup: view.reply_markup };
-    const response = messageId
-      ? await bot.editMessageMedia(
-          { type: "photo", media: cached || `attach://${view.file}`, caption: view.caption, parse_mode: "HTML" },
-          { chat_id: chatId, message_id: messageId, reply_markup: view.reply_markup },
-        )
-      : await bot.sendPhoto(chatId, cached || view.file, options);
-    if (!cached) {
-      try {
-        saveFileTelegram(response, view.key);
-      } catch (error) {
-        console.error("Error guardando caché del catálogo:", error.message);
-      }
-    }
+    return renderPhotoView(bot, {
+      chatId,
+      message,
+      cacheKey: view.key,
+      image: view.file,
+      text: view.caption,
+      replyMarkup: view.reply_markup,
+    });
   }
+
   bot.onText(/^\/buy(?:@\w+)?\s*$/i, async (msg) => {
     const key = `chat:${msg.chat.id}`;
     if (pending.has(key)) return;
@@ -77,7 +70,7 @@ module.exports = function registerBuyCommand(bot) {
     pending.add(key);
     try {
       await bot.answerCallbackQuery(query.id);
-      await show(chat.id, open ? 0 : Number(match[1]), open ? undefined : message_id);
+      await show(chat.id, open ? 0 : Number(match[1]), open ? undefined : query.message);
     } catch (error) {
       if (!/message is not modified/i.test(error.message || "")) {
         console.error("Error navegando catálogo:", error.message);

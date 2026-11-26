@@ -37,7 +37,7 @@ function saveFileTelegram(response, key) {
 }
 
 function deleteCachedFiles(scope) {
-  if (!["gallery", "shop", "all"].includes(scope)) throw new Error("Invalid cache scope");
+  if (!["gallery", "shop", "base"].includes(scope)) throw new Error("Invalid cache scope");
   if (!fs.existsSync(filesJsonPath)) return 0;
   // Fail on invalid JSON instead of overwriting entries that must be preserved.
   const files = JSON.parse(fs.readFileSync(filesJsonPath, "utf8"));
@@ -45,7 +45,8 @@ function deleteCachedFiles(scope) {
   let deleted = 0;
   for (const key of Object.keys(files)) {
     const gallery = key.startsWith("GALLERY_");
-    const shouldDelete = scope === "shop" ? shopCacheKeys.has(key) : scope === "gallery" ? gallery : !gallery;
+    const shop = shopCacheKeys.has(key);
+    const shouldDelete = scope === "shop" ? shop : scope === "gallery" ? gallery : !gallery && !shop;
     if (shouldDelete) {
       delete files[key];
       deleted++;

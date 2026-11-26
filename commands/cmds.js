@@ -1,14 +1,13 @@
-const path = require("path");
+const { renderPhotoView } = require("../utils/photo-view");
 const { CONFIG, VOUCHER_KEYS } = require("../vouchers");
-const { LOCAL, buildButtonsCredits, buildButtonsVoucherPlan } = require("../utils/constants");
+const { LOCAL, APP_USERNAME, buildButtonsVoucherPlan } = require("../utils/constants");
 
 const { getUser } = require("../utils/api");
 const { isOwner } = require("../middleware/isAdmin");
-const { sendMessage } = require("../utils/sender");
-const { VOUCHER_PRODUCT, CREDITS_PRODUCT } = require("../utils/products");
+
+const { getActiveProducts, PRODUCTS_BY_KEY, VOUCHER_PRODUCT, buildProductButton } = require("../utils/products");
 const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, FREE_BONUS_VOUCHER } = require("../utils/constants");
 
-const { getFiles, saveFileTelegram } = require("../utils/files");
 const { restantesGratis, tienePlanActivo } = require("../vouchers/access/availability");
 const { sendGalleryMessage } = require("../vouchers/access/telegram/gallery");
 const { escapeHtml } = require("../utils/functions");
@@ -19,7 +18,7 @@ function buildVoucherCommandsBlock(commands, offset) {
   return commands
     .map((comando, index) => {
       const formats = CONFIG[comando].examples.map((example) => "- Formato: <code>" + escapeHtml(example) + "</code>").join("\n");
-      return `${offset + index + 1}. <b>${CONFIG[comando].name || comando.toUpperCase()} ✅</b>\n${formats}`;
+      return `${offset + index + 1}. <b>${escapeHtml(CONFIG[comando].name || comando.toUpperCase())} ✅</b>\n${formats}`;
     })
     .join("\n\n");
 }
@@ -27,7 +26,7 @@ function buildVoucherCommandsBlock(commands, offset) {
 function buildView(section, admin, userId, requestedPage = 0, availability = "") {
   const callback = (value) => `cmds:${userId}:${value}`;
   if (section === "menu") {
-    const buttons = [[{ text: "⭐ PLAN VOUCHERS", callback_data: callback("vouchers") }], [{ text: "🚀 ACTIVACIONES YAPE APP", callback_data: callback("activaciones") }]];
+    const buttons = getActiveProducts().map((product) => [{ text: product.name, callback_data: callback(product.key) }]);
     if (admin) buttons.push([{ text: "🛠️ ADMIN", callback_data: callback("admin") }]);
     return {
       text: "📋 <b>COMANDOS DISPONIBLES</b>\n\nSelecciona una sección:",
@@ -41,7 +40,7 @@ function buildView(section, admin, userId, requestedPage = 0, availability = "")
     const offset = page * VOUCHERS_PER_PAGE;
     const commands = VOUCHER_KEYS.slice(offset, offset + VOUCHERS_PER_PAGE);
     return {
-      text: `⭐ <b>PLAN VOUCHERS</b>\n📂 Página ${page + 1}/${totalPages} · ${VOUCHER_KEYS.length} comandos\n\n${buildVoucherCommandsBlock(commands, offset)}\n\n🎁 ${availability}`,
+      text: `<b>${escapeHtml(VOUCHER_PRODUCT.title || VOUCHER_PRODUCT.name)}</b>\n📂 Página ${page + 1}/${totalPages} · ${VOUCHER_KEYS.length} comandos\n\n${buildVoucherCommandsBlock(commands, offset)}\n\n🎁 ${availability}`,
       reply_markup: {
         inline_keyboard: [
           [
@@ -55,68 +54,59 @@ function buildView(section, admin, userId, requestedPage = 0, availability = "")
     };
   }
 
+  const product = PRODUCTS_BY_KEY[section];
+  if (product) {
+    const commands = (product.commands || []).map((item) => `${escapeHtml(item.description)}\n<code>${escapeHtml(item.command)}</code>`).join("\n\n");
+    return {
+      text: `<b>${escapeHtml(product.title || product.name)}</b>\n\n<blockquote>${escapeHtml(product.description)}</blockquote>\n\n${commands}`,
+      reply_markup: { inline_keyboard: [[buildProductButton(product, APP_USERNAME)], [{ text: "🏠 Regresar Menú", callback_data: callback("menu") }]] },
+    };
+  }
+
+  const adminCommands = [
+    { command: "/creditos telegramId", description: "Gestiona créditos de activaciones." },
+    { command: "/dias telegramId", description: "Gestiona el plan de vouchers." },
+    { command: "/create_token nombre|30|true", description: 'Crea un TOKEN API. Usa "true" para plan ilimitado.' },
+    { command: "/extender_token TOKEN|DIAS", description: "Extiende la duración de un TOKEN API existente." },
+    { command: "/delete_gallery", description: "Borra únicamente la caché de la galería." },
+    { command: "/delete_shop", description: "Borra únicamente la caché de las imágenes del catálogo." },
+    { command: "/delete_base", description: "Borra la caché base y conserva la galería y las imágenes del catálogo." },
+  ];
+
   const sections = {
-    activaciones: `🚀 <b>ACTIVACIONES YAPE FAKE - ANDROID/IPHONE</b>
-
-<blockquote>Este bot es exclusivo para clientes que tienen su cuenta de Yape Fake en aplicativo. Te permite activar a mitad de precio para que puedas ganar el 50% 💸.</blockquote>
-
-<code>/activate correo@gmail.com</code>
-Activa una cuenta de un cliente registrado.
-
-<code>/info correo@gmail.com</code>
-Ver información del cliente.
-
-<code>/token</code>
-Genera token de autocompletado.
-
-<code>/historial</code>
-Ver el historial de tus activaciones.`,
-    admin: `🛠️ <b>ADMIN</b>
-
-<code>/creditos telegramId</code>
-Gestiona créditos de activaciones.
-
-<code>/dias telegramId</code>
-Gestiona el plan de vouchers.
-
-<code>/create_token nombre|dias|unlimited</code>
-Crea un TOKEN API. Usa "true" en unlimited para plan ilimitado.
-
-<code>/extender_token TOKEN|DIAS</code>
-Extiende la duración de un TOKEN API existente.
-
-<code>/delete_gallery</code>
-Borra únicamente la caché de la galería.
-
-<code>/delete_shop</code>
-Borra únicamente la caché de las imágenes del catálogo.
-
-<code>/delete_all</code>
-Borra las demás entradas de caché y conserva la galería.`,
+    admin: `🛠️ <b>ADMIN</b>\n\n${adminCommands.map((item) => `${escapeHtml(item.description)}\n<code>${escapeHtml(item.command)}</code>`).join("\n\n")}`,
   };
+
   const buttons = [[{ text: "🏠 Regresar Menú", callback_data: callback("menu") }]];
-  if (section === "activaciones") buttons.push(...buildButtonsCredits().inline_keyboard);
   return { text: sections[section], reply_markup: { inline_keyboard: buttons } };
 }
 
 function registerCmdsCommand(bot) {
+  const pending = new Set();
   bot.onText(/^\/cmds(?:@\w+)?\s*$/, async (msg) => {
     const view = buildView("menu", isOwner(msg.from.id), msg.from.id);
-    const fileId = getFiles().TARGET_IMAGE;
-    const response = await sendMessage(bot, msg.chat.id, {
+    await renderPhotoView(bot, {
+      chatId: msg.chat.id,
+      cacheKey: "TARGET_IMAGE",
+      image: LOCAL.TARGET_IMAGE,
       text: view.text,
-      fileId,
-      filePath: LOCAL.TARGET_IMAGE,
       replyMarkup: view.reply_markup,
     });
-    if (!fileId) saveFileTelegram(response, "TARGET_IMAGE");
   });
 
   bot.on("callback_query", async (query) => {
     if (!query.data?.startsWith("cmds:")) return;
+    const lockKey = query.message && `${query.message.chat.id}:${query.message.message_id}`;
+    if (pending.has(lockKey)) {
+      await bot.answerCallbackQuery(query.id).catch(() => {});
+      return;
+    }
+    pending.add(lockKey);
     try {
-      const match = /^cmds:(\d+):(menu|activaciones|vouchers|admin|noop|gallery)(?::(\d{1,6}))?$/.exec(query.data);
-      if (!match || !query.message) {
+      const match = /^cmds:(\d+):([a-z]+)(?::(\d{1,6}))?$/.exec(query.data);
+      if (match?.[2] === "activaciones") match[2] = "credits";
+      const selectedProduct = match && Object.hasOwn(PRODUCTS_BY_KEY, match[2]) ? PRODUCTS_BY_KEY[match[2]] : null;
+      if (!match || !query.message || (!selectedProduct && !["menu", "admin", "noop", "gallery"].includes(match[2])) || (selectedProduct && selectedProduct.status !== true)) {
         await bot.answerCallbackQuery(query.id, { text: "Menú inválido. Usa /cmds nuevamente." });
         return;
       }
@@ -152,33 +142,23 @@ function registerCmdsCommand(bot) {
         }
       }
       const view = buildView(match[2], admin, query.from.id, Number(match[3] || 0), availability);
-      const product = { vouchers: VOUCHER_PRODUCT, activaciones: CREDITS_PRODUCT }[match[2]];
+      const product = selectedProduct;
       const imageKey = product ? product.cacheKey : "TARGET_IMAGE";
       const imagePath = product ? product.image : LOCAL.TARGET_IMAGE;
-      const cachedImage = getFiles()[imageKey];
-      const options = {
-        chat_id: query.message.chat.id,
-        message_id: query.message.message_id,
-        reply_markup: view.reply_markup,
-      };
-      if (cachedImage && query.message.photo?.some((photo) => photo.file_id === cachedImage)) {
-        await bot.editMessageCaption(view.text, { ...options, parse_mode: "HTML" });
-      } else {
-        const response = await bot.editMessageMedia(
-          {
-            type: "photo",
-            media: cachedImage || `attach://${path.resolve(__dirname, "../resources", imagePath)}`,
-            caption: view.text,
-            parse_mode: "HTML",
-          },
-          options,
-        );
-        if (!cachedImage) saveFileTelegram(response, imageKey);
-      }
+      await renderPhotoView(bot, {
+        chatId: query.message.chat.id,
+        message: query.message,
+        cacheKey: imageKey,
+        image: imagePath,
+        text: view.text,
+        replyMarkup: view.reply_markup,
+      });
     } catch (error) {
       if (!/message is not modified/i.test(error.message || "")) {
         console.error("Error en menú /cmds:", error.message);
       }
+    } finally {
+      pending.delete(lockKey);
     }
   });
 }
