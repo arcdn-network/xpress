@@ -1,56 +1,81 @@
-const { sendMessage } = require("../utils/sender");
-const { buildButtonsCredits, LOCAL, BASE_ACTIVATION_COST, EXTRA_BANK_COST } = require("../utils/constants");
+const path = require("path");
+const { APP_USERNAME } = require("../utils/constants");
 const { getFiles, saveFileTelegram } = require("../utils/files");
 
-function buildBuyMessage() {
-  return `
-💳 <b>TARIFARIO DE CRÉDITOS</b>
+const { PRODUCTS: products, buildProductButton } = require("../utils/products");
 
-🎯 <b>Consumo de créditos</b>
-- Yape Fake ➤ ${BASE_ACTIVATION_COST} créditos
-- Banca Fake ➤ ${EXTRA_BANK_COST} créditos
-
-📈 Ganancia reseller: hasta 60%. Precios libres.
-
-🛒 Compra tus créditos aquí 👇
-`.trim();
+function buildPage(page) {
+  const index = ((page % products.length) + products.length) % products.length;
+  const product = products[index];
+  return {
+    key: product.cacheKey,
+    file: path.resolve(__dirname, "../resources", product.image),
+    caption: `🏪 <b>Yape demostración sin validez</b>\n\n<b>${product.name}</b> · ${index + 1}/${products.length}\n\n${product.description}\n\nSIMULACIÓN — SIN VALIDEZ DE PAGO`,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "⬅️ Atrás", callback_data: `buy:page:${(index + products.length - 1) % products.length}` },
+          { text: "Siguiente ➡️", callback_data: `buy:page:${(index + 1) % products.length}` },
+        ],
+        [buildProductButton(product, APP_USERNAME)],
+      ],
+    },
+  };
 }
 
-function registerBuyCommand(bot) {
-  bot.onText(/\/buy/, async (msg) => {
-    const chatId = msg.chat.id;
-
+module.exports = function registerBuyCommand(bot) {
+  const pending = new Set();
+  async function show(chatId, page, messageId) {
+    const view = buildPage(page);
+    const cached = getFiles()[view.key];
+    const options = { caption: view.caption, parse_mode: "HTML", reply_markup: view.reply_markup };
+    const response = messageId
+      ? await bot.editMessageMedia(
+          { type: "photo", media: cached || `attach://${view.file}`, caption: view.caption, parse_mode: "HTML" },
+          { chat_id: chatId, message_id: messageId, reply_markup: view.reply_markup },
+        )
+      : await bot.sendPhoto(chatId, cached || view.file, options);
+    if (!cached) {
+      try {
+        saveFileTelegram(response, view.key);
+      } catch (error) {
+        console.error("Error guardando caché del catálogo:", error.message);
+      }
+    }
+  }
+  bot.onText(/^\/buy(?:@\w+)?\s*$/i, async (msg) => {
+    const key = `chat:${msg.chat.id}`;
+    if (pending.has(key)) return;
+    pending.add(key);
     try {
-      const response = buildBuyMessage();
-
-      await sendBuyMessage(bot, chatId, response);
+      await show(msg.chat.id, 0);
     } catch (error) {
       console.error("Error en /buy:", error.message);
-      await bot.sendMessage(chatId, "Error al mostrar la información de compra");
+      await bot.sendMessage(msg.chat.id, "❌ No se pudo abrir el catálogo. Inténtalo nuevamente.");
+    } finally {
+      pending.delete(key);
     }
   });
-}
-
-async function sendBuyMessage(bot, chatId, text) {
-  const files = getFiles();
-
-  if (files.CREDITS_IMAGE) {
-    return sendMessage(bot, chatId, {
-      text,
-      fileId: files.CREDITS_IMAGE,
-      replyMarkup: buildButtonsCredits(),
-    });
-  }
-
-  const telegramResponse = await sendMessage(bot, chatId, {
-    text,
-    filePath: LOCAL.CREDITS_IMAGE,
-    replyMarkup: buildButtonsCredits(),
+  bot.on("callback_query", async (query) => {
+    const open = query.data === "buy:open";
+    const match = /^buy:page:([0-2])$/.exec(query.data || "");
+    if ((!open && !match) || !query.message) return;
+    const { chat, message_id } = query.message;
+    const key = open ? `chat:${chat.id}` : `${chat.id}:${message_id}`;
+    if (pending.has(key)) {
+      await bot.answerCallbackQuery(query.id).catch(() => {});
+      return;
+    }
+    pending.add(key);
+    try {
+      await bot.answerCallbackQuery(query.id);
+      await show(chat.id, open ? 0 : Number(match[1]), open ? undefined : message_id);
+    } catch (error) {
+      if (!/message is not modified/i.test(error.message || "")) {
+        console.error("Error navegando catálogo:", error.message);
+      }
+    } finally {
+      pending.delete(key);
+    }
   });
-
-  saveFileTelegram(telegramResponse, "CREDITS_IMAGE");
-
-  return telegramResponse;
-}
-
-module.exports = registerBuyCommand;
+};

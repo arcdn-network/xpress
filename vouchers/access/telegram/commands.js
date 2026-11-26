@@ -1,4 +1,5 @@
-const { LOCAL, FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
+const { VOUCHER_PRODUCT } = require("../../../utils/products");
+const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
 const { CONFIG, VOUCHER_KEYS } = require("../../catalog");
 
 const COOLDOWN_MS = 10000;
@@ -99,21 +100,21 @@ function createVoucherHandler(bot, comando) {
     if (!esIlimitado && !puedeUsarGratis(user)) {
       const files = getFiles();
 
-      if (files.VOUCHER_IMAGE) {
+      if (files[VOUCHER_PRODUCT.cacheKey]) {
         return sendMessage(bot, chatId, {
           text: textoLimiteAlcanzado(),
-          fileId: files.VOUCHER_IMAGE,
+          fileId: files[VOUCHER_PRODUCT.cacheKey],
           replyMarkup: buildButtonsVoucherPlan(),
         });
       }
 
       const telegramResponse = await sendMessage(bot, chatId, {
         text: textoLimiteAlcanzado(),
-        filePath: LOCAL.VOUCHER_IMAGE,
+        filePath: VOUCHER_PRODUCT.image,
         replyMarkup: buildButtonsVoucherPlan(),
       });
 
-      saveFileTelegram(telegramResponse, "VOUCHER_IMAGE");
+      saveFileTelegram(telegramResponse, VOUCHER_PRODUCT.cacheKey);
       return;
     }
 

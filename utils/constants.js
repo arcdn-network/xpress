@@ -1,11 +1,9 @@
+const { PRODUCTS, CREDITS_PRODUCT, VOUCHER_PRODUCT, buildProductButton } = require("./products");
 const LOCAL = {
-  BOT_IMAGE: "bot.png",
   TARGET_IMAGE: "target.png",
   WELCOME_IMAGE: "welcome.png",
-  CREDITS_IMAGE: "credits.png",
-  RECHARGE_IMAGE: "recharge.png",
-  VOUCHER_IMAGE: "prices.png",
   BROADCAST_IMAGE: "flayer.png",
+  ...Object.fromEntries(PRODUCTS.map((product) => [product.cacheKey, product.image])),
   APK_FILE: "resources/files/Yape_Fake.apk",
 };
 
@@ -28,26 +26,6 @@ const USE_DAILY_LIMIT = true;
 const FREE_DAILY_LIMIT = 2;
 const FREE_BONUS_VOUCHER = 5;
 
-function buildTelegramLink(username, mensaje) {
-  return `https://t.me/${username}?text=${encodeURIComponent(mensaje)}`;
-}
-
-const RESELLERS = [
-  {
-    text: "💰 Comprar créditos",
-    url: buildTelegramLink(APP_USERNAME, `Hola, quiero comprar créditos de ${APP_NAME}`),
-    visible: true,
-  },
-];
-
-const VOUCHER_PLAN_CONTACT = [
-  {
-    text: "⭐ Adquirir plan de vouchers",
-    url: buildTelegramLink(APP_USERNAME, `Hola, quiero adquirir el plan de vouchers de ${APP_NAME}`),
-    visible: true,
-  },
-];
-
 const TARIFARIO = [
   { credits: 50, price: 50, active: true },
   { credits: 100, price: 95, active: true },
@@ -56,52 +34,11 @@ const TARIFARIO = [
 ];
 
 function buildButtonsCredits() {
-  return {
-    inline_keyboard: RESELLERS.filter((item) => item.visible).map((item) => [
-      {
-        text: item.text,
-        url: item.url,
-      },
-    ]),
-  };
+  return { inline_keyboard: [[buildProductButton(CREDITS_PRODUCT, APP_USERNAME)]] };
 }
 
 function buildButtonsVoucherPlan() {
-  return {
-    inline_keyboard: VOUCHER_PLAN_CONTACT.filter((item) => item.visible).map((item) => [
-      {
-        text: item.text,
-        url: item.url,
-      },
-    ]),
-  };
-}
-
-function buildButtonsCreditsWithApk() {
-  const resellers = RESELLERS.filter((item) => item.visible).map((item) => [
-    {
-      text: item.text,
-      url: item.url,
-    },
-  ]);
-
-  const buttons = [
-    [
-      {
-        text: "🌐 WEB (Android/IPhone)",
-        switch_inline_query_current_chat: "/web",
-      },
-      {
-        text: "⬇️ APK (Android)",
-        switch_inline_query_current_chat: "/apk",
-      },
-    ],
-    ...resellers,
-  ];
-
-  return {
-    inline_keyboard: buttons,
-  };
+  return { inline_keyboard: [[buildProductButton(VOUCHER_PRODUCT, APP_USERNAME)]] };
 }
 
 function buildPaquetesMessage() {
@@ -127,7 +64,6 @@ module.exports = {
   FREE_DAILY_LIMIT,
   FREE_BONUS_VOUCHER,
   buildButtonsCredits,
-  buildButtonsCreditsWithApk,
   buildButtonsVoucherPlan,
   buildPaquetesMessage,
 };

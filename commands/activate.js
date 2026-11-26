@@ -1,3 +1,4 @@
+const { CREDITS_PRODUCT } = require("../utils/products");
 const { buildButtonsCredits, APP_NAME, LOCAL, BASE_ACTIVATION_COST, EXTRA_BANK_COST } = require("../utils/constants");
 const { getUser, updateUser, getYapeClient, updateYapeClient, createActivacionLog } = require("../utils/api");
 const { sendMessage } = require("../utils/sender");
@@ -23,21 +24,21 @@ function delay(ms) {
 async function sendRechargeMessage(bot, chatId, text) {
   const files = getFiles();
 
-  if (files.RECHARGE_IMAGE) {
+  if (files[CREDITS_PRODUCT.cacheKey]) {
     return sendMessage(bot, chatId, {
       text,
-      fileId: files.RECHARGE_IMAGE,
+      fileId: files[CREDITS_PRODUCT.cacheKey],
       replyMarkup: buildButtonsCredits(),
     });
   }
 
   const telegramResponse = await sendMessage(bot, chatId, {
     text,
-    filePath: LOCAL.RECHARGE_IMAGE,
+    filePath: CREDITS_PRODUCT.image,
     replyMarkup: buildButtonsCredits(),
   });
 
-  saveFileTelegram(telegramResponse, "RECHARGE_IMAGE");
+  saveFileTelegram(telegramResponse, CREDITS_PRODUCT.cacheKey);
 
   return telegramResponse;
 }

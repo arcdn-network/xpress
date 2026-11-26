@@ -1,4 +1,5 @@
 const { isOwner } = require("../middleware/isAdmin");
+const { VOUCHER_PRODUCT } = require("../utils/products");
 const path = require("path");
 const { CONFIG, VOUCHER_KEYS } = require("../vouchers");
 const { LOCAL, buildButtonsCredits, buildButtonsVoucherPlan } = require("../utils/constants");
@@ -88,9 +89,8 @@ Borra únicamente la caché de la galería.
 <code>/delete_all</code>
 Borra las demás entradas de caché y conserva la galería.`,
   };
-  const buttons = [];
+  const buttons = [[{ text: "🏠 Regresar Menú", callback_data: callback("menu") }]];
   if (section === "activaciones") buttons.push(...buildButtonsCredits().inline_keyboard);
-  buttons.push([{ text: "🏠 Regresar Menú", callback_data: callback("menu") }]);
   return { text: sections[section], reply_markup: { inline_keyboard: buttons } };
 }
 
@@ -147,7 +147,8 @@ function registerCmdsCommand(bot) {
         }
       }
       const view = buildView(match[2], admin, query.from.id, Number(match[3] || 0), availability);
-      const imageKey = match[2] === "vouchers" ? "BOT_IMAGE" : "TARGET_IMAGE";
+      const imageKey = match[2] === "vouchers" ? VOUCHER_PRODUCT.cacheKey : "TARGET_IMAGE";
+      const imagePath = match[2] === "vouchers" ? VOUCHER_PRODUCT.image : LOCAL.TARGET_IMAGE;
       const cachedImage = getFiles()[imageKey];
       const options = {
         chat_id: query.message.chat.id,
@@ -160,7 +161,7 @@ function registerCmdsCommand(bot) {
         const response = await bot.editMessageMedia(
           {
             type: "photo",
-            media: cachedImage || `attach://${path.resolve(__dirname, "../resources", LOCAL[imageKey])}`,
+            media: cachedImage || `attach://${path.resolve(__dirname, "../resources", imagePath)}`,
             caption: view.text,
             parse_mode: "HTML",
           },

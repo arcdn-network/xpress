@@ -1,8 +1,13 @@
 const { sendMessage } = require("../utils/sender");
 const { formatDate } = require("../utils/functions");
-const { buildButtonsCreditsWithApk, buildButtonsCredits, APP_NAME, LOCAL } = require("../utils/constants");
+const { APP_NAME, LOCAL, FREE_DAILY_LIMIT } = require("../utils/constants");
 const { getFiles, saveFileTelegram } = require("../utils/files");
 const { getUser, createUser, updateUser } = require("../utils/api");
+const { restantesGratis } = require("../vouchers/access/availability");
+
+function buildCatalogButton() {
+  return { inline_keyboard: [[{ text: "🏪 Ver Catálogo", callback_data: "buy:open" }]] };
+}
 
 function buildStartMessage(firstName) {
   return `
@@ -18,20 +23,15 @@ Para utilizar este bot primero debes registrarte utilizando:
 `.trim();
 }
 
-function buildRegisterSuccessMessage(firstName, user) {
+function buildRegisterSuccessMessage(firstName, user, alreadyRegistered = false) {
+  const heading = alreadyRegistered ? `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>${APP_NAME}</b> 🧑‍🦯` : `<b>${firstName}</b> te registraste correctamente ✅`;
   return `
-<b>${firstName}</b> te registraste correctamente ✅
+${heading}
 
 [〽️] ROL ➤ USUARIO
 [📅] REGISTRADO ➤ ${formatDate(user.registeredAt)}
-
-Actualmente cuentas con <b>${user.credits} créditos</b>.
-Para comprar créditos haz click en el enlace de abajo.
+[🎁] ${restantesGratis(user)}/${FREE_DAILY_LIMIT} vouchers diarios
 `.trim();
-}
-
-function buildAlreadyRegisteredMessage(firstName) {
-  return `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>${APP_NAME}</b> 🧑‍🦯`.trim();
 }
 
 async function sendWelcomeMessage(bot, chatId, text, replyMarkup) {
@@ -64,7 +64,7 @@ function registerStartCommand(bot) {
 
     try {
       const response = buildStartMessage(firstName);
-      await sendWelcomeMessage(bot, chatId, response, buildButtonsCreditsWithApk());
+      await sendWelcomeMessage(bot, chatId, response, buildCatalogButton());
     } catch (error) {
       console.error("Error en /start:", error.message);
       await bot.sendMessage(chatId, "Error al mostrar el mensaje de bienvenida");
@@ -88,11 +88,8 @@ function registerStartCommand(bot) {
           await updateUser(telegramId, { username });
         }
 
-        const response = buildAlreadyRegisteredMessage(firstName);
-
-        await bot.sendMessage(chatId, response, {
-          parse_mode: "HTML",
-        });
+        const response = buildRegisterSuccessMessage(firstName, user, true);
+        await sendWelcomeMessage(bot, chatId, response, buildCatalogButton());
 
         return;
       }
@@ -109,7 +106,7 @@ function registerStartCommand(bot) {
       user = await createUser(body);
 
       const response = buildRegisterSuccessMessage(firstName, user);
-      await sendWelcomeMessage(bot, chatId, response, buildButtonsCredits());
+      await sendWelcomeMessage(bot, chatId, response, buildCatalogButton());
     } catch (error) {
       console.error("Error en /register:", error.message);
       await bot.sendMessage(chatId, error.code === "BACKEND_UNAVAILABLE" ? error.message : "Error al procesar tu registro");
