@@ -1,19 +1,25 @@
 const PRODUCTS = [
   {
     name: "🚀 Yape App",
+    status: true,
     description: "Aplicación de demostración para simular la experiencia de uso. No realiza pagos reales.",
+    rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
     button: "🚀 Comprar App",
     message: "Hola, quiero comprar la aplicación Yape de demostración, sin validez de pago.",
   },
   {
     name: "⭐ Plan Vouchers",
+    status: true,
     description: "Formatos de ejemplo con marca SIMULACIÓN — SIN VALIDEZ DE PAGO. No acreditan transferencias.",
+    rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
     button: "⭐ Adquirir plan vouchers",
     message: "Hola, quiero adquirir el plan de vouchers de demostración de YapeXpress, sin validez de pago.",
   },
   {
     name: "💰 Activaciones Apps",
+    status: true,
     description: "Créditos para activar aplicaciones de demostración. No representan saldo bancario ni permiten realizar pagos.",
+    rules: "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
     button: "💰 Comprar créditos",
     message: "Hola, quiero comprar créditos de YapeXpress para aplicaciones de demostración, sin validez de pago.",
   },

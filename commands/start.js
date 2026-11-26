@@ -1,5 +1,5 @@
 const { sendMessage } = require("../utils/sender");
-const { formatDate } = require("../utils/functions");
+const { formatDate, escapeHtml } = require("../utils/functions");
 const { APP_NAME, LOCAL, FREE_DAILY_LIMIT } = require("../utils/constants");
 const { getFiles, saveFileTelegram } = require("../utils/files");
 const { getUser, createUser, updateUser } = require("../utils/api");
@@ -10,6 +10,7 @@ function buildCatalogButton() {
 }
 
 function buildStartMessage(firstName) {
+  firstName = escapeHtml(firstName);
   return `
 Hola, que tal <b>${firstName}</b>? Bienvenido a <b>${APP_NAME}</b>!
 
@@ -24,6 +25,7 @@ Para utilizar este bot primero debes registrarte utilizando:
 }
 
 function buildRegisterSuccessMessage(firstName, user, alreadyRegistered = false) {
+  firstName = escapeHtml(firstName);
   const heading = alreadyRegistered ? `[⚠] Estimado <b>${firstName}</b> ya te encuentras registrado en <b>${APP_NAME}</b> 🧑‍🦯` : `<b>${firstName}</b> te registraste correctamente ✅`;
   return `
 ${heading}

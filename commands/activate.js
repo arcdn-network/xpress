@@ -1,3 +1,4 @@
+const { ExpiringMap } = require("../utils/expiring-map");
 const { CREDITS_PRODUCT } = require("../utils/products");
 const { buildButtonsCredits, APP_NAME, LOCAL, BASE_ACTIVATION_COST, EXTRA_BANK_COST } = require("../utils/constants");
 const { getUser, updateUser, getYapeClient, updateYapeClient, createActivacionLog } = require("../utils/api");
@@ -14,7 +15,7 @@ const pendingActivations = new Map();
 const processingActivations = new Set();
 const pendingActivationByUser = new Map();
 
-const pendingActivationFlows = new Map();
+const pendingActivationFlows = new ExpiringMap();
 const processingActivationFlows = new Set();
 
 function delay(ms) {
@@ -319,8 +320,7 @@ function buildInsufficientCreditsMessage(user, cost) {
 - Créditos actuales ➣ ${user.credits}
 
 <b>[📌] INFORMACIÓN</b>
-- No cuentas con créditos suficientes.
-- Para recargar créditos usa /buy`;
+- No cuentas con créditos suficientes.`;
 }
 
 function buildConfirmActivationMessage(client, pendingLicenses, cost, unlimitedStatus) {
@@ -524,17 +524,7 @@ async function openActivationSelector(bot, flow) {
   });
 }
 
-async function openActivationConfirmation(
-  bot,
-  chatId,
-  messageId,
-  telegramId,
-  client,
-  requestedLicenses,
-  rawValue,
-  previousSelectedBanks = [],
-  supplierId,
-) {
+async function openActivationConfirmation(bot, chatId, messageId, telegramId, client, requestedLicenses, rawValue, previousSelectedBanks = [], supplierId) {
   const user = await getUser(telegramId);
 
   if (!user) {
@@ -611,12 +601,7 @@ function registerActivateCallback(bot) {
     const chatId = query.message?.chat?.id;
     const messageId = query.message?.message_id;
 
-    if (
-      !data.startsWith("activate_confirm_") &&
-      !data.startsWith("activate_cancel_") &&
-      !data.startsWith("activate_back_") &&
-      !data.startsWith("activate_flow:")
-    ) {
+    if (!data.startsWith("activate_confirm_") && !data.startsWith("activate_cancel_") && !data.startsWith("activate_back_") && !data.startsWith("activate_flow:")) {
       return;
     }
 
@@ -692,13 +677,7 @@ function registerActivateCallback(bot) {
 
         const selectedBanks = payload.previousSelectedBanks || [];
 
-        await safeEditCaption(
-          bot,
-          chatId,
-          messageId,
-          buildActivationSelectorMessage(client, user, selectedBanks),
-          buildActivationSelectorKeyboard(payload.telegramId, client, user, selectedBanks),
-        );
+        await safeEditCaption(bot, chatId, messageId, buildActivationSelectorMessage(client, user, selectedBanks), buildActivationSelectorKeyboard(payload.telegramId, client, user, selectedBanks));
 
         pendingActivationFlows.set(payload.telegramId, {
           telegramId: payload.telegramId,
@@ -793,8 +772,7 @@ function registerActivateCallback(bot) {
           return;
         }
 
-        const resellerId =
-          PROVIDER_BY_TELEGRAM_ID[telegramId]?.resellerId ?? (unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID);
+        const resellerId = PROVIDER_BY_TELEGRAM_ID[telegramId]?.resellerId ?? (unlimitedStatus.isUnlimited ? unlimitedStatus.resellerId : DEFAULT_RESELLER_ID);
 
         const newCredits = unlimitedStatus.isUnlimited ? user.credits : user.credits - cost;
 
@@ -833,13 +811,7 @@ function registerActivateCallback(bot) {
         const updatedUser = { ...user, credits: newCredits };
         const resellerName = getUserDisplayName(updatedUser);
 
-        await safeEditCaption(
-          bot,
-          chatId,
-          messageId,
-          buildActivationSuccessMessage(client, updatedUser, pendingLicenses, cost, resellerName, unlimitedStatus),
-          { inline_keyboard: [] },
-        );
+        await safeEditCaption(bot, chatId, messageId, buildActivationSuccessMessage(client, updatedUser, pendingLicenses, cost, resellerName, unlimitedStatus), { inline_keyboard: [] });
 
         clearActivationState(confirmId);
         return;
@@ -891,9 +863,7 @@ function registerActivateCallback(bot) {
             return;
           }
 
-          const nextSelectedBanks = flow.selectedBanks.includes(value)
-            ? flow.selectedBanks.filter((item) => item !== value)
-            : [...flow.selectedBanks, value];
+          const nextSelectedBanks = flow.selectedBanks.includes(value) ? flow.selectedBanks.filter((item) => item !== value) : [...flow.selectedBanks, value];
 
           const uniqueBanks = [];
           const seen = new Set();
@@ -959,17 +929,7 @@ function registerActivateCallback(bot) {
 
           clearActivationFlow(telegramId);
 
-          await openActivationConfirmation(
-            bot,
-            flow.chatId,
-            flow.messageId,
-            telegramId,
-            flow.client,
-            requestedLicenses,
-            rawValue,
-            flow.selectedBanks,
-            flow.supplierId,
-          );
+          await openActivationConfirmation(bot, flow.chatId, flow.messageId, telegramId, flow.client, requestedLicenses, rawValue, flow.selectedBanks, flow.supplierId);
 
           processingActivationFlows.delete(telegramId);
           return;

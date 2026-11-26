@@ -1,10 +1,11 @@
+const { ExpiringMap } = require("../../../utils/expiring-map");
 const { VOUCHER_PRODUCT } = require("../../../utils/products");
-const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
 const { CONFIG, VOUCHER_KEYS } = require("../../catalog");
+const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, getUser, updateUser, buildButtonsVoucherPlan, getFiles, saveFileTelegram, formatDateTime, formatDateLima, sendMessage } = require("../host");
 
 const COOLDOWN_MS = 10000;
 const COOLDOWN_MS_PLAN = COOLDOWN_MS / 2;
-const cooldowns = new Map();
+const cooldowns = new ExpiringMap({ ttlMs: COOLDOWN_MS });
 const enProceso = new Set();
 
 const { restantesGratis, puedeUsarGratis, tienePlanActivo } = require("../availability");
@@ -140,11 +141,13 @@ function createVoucherHandler(bot, comando) {
     if (!validarDigitos(digitos, cantidad)) return sendError();
 
     enProceso.add(userId);
-    const loading = await bot.sendMessage(chatId, "⏳ Generando voucher...", {
-      reply_to_message_id: msg.message_id,
-    });
+    let loading;
 
     try {
+      loading = await bot.sendMessage(chatId, "⏳ Generando voucher...", {
+        reply_to_message_id: msg.message_id,
+      });
+
       const base64 = await service({ monto, nombre, digitos, mensaje, destino });
       const buffer = Buffer.from(base64, "base64");
 
@@ -164,7 +167,7 @@ function createVoucherHandler(bot, comando) {
           : `♾️ *Plan:* Ilimitado sin vencimiento`
         : lineaEstadoGratis(restantes);
 
-      await bot.deleteMessage(chatId, loading.message_id);
+      await bot.deleteMessage(chatId, loading.message_id).catch(() => {});
       await bot.sendDocument(
         chatId,
         buffer,
@@ -186,7 +189,7 @@ function createVoucherHandler(bot, comando) {
       );
     } catch (error) {
       console.error(`Error en /${comando}:`, error.message);
-      await bot.deleteMessage(chatId, loading.message_id).catch(() => {});
+      if (loading) await bot.deleteMessage(chatId, loading.message_id).catch(() => {});
       await bot.sendMessage(chatId, "❌ Error al generar el voucher", replyOpts);
     } finally {
       enProceso.delete(userId);

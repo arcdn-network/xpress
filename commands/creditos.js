@@ -1,3 +1,4 @@
+const { ExpiringMap } = require("../utils/expiring-map");
 const { getUser, updateUser, searchReseller, createCreditLog } = require('../utils/api');
 const { TARIFARIO } = require('../utils/constants');
 const { formatDateTime } = require('../utils/functions');
@@ -6,8 +7,8 @@ const { isAdmin } = require('../middleware/isAdmin');
 const { mySupplierId } = require('../utils/data');
 
 const creditosProcessingUsers = new Set();
-const pendingCustomAmount = new Map();
-const pendingUnlimitedFlow = new Map();
+const pendingCustomAmount = new ExpiringMap();
+const pendingUnlimitedFlow = new ExpiringMap();
 
 const UNLIMITED_OPTIONS = [
   { label: '7 días', days: 7 },

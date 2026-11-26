@@ -53,4 +53,8 @@ function formatDateLima() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 }
 
-module.exports = { formatDate, formatDateTime, formatShortDateTime, formatDateLima };
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+module.exports = { formatDate, formatDateTime, formatShortDateTime, formatDateLima, escapeHtml };

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "🚀 Yape Fake App",
+    "status": true,
+    "description": "Aplicación para Android y iPhone. Realiza Yapeos, transferencias, recargas y mucho más. Gestiona tus movimientos, autocompletado de nombres, de pago único y permanente.\n",
+    "rules": "➤ Descarga Android → /apk\n➤ Descarga IPhone → /iphone",
+    "button": "🚀 Comprar Aplicación",
+    "message": "Hola, quiero comprar la aplicación de Yape Fake"
+  },
+  {
+    "name": "⭐ Plan Vouchers",
+    "status": true,
+    "description": "Genera todos los vouchers que necesites, cuando quieras. Más de 15 formatos disponibles.\n",
+    "rules": "➤ Uso ilimitado.\n➤ Operativo 24/7.\n➤ Formatos disponibles → /ejemplos",
+    "button": "⭐ Adquirir plan vouchers",
+    "message": "Hola, quiero adquirir el plan de vouchers de YapeXpress"
+  },
+  {
+    "name": "💰 Compra de Créditos",
+    "status": true,
+    "description": "Bot exclusivo para clientes que tienen su cuenta de Yape Fake en aplicativo. Te permite activar a mitad de precio para que puedas ganar el 50% 💸.\n",
+    "rules": "➤ Costo por activación 25 créditos.\n➤ Recarga minima 50 créditos.\n➤ Tutorial de uso → /tutorial",
+    "button": "💰 Comprar créditos",
+    "message": "Hola, quiero comprar créditos de YapeXpress"
+  }
+]

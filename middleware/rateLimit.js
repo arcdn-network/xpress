@@ -1,9 +1,7 @@
-const rateLimit = require('express-rate-limit');
-const { ipKeyGenerator } = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 
 const keyGenerator = (req) => {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
-  return ipKeyGenerator(ip);
+  return ipKeyGenerator(req.ip);
 };
 
 const hourLimiter = rateLimit({
@@ -13,7 +11,7 @@ const hourLimiter = rateLimit({
   legacyHeaders: false,
   validate: { xForwardedForHeader: false },
   keyGenerator,
-  message: { status: false, message: 'RATE_LIMIT_HOUR' },
+  message: { status: false, message: "RATE_LIMIT_HOUR" },
 });
 
 const dayLimiter = rateLimit({
@@ -23,7 +21,7 @@ const dayLimiter = rateLimit({
   legacyHeaders: false,
   validate: { xForwardedForHeader: false },
   keyGenerator,
-  message: { status: false, message: 'RATE_LIMIT_DAY' },
+  message: { status: false, message: "RATE_LIMIT_DAY" },
 });
 
 module.exports = { hourLimiter, dayLimiter };

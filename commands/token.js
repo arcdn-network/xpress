@@ -1,11 +1,29 @@
-const { getUser, updateUser, createToken } = require("../utils/api");
+const processingTokenUsers = new Set();
+const { ExpiringMap } = require("../utils/expiring-map");
+const { getUser, updateUser, createToken, createActivacionLog } = require("../utils/api");
 const { APP_NAME, TOKEN_COST } = require("../utils/constants");
 const { getUnlimitedStatus } = require("../utils/unlimited");
 
-const pendingTokens = new Map();
-const pendingTokenConfirms = new Map();
+const pendingTokens = new ExpiringMap();
+const pendingTokenConfirms = new ExpiringMap();
 
 const TOKEN_PRICES = TOKEN_COST;
+
+async function recordTokenHistory(bot, chatId, telegramId, days, creditsCost) {
+  try {
+    await createActivacionLog({
+      resellerTelegramId: telegramId,
+      clientId: null,
+      clientEmail: null,
+      activatedLicenses: ["Token"],
+      creditsCost,
+      commandRaw: `/token ${days}`,
+    });
+  } catch (error) {
+    console.error("Error registrando consumo de token:", error.message);
+    await bot.sendMessage(chatId, "⚠️ El token se generó, pero no se pudo guardar su registro en el historial. No repitas la generación; contacta al administrador.").catch(() => {});
+  }
+}
 
 function getTokenCost(days) {
   return TOKEN_PRICES[days] ?? null;
@@ -57,8 +75,7 @@ function buildInsufficientCreditsMessage(user, cost) {
 - Créditos actuales ➣ ${user.credits}
 
 <b>[📌] INFORMACIÓN</b>
-- No cuentas con créditos suficientes.
-- Para recargar créditos usa /buy`;
+- No cuentas con créditos suficientes.`;
 }
 
 function buildGeneratedTokenMessage(token, days) {
@@ -145,6 +162,11 @@ function registerTokenCallback(bot) {
       data.startsWith("token_back_");
 
     if (!isTokenData) return;
+    if (processingTokenUsers.has(telegramId)) {
+      await bot.answerCallbackQuery(query.id, { text: "⏳ Hay una operación en curso" }).catch(() => {});
+      return;
+    }
+    processingTokenUsers.add(telegramId);
 
     try {
       // ── CANCELAR desde selector ──────────────────────────────────────
@@ -244,6 +266,7 @@ function registerTokenCallback(bot) {
         if (unlimitedStatus.isUnlimited) {
           await bot.answerCallbackQuery(query.id, { text: "Generando token..." });
 
+          pendingTokens.delete(telegramId);
           const resp = await createToken({ days: config.days, telegramId });
 
           if (!resp.status) {
@@ -252,6 +275,7 @@ function registerTokenCallback(bot) {
 
           pendingTokens.delete(telegramId);
 
+          await recordTokenHistory(bot, chatId, telegramId, config.days, 0);
           await bot.editMessageText(buildGeneratedTokenMessage(resp.token, config.days), {
             chat_id: chatId,
             message_id: messageId,
@@ -341,6 +365,8 @@ function registerTokenCallback(bot) {
 
         await bot.answerCallbackQuery(query.id, { text: "Generando token..." });
 
+        clearConfirm(confirmId);
+        pendingTokens.delete(telegramId);
         const resp = await createToken({ days: payload.days, telegramId: payload.telegramId });
 
         if (!resp.status) {
@@ -351,6 +377,7 @@ function registerTokenCallback(bot) {
         const newCredits = user.credits - payload.cost;
 
         await updateUser(telegramId, { credits: newCredits });
+        await recordTokenHistory(bot, chatId, telegramId, payload.days, payload.cost);
 
         pendingTokens.delete(telegramId);
         clearConfirm(confirmId);
@@ -429,6 +456,8 @@ function registerTokenCallback(bot) {
     } catch (error) {
       console.error("Error token:", error.message);
       await bot.sendMessage(chatId, "❌ Ocurrió un error al generar el token").catch(() => {});
+    } finally {
+      processingTokenUsers.delete(telegramId);
     }
   });
 }
@@ -439,6 +468,8 @@ function registerTokenCommand(bot) {
   bot.onText(/\/token/, async (msg) => {
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
+    if (processingTokenUsers.has(telegramId)) return;
+    processingTokenUsers.add(telegramId);
 
     try {
       const user = await getUser(telegramId);
@@ -457,6 +488,13 @@ function registerTokenCommand(bot) {
       }
 
       const selectedDays = 7;
+      const minimumCost = Math.min(...Object.values(TOKEN_PRICES));
+      const credits = Number(user.credits);
+      if (!getUnlimitedStatus(user).isUnlimited && (!Number.isFinite(credits) || credits < minimumCost)) {
+        return await bot.sendMessage(chatId, buildInsufficientCreditsMessage(user, minimumCost), {
+          parse_mode: "HTML",
+        });
+      }
 
       const sentMessage = await bot.sendMessage(chatId, buildTokenMessage(user, selectedDays), {
         parse_mode: "HTML",
@@ -467,6 +505,8 @@ function registerTokenCommand(bot) {
     } catch (error) {
       console.error("Error /token:", error.message);
       await bot.sendMessage(chatId, "❌ Ocurrió un error al abrir el generador");
+    } finally {
+      processingTokenUsers.delete(telegramId);
     }
   });
 }

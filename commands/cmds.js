@@ -1,17 +1,19 @@
-const { isOwner } = require("../middleware/isAdmin");
-const { VOUCHER_PRODUCT } = require("../utils/products");
 const path = require("path");
 const { CONFIG, VOUCHER_KEYS } = require("../vouchers");
 const { LOCAL, buildButtonsCredits, buildButtonsVoucherPlan } = require("../utils/constants");
-const { sendMessage } = require("../utils/sender");
-const { getFiles, saveFileTelegram } = require("../utils/files");
 
-const VOUCHERS_PER_PAGE = 2;
 const { getUser } = require("../utils/api");
+const { isOwner } = require("../middleware/isAdmin");
+const { sendMessage } = require("../utils/sender");
+const { VOUCHER_PRODUCT, CREDITS_PRODUCT } = require("../utils/products");
 const { FREE_DAILY_LIMIT, USE_DAILY_LIMIT, FREE_BONUS_VOUCHER } = require("../utils/constants");
+
+const { getFiles, saveFileTelegram } = require("../utils/files");
 const { restantesGratis, tienePlanActivo } = require("../vouchers/access/availability");
 const { sendGalleryMessage } = require("../vouchers/access/telegram/gallery");
-const escapeHtml = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const { escapeHtml } = require("../utils/functions");
+
+const VOUCHERS_PER_PAGE = 2;
 
 function buildVoucherCommandsBlock(commands, offset) {
   return commands
@@ -86,6 +88,9 @@ Extiende la duración de un TOKEN API existente.
 <code>/delete_gallery</code>
 Borra únicamente la caché de la galería.
 
+<code>/delete_shop</code>
+Borra únicamente la caché de las imágenes del catálogo.
+
 <code>/delete_all</code>
 Borra las demás entradas de caché y conserva la galería.`,
   };
@@ -147,8 +152,9 @@ function registerCmdsCommand(bot) {
         }
       }
       const view = buildView(match[2], admin, query.from.id, Number(match[3] || 0), availability);
-      const imageKey = match[2] === "vouchers" ? VOUCHER_PRODUCT.cacheKey : "TARGET_IMAGE";
-      const imagePath = match[2] === "vouchers" ? VOUCHER_PRODUCT.image : LOCAL.TARGET_IMAGE;
+      const product = { vouchers: VOUCHER_PRODUCT, activaciones: CREDITS_PRODUCT }[match[2]];
+      const imageKey = product ? product.cacheKey : "TARGET_IMAGE";
+      const imagePath = product ? product.image : LOCAL.TARGET_IMAGE;
       const cachedImage = getFiles()[imageKey];
       const options = {
         chat_id: query.message.chat.id,

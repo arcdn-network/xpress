@@ -2,9 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const { getFiles, saveFileTelegram } = require("../host");
 const { CONFIG, VOUCHER_KEYS } = require("../../catalog");
+const { ExpiringMap } = require("../../../utils/expiring-map");
 const botStates = new WeakMap();
+
 function getState(bot) {
-  if (!botStates.has(bot)) botStates.set(bot, { opening: new Map(), navigating: new Set(), active: new Map(), registered: false });
+  if (!botStates.has(bot)) botStates.set(bot, { opening: new Map(), navigating: new Set(), active: new ExpiringMap({ ttlMs: 24 * 60 * 60 * 1000 }), registered: false });
   return botStates.get(bot);
 }
 
@@ -22,20 +24,22 @@ function sendGalleryMessage(bot, chatId, index) {
         await editGalleryMessage(bot, chatId, message.message_id, index);
         return message;
       } catch (error) {
-        if (/message is not modified/i.test(error.message || '')) return message;
-        // Only confirmed deletion allows creating a replacement, never a network error.
-        if (!/message to edit not found/i.test(error.message || '')) throw error;
+        if (/message is not modified/i.test(error.message || "")) return message;
+        if (!/message to edit not found/i.test(error.message || "")) throw error;
         active.delete(key);
       } finally {
         navigating.delete(lockKey);
       }
     }
     const response = await sendGalleryMessageOnce(bot, chatId, index);
-    if (response?.document && response.message_id) active.set(key, response);
+    if (response?.document && response.message_id) active.set(key, { message_id: response.message_id });
     return response;
   });
   opening.set(key, pending);
-  pending.then(() => opening.delete(key), () => opening.delete(key));
+  pending.then(
+    () => opening.delete(key),
+    () => opening.delete(key),
+  );
   return pending;
 }
 
@@ -93,14 +97,22 @@ async function sendGalleryMessageOnce(bot, chatId, index) {
 
   const source = files[key] || fs.createReadStream(filename);
 
-  const response = await bot.sendDocument(chatId, source, {
-    caption,
-    parse_mode: "Markdown",
-    reply_markup: buildGalleryKeyboard(safeIndex, total),
-  }, { filename: `${comando}${path.extname(filename)}` });
+  const response = await bot.sendDocument(
+    chatId,
+    source,
+    {
+      caption,
+      parse_mode: "Markdown",
+      reply_markup: buildGalleryKeyboard(safeIndex, total),
+    },
+    { filename: `${comando}${path.extname(filename)}` },
+  );
 
-  try { saveFileTelegram(response, key); }
-  catch (error) { console.error('Error guardando caché de galería:', error.message); }
+  try {
+    saveFileTelegram(response, key);
+  } catch (error) {
+    console.error("Error guardando caché de galería:", error.message);
+  }
   return response;
 }
 
@@ -132,14 +144,20 @@ async function editGalleryMessage(bot, chatId, messageId, index) {
   }
 
   // Upload into the same message: never delete/send a replacement during navigation.
-  const response = await bot.editMessageMedia({
-    type: "document", media: `attach://${filename}`, caption, parse_mode: "Markdown",
-    fileOptions: { filename: `${comando}${path.extname(filename)}` },
-  }, {
-    chat_id: chatId,
-    message_id: messageId,
-    reply_markup: buildGalleryKeyboard(safeIndex, total),
-  });
+  const response = await bot.editMessageMedia(
+    {
+      type: "document",
+      media: `attach://${filename}`,
+      caption,
+      parse_mode: "Markdown",
+      fileOptions: { filename: `${comando}${path.extname(filename)}` },
+    },
+    {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: buildGalleryKeyboard(safeIndex, total),
+    },
+  );
 
   saveFileTelegram(response, key);
 }
@@ -176,9 +194,10 @@ function registerGalleryCommand(bot) {
     try {
       await bot.answerCallbackQuery(query.id);
       if (action === "close") {
-        try { await bot.deleteMessage(chatId, messageId); }
-        catch (error) {
-          if (!/message to delete not found/i.test(error.message || '')) throw error;
+        try {
+          await bot.deleteMessage(chatId, messageId);
+        } catch (error) {
+          if (!/message to delete not found/i.test(error.message || "")) throw error;
         }
         if (state.active.get(String(chatId))?.message_id === messageId) state.active.delete(String(chatId));
         return;
@@ -205,5 +224,4 @@ function registerGalleryCommand(bot) {
   });
 }
 
-module.exports = registerGalleryCommand;
-module.exports.sendGalleryMessage = sendGalleryMessage;
+module.exports = { registerGalleryCommand, sendGalleryMessage };

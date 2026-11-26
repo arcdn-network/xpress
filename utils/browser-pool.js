@@ -24,7 +24,7 @@ function buildPool(puppeteer, launchOptions = {}, options = {}) {
   ) {
     throw new Error("Xpress requiere un navegador con perfil temporal propio");
   }
-  let browser, launching, maintenance;
+  let browser, launching, maintenance, recoveryTimer;
   let running = 0,
     useCount = 0,
     dirty = false,
@@ -73,16 +73,24 @@ function buildPool(puppeteer, launchOptions = {}, options = {}) {
   }
 
   function pump() {
-    if (maintenance) return;
+    if (maintenance || recoveryTimer) return;
     if (browser && !browser.connected) dirty = true;
     if (dirty || useCount >= settings.restartAfter || stopped) {
       if (running) return;
       maintenance = retire()
         .catch((error) => {
-          // Fail closed: never launch replacements if closing the owned browser failed.
-          stopped = true;
+          // Retain ownership and retry closure; never launch a second browser
+          // while the first one's closure is unconfirmed.
+          dirty = true;
           rejectQueue(error);
           console.error("[Xpress browser]", error.message);
+          if (!stopped) {
+            recoveryTimer = setTimeout(() => {
+              recoveryTimer = null;
+              pump();
+            }, settings.closeTimeoutMs);
+            recoveryTimer.unref();
+          }
         })
         .finally(() => {
           maintenance = null;
@@ -157,6 +165,8 @@ function buildPool(puppeteer, launchOptions = {}, options = {}) {
     stats: () => ({ running, queued: queue.length, useCount, stopped, recycling: !!maintenance }),
     async close() {
       stopped = true;
+      clearTimeout(recoveryTimer);
+      recoveryTimer = null;
       rejectQueue(new Error("Pool de Xpress detenido"));
       // Active jobs retain their browser until their own bounded cleanup finishes.
       while (running) await new Promise((resolve) => setTimeout(resolve, 10));
